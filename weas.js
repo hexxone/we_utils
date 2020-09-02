@@ -76,7 +76,7 @@ $(() => {
 	// if wallpaper engine context given, listen
 	if (window.wallpaperRegisterAudioListener) {
 		// initialize web worker
-		weas.weasWorker = new Worker('./js/worker/weasWorker.js');
+		weas.weasWorker = new Worker('./we_utils/worker/weasWorker.js');
 		weas.weasWorker.addEventListener("message", weas.processed, true);
 		weas.weasWorker.addEventListener("error", weas.error, true);
 		// intialize wallpaper engine audio listener
