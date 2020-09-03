@@ -289,7 +289,7 @@ wewwApp.AddMenu = (lang) => {
         // add html struct
         var row = ce("tr");
         var td1 = ce("td");
-        td1.innerHTML = "<h4>Language</h4>";
+        td1.innerHTML = "<h4>🇩🇪🇬🇧🇮🇹🇷🇺🇨🇳</h4>";
         var td2 = ce("td");
         var lan = ce("select");
         // process all
