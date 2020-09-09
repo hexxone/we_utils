@@ -356,7 +356,7 @@ wewwApp.AddMenu = (lang) => {
 
     // footer with ident
     var footer = ce("div");
-    footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a target=\"_blank\" href='https://hexx.one'>Hexxon</a>";
+    footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a target=\"_blank\" href='https://hexx.one'>hexxone</a>";
     // finish up menu
     menu.append(preview, header, link, tmain, preFoot, footer)
 
