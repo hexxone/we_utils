@@ -21,6 +21,7 @@
 var weicue = {
     // runtime values
     injected: false,
+    PAUSED: false,
     isAvailable: false,
     canvasX: 23,
     canvasY: 7,
@@ -412,7 +413,7 @@ AAAASUVORK5CYII=
     updateFrame: function () {
         var self = weicue;
         var sett = self.settings;
-        if (audiOrbits.state == RunState.Paused || !self.isAvailable || sett.icue_mode == 0 || self.icueDevices.length < 1) return;
+        if (self.Paused || !self.isAvailable || sett.icue_mode == 0 || self.icueDevices.length < 1) return;
         // projection mode
         if (sett.icue_mode == 1) {
             // get scaled down image data and encode it for icue
