@@ -43,15 +43,15 @@ ShaderQuality = {
         // replace precisions according to user setting
         switch (precision) {
             case "high":
-                str0 = str0.replaceAll("{bprec}", "high");
+                str0 = str0.split("{bprec}").join("high");
                 str0 += "precision mediump sampler2D;\r\n    "
                       + "precision mediump samplerCube;\r\n    ";
                 break;
             case "low":
-                str0 = str0.replaceAll("{bprec}", "low");
+                str0 = str0.split("{bprec}").join("low");
                 break;
             default:
-                str0 = str0.replaceAll("{bprec}", "medium");
+                str0 = str0.split("{bprec}").join("medium");
                 break;
         }
         //finish new quality code
