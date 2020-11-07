@@ -24,6 +24,7 @@ var pinkNoise = [1.1760367470305, 0.85207379418243, 0.68842437227852, 0.63767902
     2.2196355526005, 2.2660112509705, 2.320762171749, 2.3574848254513, 2.3986127976537,
     2.4043566176474, 2.4280476777842, 2.3917477397336, 2.4032522546622, 2.3614180150678];
 
+// correct pink noise for first and second half
 var correctPinkNoise = function (data) {
     var correct = [];
     for (var i = 0; i < 64; i++) {
@@ -33,6 +34,7 @@ var correctPinkNoise = function (data) {
     return correct;
 };
 
+// merge first and second half into full range
 var stereoToMono = function (data) {
     var mono = [];
     var mIdx = 0;
@@ -43,46 +45,116 @@ var stereoToMono = function (data) {
     return mono;
 };
 
+// switch front with back in first half
+var invertFirst = function (data) {
+    for (var i = 0; i < 32; i++) {
+        var a = data[i];
+        data[i] = data[64 - i];
+        data[64 - i] = a;
+    }
+};
+
+// switch front with back in second half
+var invertSecond = function (data) {
+    for (var i = 0; i < 32; i++) {
+        var b = data[64 + i];
+        data[64 + i] = data[128 - i];
+        data[128 - i] = b;
+    }
+};
+
+// switch front with back in full range
+var invertAll = function (data) {
+    for (var i = 0; i < 64; i++) {
+        var a = data[i];
+        data[i] = data[128 - i];
+        data[128 - i] = a;
+    }
+};
+
+// filter peaks for full range
+var peakFilter = function (array, amount) {
+    var oldMax = 0;
+    var newMax = 0;
+    var newArray = new Float64Array(array.length);
+    // pow this shit
+    for (var i = 0; i < array.length; i++) {
+        if (array[i] > oldMax) oldMax = array[i];
+        newArray[i] = Math.pow(array[i] * amount, amount);
+        if (newArray[i] > newMax) newMax = newArray[i];
+    }
+    // re-scale & apply
+    var divide = newMax / oldMax;
+    for (var i = 0; i < array.length; i++)
+        array[i] = newArray[i] / divide;
+};
+
+// smooth values for full range
 var smoothArray = function (array, smoothing) {
     var newArray = new Float64Array(array.length);
+    // make smoothed array
     for (var i = 0; i < array.length; i++) {
         var sum = 0;
         for (var index = i - smoothing; index <= i + smoothing; index++)
             sum += array[index < 0 ? index + array.length : index % array.length];
         newArray[i] = sum / ((smoothing * 2) + 1);
     }
-    return newArray;
+    // copy new data to old array
+    for (var i = 0; i < array.length; i++)
+        array[i] = newArray[i];
 };
 
 // function will apply setting-defined data smoothing
-var applyValueLeveling = function (curr, prev, s) {
-    return curr - (curr - prev) * s / 100;
+var applyValueLeveling = function (curr, prev, sett) {
+    for (var i = 0; i < array.length; i++) {
+        var diff = curr[i] - prev[i];
+        var mlt = diff < 0 ? sett.audio_increase : sett.audio_decrease;
+        curr[i] -= diff * mlt / 100;
+    }
 };
 
 onmessage = function (e) {
     let eventData = e.data;
     // can be null
-    let audioArray = new Float64Array(eventData.audio);
+    let data = new Float64Array(eventData.audio);
     let lastData = eventData.last;
     let settings = eventData.settings;
-    // fix pink noise for both channels
-    var corrected = correctPinkNoise(audioArray);
+
+    // fix pink noise?
+    if (settings.equalize) correctPinkNoise(data);
+
     // write botch channels to mono
-    var monoArray = stereoToMono(corrected);
-    // smooth and get final data
-    var data = smoothArray(monoArray, 2);
-    // set latest data
-    var ldata;
-    if (lastData) ldata = lastData.data.slice(0);
+    if (settings.mono_audio) stereoToMono(data);
+
+    // normal high & low mapping
+    if (settings.audio_direction == 0) {
+        // only flip the second half of the data
+        if (!settings.mono_audio) invertSecond(data);
+    }
+    // flipped high & low mapping
+    else {
+        // flip whole range
+        if (settings.mono_audio) invertAll(data);
+        // only flip first half of stereo
+        else invertFirst(data);
+    }
+
+    // process peaks?
+    if (settings.peak_filter > 0) peakFilter(data, settings.peak_filter + 1);
+
+    // smooth data?
+    if (settings.value_smoothing > 0) smoothArray(data, settings.value_smoothing);
+
+    // process with last data?
+    if (lastData) applyValueLeveling(data, lastData.data, settings);
+
     // process current frequency data and previous if given
     var sum = 0, min = 1, max = 0, bass = 0, mids = 0, peaks = 0;
-    for (var i = 0; i < 128; i++) {
+    for (var i = 0; i < data.length; i++) {
         // parse current freq value
         var idata = parseFloat(data[i]);
         // fix null values
         if (idata == null || isNaN(idata)) data[i] = idata = 0.0;
-        // process last value with current
-        if (lastData) data[i] = idata = applyValueLeveling(idata, ldata[i], settings.audio_smoothing);
         // process min max value
         if (idata < min) min = idata;
         if (idata > max) max = idata;
@@ -94,7 +166,7 @@ onmessage = function (e) {
         sum += idata;
     }
     // calc average with previous entry
-    var average = sum / 128;
+    var average = sum / data.length;
     // I cant really explain.... magic?
     var intensity = (bass * 6 - mids + peaks) / 6 / average;
     // done
@@ -111,6 +183,5 @@ onmessage = function (e) {
         intensity: intensity,
         time: performance.now() / 1000,
         data: data.buffer,
-    },
-    [data.buffer]);
-};
+    }, [data.buffer]);
+}; // Strassenbande

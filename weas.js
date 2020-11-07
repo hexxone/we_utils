@@ -36,8 +36,20 @@ var weas = {
 	lastAudio: null,
 	// settings object
 	settings: {
+		audioprocessing: true,
+		// do pink-noise processing?
+		equalize: true,
+		// convert to mono?
+		mono_audio: true,
+		// peak filtering
+		peak_filter: 1,
+		// invert low & high freqs?
+		audio_direction: 0,
 		// time-value smoothing ratio
-		audio_smoothing: 55,
+		audio_increase: 75,
+		audio_decrease: 35,
+		// neighbour-smoothing value
+		value_smoothing: 2,
 		// multipliers
 		treble_multiplier: 0.5,
 		mids_multiplier: 0.75,
