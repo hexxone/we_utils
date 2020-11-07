@@ -41,19 +41,19 @@ var weas = {
 		equalize: true,
 		// convert to mono?
 		mono_audio: true,
-		// peak filtering
-		peak_filter: 1,
 		// invert low & high freqs?
 		audio_direction: 0,
+		// peak filtering
+		peak_filter: 1,
+		// neighbour-smoothing value
+		value_smoothing: 2,
 		// time-value smoothing ratio
 		audio_increase: 75,
 		audio_decrease: 35,
-		// neighbour-smoothing value
-		value_smoothing: 2,
 		// multipliers
 		treble_multiplier: 0.5,
 		mids_multiplier: 0.75,
-		bass_multiplier: 1,
+		bass_multiplier: 1.8,
 		// ignore value leveling for "silent" data
 		minimum_volume: 0.005,
 	},
