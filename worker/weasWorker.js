@@ -108,7 +108,7 @@ var smoothArray = function (array, smoothing) {
 var applyValueLeveling = function (curr, prev, sett) {
     for (var i = 0; i < array.length; i++) {
         var diff = curr[i] - prev[i];
-        var mlt = diff < 0 ? sett.audio_increase : sett.audio_decrease;
+        var mlt = diff > 0 ? sett.audio_increase : sett.audio_decrease;
         curr[i] -= diff * mlt / 100;
     }
 };
