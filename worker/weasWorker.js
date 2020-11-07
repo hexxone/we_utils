@@ -106,7 +106,7 @@ var smoothArray = function (array, smoothing) {
 
 // function will apply setting-defined data smoothing
 var applyValueLeveling = function (curr, prev, sett) {
-    for (var i = 0; i < array.length; i++) {
+    for (var i = 0; i < curr.length; i++) {
         var diff = curr[i] - prev[i];
         var mlt = diff > 0 ? sett.audio_increase : sett.audio_decrease;
         curr[i] -= diff * mlt / 100;
@@ -159,9 +159,9 @@ onmessage = function (e) {
         if (idata < min) min = idata;
         if (idata > max) max = idata;
         // process ranges
-        if (i < 16) bass += idata;
-        else if (i > 80) peaks += idata / 1.5;
-        else mids += idata / 1.25;
+        if (i < 10) bass += idata * settings.bass_multiplier;
+        else if (i > 70) peaks += idata * settings.treble_multiplier;
+        else mids += idata * settings.mids_multiplier;
         // calc peak average
         sum += idata;
     }
