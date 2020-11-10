@@ -28,7 +28,6 @@ var weicue = {
     icueDevices: [],
     preview: null,
     icueInterval: null,
-    mainCanvas: null,
     helperCanvas: null,
     helperContext: null,
     // settings
@@ -450,10 +449,10 @@ AAAASUVORK5CYII=
     },
 
     // prepare canvas
-    updateCanvas: function () {
+    updateCanvas: function (mainCanvas) {
         var self = weicue;
         var sett = self.settings;
-        if (!self.isAvailable || !self.mainCanvas || sett.icue_mode == 0 || self.icueDevices.length < 1) return;
+        if (!self.isAvailable || !mainCanvas || sett.icue_mode == 0 || self.icueDevices.length < 1) return;
 
         if (sett.icue_mode == 1) {
             // get helper vars
@@ -468,7 +467,7 @@ AAAASUVORK5CYII=
             hctx.fillStyle = "rgba(" + spl.join(", ") + ", " + sett.icue_area_decay / 100 + ")";
             hctx.fillRect(0, 0, cueWid, cueHei);
             // scale down and copy the image to the helper canvas
-            hctx.drawImage(self.mainCanvas, area.left, area.top, area.width, area.height, 0, 0, cueWid, cueHei);
+            hctx.drawImage(mainCanvas, area.left, area.top, area.width, area.height, 0, 0, cueWid, cueHei);
             // blur the helper projection canvas
             if (sett.icue_area_blur > 0) self.gBlurCanvas(self.helperCanvas, hctx, sett.icue_area_blur);
         }

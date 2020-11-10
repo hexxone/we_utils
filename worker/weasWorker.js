@@ -108,7 +108,7 @@ var smoothArray = function (array, smoothing) {
 var applyValueLeveling = function (curr, prev, sett) {
     for (var i = 0; i < curr.length; i++) {
         var diff = curr[i] - prev[i];
-        var mlt = diff > 0 ? sett.audio_increase : sett.audio_decrease;
+        var mlt = 100 - (diff > 0 ? sett.audio_increase : sett.audio_decrease);
         curr[i] -= diff * mlt / 100;
     }
 };
@@ -167,20 +167,18 @@ onmessage = function (e) {
     }
     // calc average with previous entry
     var average = sum / data.length;
-    // I cant really explain.... magic?
-    var intensity = (bass * 6 - mids + peaks) / 6 / average;
     // done
     self.postMessage({
-        silent: (max < settings.minimum_volume / 1000),
-        min: min,
-        max: max,
-        range: max - min,
         bass: bass,
         mids: mids,
         peaks: peaks,
         sum: sum,
+        min: min,
+        max: max,
         average: average,
-        intensity: intensity,
+        range: max - min,
+        silent: (max < settings.minimum_volume / 1000),
+        intensity: (bass * 8 - mids + peaks) / 6 / average,
         time: performance.now() / 1000,
         data: data.buffer,
     }, [data.buffer]);
