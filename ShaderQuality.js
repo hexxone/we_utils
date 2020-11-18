@@ -9,6 +9,9 @@
  * @description
  * helper for globally injecting "precision" strings into THREE.js shaders.
  * 
+ * @todo
+ * - check if three.js overrides this?
+ * - add "default" option -> choose highest available
 */
 
 ShaderQuality = {
