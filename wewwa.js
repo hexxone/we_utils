@@ -565,9 +565,18 @@ wewwApp.UpdateSettings = () => {
             var partials = cprop.split(/&&|\|\|/);
             // loop all partial values of the check
             for (var part of partials) {
+                var prefix ="wewwaProps.";
                 var onlyVal = part.match(/[a-zA-Z0-9_\.]*/)[0];
-                if (!onlyVal.startsWith("wewwaProps."))
-                    cprop = cprop.replace(onlyVal, "wewwaProps." + onlyVal);
+                if (!onlyVal.startsWith(prefix) && !onlyVal.startsWith("!" + prefix)){
+                    // fix for inverted values
+                    var replW = onlyVal;
+                    if(replW.startsWith("!")) {
+                        replW = replW.substr(1);
+                        prefix = "!" + prefix;
+                    }
+                    cprop = cprop.replace(onlyVal, prefix + replW);
+                }
+                
             }
             visible = eval(cprop) == true;
             //console.log("eval: (" + cprop + ")=" + visible + " for: " + p);
