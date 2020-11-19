@@ -42,7 +42,7 @@ var wewwApp = wewwApp || {};
 wewwApp.Init = () => {
     wewwApp.LoadProjectJSON((proj) => {
         if (proj.type != "web") {
-            console.log("Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...");
+            console.error("Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...");
             return;
         }
         wewwApp.project = proj;
@@ -61,7 +61,7 @@ wewwApp.LoadProjectJSON = (complete) => {
         url: "project.json",
         beforeSend: (xhr) => xhr.overrideMimeType("text/plain;"),
         success: (result) => complete(JSON.parse(result)),
-        error: (xhr, status, error) => console.log(status + ": ajax error!\r\n" + error)
+        error: (xhr, status, error) => console.error(status + ": ajax error!\r\n" + error)
     });
 }
 
@@ -71,7 +71,7 @@ wewwApp.LoadStorage = () => {
     if (last != null) {
         var merged = Object.assign(props, JSON.parse(last));
         wewwApp.project.general.properties = merged;
-        console.log("Loaded & merged settings.")
+        console.debug("Loaded & merged settings.")
     }
 }
 
@@ -432,7 +432,7 @@ wewwApp.CreateItem = (prop, itm) => {
             sliderVal.setAttribute("id", sliderVal.name);
             sliderVal.setAttribute("type", "number");
             sliderVal.style.width = "75%";
-            if(canEdit) {
+            if (canEdit) {
                 sliderVal.setAttribute("value", itm.value);
                 sliderVal.addEventListener("change", function (e) { wewwApp.SetProperty(prop, this); });
             }
@@ -466,7 +466,7 @@ wewwApp.CreateItem = (prop, itm) => {
         td2.prepend(inp);
     }
     // append td3 or stretch td2?
-    if(td3) {
+    if (td3) {
         row.append(td1, td2, td3)
     }
     else {
@@ -489,7 +489,9 @@ wewwApp.SetProperty = (prop, elm) => {
     var applyCall = (val) => {
         // save the updated value to storage
         props[prop].value = val;
-        console.log("Property set: " + prop + " v: " + val);
+
+        //console.debug("Property set: " + prop + " v: " + val);
+
         // update
         wewwApp.UpdateSettings();
         var obj = {};
@@ -510,7 +512,7 @@ wewwApp.SetProperty = (prop, elm) => {
         case "slider":
             if (elm.name.includes("_out_")) {
                 var inpt = document.querySelector("#wewwa_" + prop);
-                if(inpt) inpt.value = elm.value;
+                if (inpt) inpt.value = elm.value;
                 else console.error("Slider not found: " + prop);
             }
             else {
@@ -565,21 +567,26 @@ wewwApp.UpdateSettings = () => {
             var partials = cprop.split(/&&|\|\|/);
             // loop all partial values of the check
             for (var part of partials) {
-                var prefix ="wewwaProps.";
-                var onlyVal = part.match(/[a-zA-Z0-9_\.]*/)[0];
-                if (!onlyVal.startsWith(prefix) && !onlyVal.startsWith("!" + prefix)){
+                var prefix = "wewwaProps.";
+                var onlyVal = part.match(/[!a-zA-Z0-9_\.]*/)[0];
+                if (!onlyVal.startsWith(prefix) && !onlyVal.startsWith("!" + prefix)) {
                     // fix for inverted values
                     var replW = onlyVal;
-                    if(replW.startsWith("!")) {
+                    if (replW.startsWith("!")) {
                         replW = replW.substr(1);
                         prefix = "!" + prefix;
                     }
+                    //console.debug("replace: " + onlyVal + " >> " + prefix + replW);
                     cprop = cprop.replace(onlyVal, prefix + replW);
                 }
-                
+
             }
-            visible = eval(cprop) == true;
-            //console.log("eval: (" + cprop + ")=" + visible + " for: " + p);
+            try {
+                visible = eval(cprop) == true;
+            }
+            catch (e) {
+                console.error("Error: (" + cprop + ") for: " + p + " => " + e);
+            }
         }
 
 
@@ -646,7 +653,7 @@ wewwApp.requestMicrophone = () => {
         wewwApp.source.connect(wewwApp.analyser);
         wewwApp.startAudioInterval();
     }).catch(function (err) {
-        console.log(err);
+        console.error(err);
         if (location.protocol != "https:") {
             var r = confirm("Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS for this feature to work! Press 'ok'/'yes' to get redirected to HTTPS and try again.");
             if (r) window.location.href = window.location.href.replace("http", "https");
@@ -695,6 +702,7 @@ wewwApp.initiateAudio = (data) => {
 // starts audio analyser interval
 wewwApp.startAudioInterval = () => {
     var data = new Uint8Array(128);
+    // 33ms ~~ 30fps
     wewwApp.audioInterval = setInterval(() => {
         if (!wewwApp.audioCallback) {
             wewwApp.stopAudioInterval();
@@ -704,7 +712,9 @@ wewwApp.startAudioInterval = () => {
         wewwApp.analyser.getByteFrequencyData(data);
         var stereo = wewwApp.convertAudio(data);
         wewwApp.audioCallback(stereo);
-    }, 33); // 33ms ~~ 30fps
+    }, 33);
+    // tell Wallpaper we are sending audio
+    wewwApp.ApplyProp({ audioprocessing: { value: true } })
 }
 
 // stops audio analyser interval and playing audio
@@ -719,9 +729,9 @@ wewwApp.stopAudioInterval = () => {
     }
 }
 
-if (window.wallpaperRegisterAudioListener) console.log("WEWWA: detected wallpaper engine - Standby.");
+if (window.wallpaperRegisterAudioListener) console.info("[WEWWA] detected wallpaper engine => Standby.");
 else {
-    console.log("WEWWA: wallpaper engine not detected - Init!");
+    console.info("[WEWWA] wallpaper engine not detected => Init!");
     // define audio listener first, so we dont miss when it gets registered.
     window.wallpaperRegisterAudioListener = function (callback) {
         // set callback to be called later with analysed audio data
