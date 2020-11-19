@@ -18,6 +18,7 @@
  * Lighting effects for Corsair ICUE devices.
  */
 
+import { Smallog } from "./Smallog";
 import { WEAS } from "./WEAS";
 
 export class WEICUE {
@@ -55,7 +56,7 @@ export class WEICUE {
         // Plugin handler
         window['wallpaperPluginListener'] = {
             onPluginLoaded: function (name, version) {
-                console.log("Plugin: " + name + ", Version: " + version);
+                Smallog.Info("Plugin: " + name + ", Version: " + version + " : registered.");
                 if (name === 'cue') this.isAvailable = true;
                 if (name === 'led') this.isAvailable = true;
             }
@@ -281,6 +282,7 @@ AAAASUVORK5CYII=
 
     // show a message by icue
     icueMessage(msg) {
+        Smallog.Debug("WEICUE MSG:  " + msg);
         $("#icueholder").css('opacity', 1);
         $("#icuetext").html(msg);
         $("#icueholder").fadeIn({ queue: false, duration: "slow" });
@@ -374,7 +376,7 @@ AAAASUVORK5CYII=
 
         this.initCUE(0);
 
-        console.log("weiCUE: init...");
+        Smallog.Debug("weiCUE: init...");
 
         // recreate if reinit
         if (this.icueInterval) clearInterval(this.icueInterval);
