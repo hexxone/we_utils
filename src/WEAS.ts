@@ -23,6 +23,8 @@
  * 
 */
 
+import { Smallog } from "./Smallog";
+
 export class WEAS {
 
 	// has currently valid audio data stored?
@@ -64,7 +66,7 @@ export class WEAS {
 	constructor() {
 		// if wallpaper engine context given, listen
 		if (!window['wallpaperRegisterAudioListener']) {
-			console.log("'window.wallpaperRegisterAudioListener' not given!");
+			Smallog.Info("'window.wallpaperRegisterAudioListener' not given!");
 			return;
 		}
 		
@@ -79,7 +81,7 @@ export class WEAS {
 
 		// worker Error
 		this.weasWorker.addEventListener("error", (e) => {
-			console.log("weas error: [" + e.filename + ", Line: " + e.lineno + "] " + e.message);
+			Smallog.Error("weas error: [" + e.filename + ", Line: " + e.lineno + "] " + e.message);
 		}, true);
 
 		// intialize wallpaper engine audio listener when laoded
@@ -87,7 +89,7 @@ export class WEAS {
 			// check proof
 			if (!audioArray) return;
 			if (audioArray.length != 128) {
-				console.log("audioListener: received invalid audio data array. Length: " + audioArray.length);
+				Smallog.Error("audioListener: received invalid audio data array. Length: " + audioArray.length);
 				return;
 			}
 			let audBuff = new Float64Array(audioArray);
