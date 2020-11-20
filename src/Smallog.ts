@@ -11,8 +11,8 @@ export enum LogLevel {
 export module Smallog {
 
     var logLevel: LogLevel = LogLevel.Info;
-    var preFix: string = " AudiOrbits: ";
-    var printTime: boolean = true;
+    var preFix: string = "[Smallog] ";
+    var printTime: boolean = false;
 
     export function GetLevel() {
         return logLevel;
@@ -20,6 +20,10 @@ export module Smallog {
 
     export function SetLevel(level: LogLevel) {
         logLevel = level;
+    }
+
+    export function SetPrefix(pre: string) {
+        preFix = pre;
     }
 
     export function Error(msg: string) {
@@ -35,8 +39,8 @@ export module Smallog {
     }
 
     function Log(call: any, msg: string) {
-        var m = preFix+ msg;
-        if (printTime) m = ("[" + new Date().toLocaleString() + "]") + m;
-        call(m);
+        var m = msg;
+        if (printTime) m = ("[" + new Date().toLocaleString() + "] ") + m;
+        call(preFix + m);
     }
 }
