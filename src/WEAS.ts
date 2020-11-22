@@ -23,53 +23,54 @@
  * 
 */
 
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
 import { Smallog } from "./Smallog";
 
-export class WEAS {
+export class WEASettings extends CSettings {
+	audioprocessing: boolean = true;
+	// do pink-noise processing?
+	equalize: boolean = true;
+	// convert to mono?
+	mono_audio: boolean = true;
+	// invert low & high freqs?
+	audio_direction: number = 0;
+	// peak filtering
+	peak_filter: number = 1;
+	// neighbour-smoothing value
+	value_smoothing: number = 2;
+	// time-value smoothing ratio
+	audio_increase: number = 75;
+	audio_decrease: number = 35;
+	// multipliers
+	treble_multiplier: number = 0.5;
+	mids_multiplier: number = 0.75;
+	bass_multiplier: number = 1.8;
+	// ignore value leveling for "silent" data
+	minimum_volume: number = 0.005;
+}
 
-	// has currently valid audio data stored?
-	hasAudio() {
-		// return false if there is no data or its invalid due to time (> 3s old)
-		return this.lastAudio && !this.lastAudio.silent &&
-			(performance.now() / 1000 - this.lastAudio.time < 3);
-	}
+export class WEAS extends CComponent {
+
 	// audio processing worker
-	weasWorker = null;
+	private weasWorker = null;
 
 	// last processed audio object
-	lastAudio = null;
+	public lastAudio = null;
 
 	// settings object
-	settings = {
-		audioprocessing: true,
-		// do pink-noise processing?
-		equalize: true,
-		// convert to mono?
-		mono_audio: true,
-		// invert low & high freqs?
-		audio_direction: 0,
-		// peak filtering
-		peak_filter: 1,
-		// neighbour-smoothing value
-		value_smoothing: 2,
-		// time-value smoothing ratio
-		audio_increase: 75,
-		audio_decrease: 35,
-		// multipliers
-		treble_multiplier: 0.5,
-		mids_multiplier: 0.75,
-		bass_multiplier: 1.8,
-		// ignore value leveling for "silent" data
-		minimum_volume: 0.005,
-	}
+	public settings: WEASettings = null;
 
-	constructor() {
+	constructor(settings: WEASettings = new WEASettings()) {
+		super();
+		this.settings = settings;
+
 		// if wallpaper engine context given, listen
 		if (!window['wallpaperRegisterAudioListener']) {
 			Smallog.Info("'window.wallpaperRegisterAudioListener' not given!");
 			return;
 		}
-		
+
 		// initialize web worker
 		this.weasWorker = new Worker('./js/worker/weasWorker.js');
 
@@ -100,5 +101,11 @@ export class WEAS {
 				audio: audBuff.buffer
 			}, [audBuff.buffer]);
 		}));
+	}
+
+	hasAudio() {
+		// return false if there is no data or its invalid due to time (> 3s old)
+		return this.lastAudio && !this.lastAudio.silent &&
+			(performance.now() / 1000 - this.lastAudio.time < 3);
 	}
 }
