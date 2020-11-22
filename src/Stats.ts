@@ -1,3 +1,10 @@
+/**
+ * @author D.Thiele @https://hexx.one
+ * 
+ * @description TypeScript Wrapper for mrdoob Stats.js
+ */
+
+
 declare interface Stats {
 	REVISION: number;
 	dom: HTMLDivElement;

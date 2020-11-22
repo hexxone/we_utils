@@ -18,12 +18,31 @@
  * Lighting effects for Corsair ICUE devices.
  */
 
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
 import { Smallog } from "./Smallog";
 import { WEAS } from "./WEAS";
 
-export class WEICUE {
+export class CUESettings extends CSettings {
+    icue_mode: number = 1;
+    icue_area_xoff: number = 50;
+    icue_area_yoff: number = 90;
+    icue_area_width: number = 75;
+    icue_area_height: number = 30;
+    icue_area_blur: number = 5;
+    icue_area_decay: number = 15;
+    icue_area_preview: boolean = false;
+    icue_main_color: string = "0 0.8 0";
+    // AudiOrbits bg Color; used as "decay"-color aswell
+    main_color: string = "0 0 0";
+}
 
-    weas : WEAS = null;
+export class WEICUE extends CComponent {
+
+    private weas: WEAS = null;
+
+    public settings: CUESettings = null;
+
     // runtime values
     PAUSED = false;
     isAvailable = false;
@@ -35,23 +54,11 @@ export class WEICUE {
     helperCanvas = null;
     helperContext = null;
 
-    // settings
-    settings = {
-        icue_mode: 1,
-        icue_area_xoff: 50,
-        icue_area_yoff: 90,
-        icue_area_width: 75,
-        icue_area_height: 30,
-        icue_area_blur: 5,
-        icue_area_decay: 15,
-        icue_area_preview: false,
-        icue_main_color: "0 0.8 0",
-        // AudiOrbits bg Color, used as "decay"-color
-        main_color: "0 0 0",
-    }
 
-    constructor(weas: WEAS) {
+    constructor(weas: WEAS, settings: CUESettings = new CUESettings()) {
+        super();
         this.weas = weas;
+        this.settings = settings;
 
         // Plugin handler
         window['wallpaperPluginListener'] = {
