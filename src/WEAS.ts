@@ -28,8 +28,7 @@ import { CSettings } from "./CSettings";
 import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
 
-import Worker from 'worker-loader!./WEAS.worker';
-
+import WEASWorker from 'worker-loader!./WEASWorker';
 
 export class WEASettings extends CSettings {
 	audioprocessing: boolean = true;
@@ -57,7 +56,7 @@ export class WEASettings extends CSettings {
 export class WEAS extends CComponent {
 
 	// audio processing worker
-	private weasWorker = null;
+	private weasWorker: WEASWorker = null;
 
 	// last processed audio object
 	public lastAudio = null;
@@ -75,25 +74,26 @@ export class WEAS extends CComponent {
 
 	private realInit() {
 		// if wallpaper engine context given, listen
-		if (!window['wallpaperRegisterAudioListener']) {
+		if (!['wallpaperRegisterAudioListener']) {
 			Smallog.Info("'window.wallpaperRegisterAudioListener' not given!");
 			return;
 		}
 
 		// initialize web worker
-		this.weasWorker = new Worker();
+		this.weasWorker = new WEASWorker();
 
+		var self = this;
 		// worker event data
-		this.weasWorker.addEventListener("message", (e) => {
-			e.data.data = new Float64Array(e.data.data);
-			this.lastAudio = e.data;
-			Smallog.Debug("Got Data from Worker: " + JSON.stringify(this.lastAudio));
-		}, true);
+		this.weasWorker.onmessage = (e) => {
+			e.data.data = new Float32Array(e.data.data);
+			self.lastAudio = e.data;
+			Smallog.Debug("Got Data from Worker: " + JSON.stringify(e.data));
+		};
 
 		// worker Error
-		this.weasWorker.addEventListener("error", (e) => {
+		this.weasWorker.onerror = (e) => {
 			Smallog.Error("weas error: [" + e.filename + ", Line: " + e.lineno + "] " + e.message);
-		}, true);
+		};
 
 		window['wallpaperRegisterAudioListener']((audioArray) => {
 			// check proof
@@ -102,9 +102,8 @@ export class WEAS extends CComponent {
 				Smallog.Error("audioListener: received invalid audio data array. Length: " + audioArray.length);
 				return;
 			}
-			let audBuff = new Float64Array(audioArray);
+			let audBuff = new Float32Array(audioArray);
 
-			
 			Smallog.Debug("Sent Data to Worker: " + JSON.stringify(audioArray));
 			// post web worker task
 			this.weasWorker.postMessage({

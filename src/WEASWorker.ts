@@ -109,7 +109,7 @@ class AudioProcessor {
     private peakFilter(array, amount) {
         var oldMax = 0;
         var newMax = 0;
-        var newArray = new Float64Array(array.length);
+        var newArray = new Float32Array(array.length);
         // pow this shit
         for (var i = 0; i < array.length; i++) {
             if (array[i] > oldMax) oldMax = array[i];
@@ -124,7 +124,7 @@ class AudioProcessor {
 
     // smooth values for full range
     private smoothArray(array, smoothing) {
-        var newArray = new Float64Array(array.length);
+        var newArray = new Float32Array(array.length);
         // make smoothed array
         for (var i = 0; i < array.length; i++) {
             var sum = 0;
@@ -153,15 +153,10 @@ const proc = new AudioProcessor();
 // get the typed object
 const ctx: Worker = self as any;
 
-console.error("In Worker call!");
-
 ctx.addEventListener("message", (e) => {
-    
-    console.error("In Worker with data callback!");
-
     let eventData = e.data;
     // can be null
-    let data = new Float64Array(eventData.audio);
+    let data = new Float32Array(eventData.audio);
     let lastData = eventData.last;
     let settings = eventData.settings;
 
