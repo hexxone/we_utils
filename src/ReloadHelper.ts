@@ -2,12 +2,14 @@
  * @author D.Thiele @https://hexx.one
  */
 
+import { Ready } from "./Ready";
+
 export class ReloadHelper {
 
     waitSeconds = 3;
 
     constructor() {
-        $(() => {
+        Ready.On(() => {
             this.injectCSS();
             this.injectHTML();
         });

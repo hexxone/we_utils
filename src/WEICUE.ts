@@ -20,6 +20,7 @@
 
 import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
+import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
 import { WEAS } from "./WEAS";
 
@@ -41,7 +42,7 @@ export class WEICUE extends CComponent {
 
     private weas: WEAS = null;
 
-    public settings: CUESettings = null;
+    public settings: CUESettings = new CUESettings();
 
     // runtime values
     PAUSED = false;
@@ -55,10 +56,9 @@ export class WEICUE extends CComponent {
     helperContext = null;
 
 
-    constructor(weas: WEAS, settings: CUESettings = new CUESettings()) {
+    constructor(weas: WEAS) {
         super();
         this.weas = weas;
-        this.settings = settings;
 
         // Plugin handler
         window['wallpaperPluginListener'] = {
@@ -68,7 +68,7 @@ export class WEICUE extends CComponent {
                 if (name === 'led') this.isAvailable = true;
             }
         }
-        $(() => {
+        Ready.On(() => {
             // inject helpers
             this.injectCSS();
             this.injectHTML();
@@ -398,7 +398,7 @@ AAAASUVORK5CYII=
         document.body.appendChild(this.helperCanvas);
 
         // update devices about every 33ms/30fps. iCue doesnt really support higher values 
-        this.icueInterval = setInterval(this.updateFrame, 1000 / 30);
+        this.icueInterval = setInterval(() => this.updateFrame(), 1000 / 30);
     }
 
     // will initialize ICUE api & usage

@@ -10,13 +10,15 @@
  * Displays a seizure warning image centered on html for a given Time.
  */
 
+import { Ready } from "./Ready";
+
 export class WarnHelper {
 
     animationSeconds = 1;
     waitSeconds = 10;
 
     constructor() {
-        $(() => {
+        Ready.On(() => {
             this.injectCSS();
             this.injectHTML();
         });
