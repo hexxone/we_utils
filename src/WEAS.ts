@@ -25,7 +25,11 @@
 
 import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
+import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
+
+import Worker from 'worker-loader!./WEAS.worker';
+
 
 export class WEASettings extends CSettings {
 	audioprocessing: boolean = true;
@@ -59,12 +63,17 @@ export class WEAS extends CComponent {
 	public lastAudio = null;
 
 	// settings object
-	public settings: WEASettings = null;
+	public settings: WEASettings = new WEASettings();
 
-	constructor(settings: WEASettings = new WEASettings()) {
+	constructor() {
 		super();
-		this.settings = settings;
+		// delay audio initialization for some time
+		Ready.On(() => {
+			setTimeout(() => this.realInit(), 3000);
+		});
+	}
 
+	private realInit() {
 		// if wallpaper engine context given, listen
 		if (!window['wallpaperRegisterAudioListener']) {
 			Smallog.Info("'window.wallpaperRegisterAudioListener' not given!");
@@ -72,12 +81,13 @@ export class WEAS extends CComponent {
 		}
 
 		// initialize web worker
-		this.weasWorker = new Worker('./js/worker/weasWorker.js');
+		this.weasWorker = new Worker();
 
 		// worker event data
 		this.weasWorker.addEventListener("message", (e) => {
 			e.data.data = new Float64Array(e.data.data);
 			this.lastAudio = e.data;
+			Smallog.Debug("Got Data from Worker: " + JSON.stringify(this.lastAudio));
 		}, true);
 
 		// worker Error
@@ -85,8 +95,7 @@ export class WEAS extends CComponent {
 			Smallog.Error("weas error: [" + e.filename + ", Line: " + e.lineno + "] " + e.message);
 		}, true);
 
-		// intialize wallpaper engine audio listener when laoded
-		$(() => window['wallpaperRegisterAudioListener']((audioArray) => {
+		window['wallpaperRegisterAudioListener']((audioArray) => {
 			// check proof
 			if (!audioArray) return;
 			if (audioArray.length != 128) {
@@ -94,13 +103,16 @@ export class WEAS extends CComponent {
 				return;
 			}
 			let audBuff = new Float64Array(audioArray);
+
+			
+			Smallog.Debug("Sent Data to Worker: " + JSON.stringify(audioArray));
 			// post web worker task
 			this.weasWorker.postMessage({
-				settings: this.settings,
+				settings: this.GetSettingsObj(),
 				last: this.lastAudio,
 				audio: audBuff.buffer
 			}, [audBuff.buffer]);
-		}));
+		});
 	}
 
 	hasAudio() {
