@@ -19,18 +19,20 @@
 
 const wrk: ServiceWorker = self as any;
 
-console.info('[OfflineWorker] : executing.');
+
 
 // A version number is useful when updating the worker logic,
 // allowing you to remove outdated cache entries during the update.
-var version = 'v1::';
+const version = 'v1::';
+const wName = "[OfflineWorker] ";
+
+console.info(wName + 'executing.');
 
 // The install event fires when the service worker is first installed.
 // You can use this event to prepare the service worker to be able to serve
 // files while visitors are offline.
-
 wrk.addEventListener("install", function (event: any) {
-  console.info('[OfflineWorker] : install event in progress.');
+  console.info(wName + 'install event in progress.');
 
   // get the path for the .json file which contains the files to-be-cached
   // These resources will be downloaded and cached by the service worker
@@ -48,7 +50,7 @@ wrk.addEventListener("install", function (event: any) {
         // then map the array and add one-by-one
         .then(cache => data.map((url) => cache.add(url))))
       // log success
-      .then(() => console.info('[OfflineWorker] : install completed'))
+      .then(() => console.info(wName + 'install completed'))
   );
 });
 
@@ -57,9 +59,9 @@ wrk.addEventListener("install", function (event: any) {
 // comprehends even the request for the HTML page on first load, as well as JS and
 // CSS resources, fonts, any images, etc.
 wrk.addEventListener("fetch", function (event: any) {
-  console.info('[OfflineWorker] : fetch event in progress.');
+  console.info(wName + 'fetch event in progress.');
   if (event.request.method !== 'GET') {
-    console.info('[OfflineWorker] : fetch event ignored.', event.request.method, event.request.url);
+    console.info(wName + 'fetch event ignored.', event.request.method, event.request.url);
     return;
   }
 
@@ -71,7 +73,7 @@ wrk.addEventListener("fetch", function (event: any) {
       .then(async (cached) => {
         // return immediately if cache successfull
         if (cached) {
-          console.info('[OfflineWorker] : fetch event(cached): ', event.request.url);
+          console.info(wName + 'fetch event(cached): ', event.request.url);
           return cached
         }
 
@@ -83,11 +85,11 @@ wrk.addEventListener("fetch", function (event: any) {
         // This is the response that will be stored on the ServiceWorker cache.
         function fetchedFromNetwork(response) {
           var cacheCopy = response.clone();
-          console.info('[OfflineWorker] : fetch response from network.', event.request.url);
+          console.info(wName + 'fetch response from network.', event.request.url);
           // We open a cache to store the response for this request.
           caches.open(version + 'pages')
             .then((cache) => cache.put(event.request, cacheCopy))
-            .then(() => console.info('[OfflineWorker] : fetch response stored in cache.', event.request.url));
+            .then(() => console.info(wName + 'fetch response stored in cache.', event.request.url));
           // Return the response so that the promise is settled in fulfillment.
           return response;
         }
@@ -104,7 +106,7 @@ wrk.addEventListener("fetch", function (event: any) {
              - Generate a Response programmaticaly, as shown below, and return that.
         */
         function unableToResolve() {
-          console.info('[OfflineWorker] : fetch request failed in both cache and network.');
+          console.info(wName + 'fetch request failed in both cache and network.');
           return new Response('Service Unavailable', {
             status: 503,
             statusText: 'Service Unavailable',
@@ -119,7 +121,7 @@ wrk.addEventListener("fetch", function (event: any) {
           // We handle the network request with success and failure scenarios.
           .then(fetchedFromNetwork, unableToResolve)
           // we are done
-          .then(() => console.info('[OfflineWorker] : fetch event(networked): ', event.request.url))
+          .then(() => console.info(wName + 'fetch event(networked): ', event.request.url))
           // We should catch errors on the fetchedFromNetwork handler as well.
           .catch(unableToResolve);
       })
@@ -133,7 +135,7 @@ wrk.addEventListener("fetch", function (event: any) {
    installing.
 */
 wrk.addEventListener("activate", function (event: any) {
-  console.info('[OfflineWorker] : activate event in progress.');
+  console.info(wName + 'activate event in progress.');
   event.waitUntil(async () => {
     // Feature-detect navigation preloads!
     if (self['registration'] && self['registration'].navigationPreload) {
@@ -149,7 +151,7 @@ wrk.addEventListener("activate", function (event: any) {
           // Return a promise that's fulfilled when each outdated cache is deleted.
           .map((key) => caches.delete(key))))
       // completed
-      .then(() => console.info('[OfflineWorker] : activate completed.'));
+      .then(() => console.info(wName + 'activate completed.'));
   });
 
   // Tell the active service worker to take control of the page immediately.
