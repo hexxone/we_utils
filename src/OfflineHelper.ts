@@ -22,14 +22,15 @@ import { Smallog } from "./Smallog";
 import OfflineWorker from 'worker-loader!./OfflineWorker';
 
 export module OfflineHelper {
-    // function helper, so OfflineWorker is actually packed
+    // function helper, so OfflineWorker is actually processed
     function DontRemove() { return new OfflineWorker() };
 
-    export async function Register(workerPath: string = "OfflineWorker.worker.js?jsonPath=offlinefiles.json") {
+    export async function Register(call: any = null, workerPath: string = "OfflineWorker.worker.js?jsonPath=offlinefiles.json") {
         if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register(workerPath).then(
-                () => Smallog.Info('[OfflineHelper]: service-worker registration complete.'),
-                () => Smallog.Error('[OfflineHelper]: service-worker registration failure.'));
+            await navigator.serviceWorker.register(workerPath)
+                .then(() => Smallog.Info('[OfflineHelper]: service-worker registration complete.'),
+                      () => Smallog.Error('[OfflineHelper]: service-worker registration failure.'))
+                .then(() => call ? call() : null);
             return true;
         }
         else Smallog.Info('[OfflineHelper]: service-worker is not supported.');

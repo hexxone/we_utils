@@ -9,8 +9,8 @@
  * @see
  * REQUIREMENTS:
  * - JQUERY >= 3.3.1
- * - HTML5 supported Browser (for webAudio processing)
- * - this file needs to be in the same (root) folder as your "project.json"
+ * - HTML5 Browser
+ * - the "project.json" needs to be in the root folder like "index.html"
  * - this file needs to be included/loaded in your "index.html"
  * 
  * @description
@@ -24,6 +24,7 @@
  * - automatically detecting if the web wallpaper is opened by wallpaper engine or browser
  * - if opened by wallpaper engine, nothing will happen
  * - if opened by a browser:
+ *   - use a ServiceWorker to make page always available offline
  *   - automatically load the "project.json"
  *   - parse the settings, languages & conditions
  *   - add respective html elements for each setting type & condition
@@ -33,6 +34,8 @@
  * - react to changes made in the ui and update them in the wallpaper
  * - save changes made in the ui to localStorage
  * 
+ * @todo
+ * - inject "audio processing" setting
 */
 
 import { Ready } from "./Ready";
@@ -55,26 +58,33 @@ export class WEWWA {
     private audioCallback: any = null;
 
 
-    constructor() {
-        if (window['wallpaperRegisterAudioListener']) Smallog.Info("[WEWWA] detected wallpaper engine => Standby.");
-        else {
-            Smallog.Info("[WEWWA] wallpaper engine not detected => Init!");
-            // define audio listener first, so we dont miss when it gets registered.
-            window['wallpaperRegisterAudioListener'] = function (callback) {
-                // set callback to be called later with analysed audio data
-                this.audioCallback = callback;
-            }
-            // intialize when ready
-            Ready.On(() => {
-                // make the website available offline using service worker
-                OfflineHelper.Register();
+    constructor(finished) {
+        if (window['wallpaperRegisterAudioListener']) {
+            Smallog.Info("[WEWWA] detected wallpaper engine => Standby.");
+            finished();
+            return;
+        }
+
+        Smallog.Info("[WEWWA] wallpaper engine not detected => Init!");
+
+        // define audio listener first, so we dont miss when it gets registered.
+        window['wallpaperRegisterAudioListener'] = (callback) => {
+            // set callback to be called later with analysed audio data
+            this.audioCallback = callback;
+        }
+
+        // intialize when ready
+        Ready.On(() => {
+            // make the website available offline using service worker
+            OfflineHelper.Register(() => {
                 // continue initializing
+                finished();
                 this.Init();
             });
-        }
+        });
     }
 
-    Init = () => {
+    private Init() {
         this.LoadProjectJSON((proj) => {
             if (proj.type != "web") {
                 Smallog.Error("Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...");
@@ -89,7 +99,7 @@ export class WEWWA {
         });
     }
 
-    LoadProjectJSON = (complete) => {
+    private LoadProjectJSON(complete) {
         $.ajax({
             url: "project.json",
             beforeSend: (xhr) => xhr.overrideMimeType("text/plain;"),
@@ -98,7 +108,7 @@ export class WEWWA {
         });
     }
 
-    LoadStorage = () => {
+    private LoadStorage() {
         var props = this.project.general.properties;
         var last = localStorage.getItem("wewwaLastProps");
         if (last != null) {
@@ -108,7 +118,7 @@ export class WEWWA {
         }
     }
 
-    AddStyle = () => {
+    private AddStyle() {
         var st = document.createElement("style");
         st.innerHTML = `
         .wewwaMenu, .wewwaIcon {
@@ -202,7 +212,9 @@ export class WEWWA {
         document.head.append(st);
     }
 
-    AddMenu = (lang) => {
+    private AddMenu(lang) {
+        var self = this;
+
         if (this.htmlMenu) {
             document.body.removeChild(this.htmlMenu);
             document.body.removeChild(this.htmlIcon);
@@ -247,21 +259,21 @@ export class WEWWA {
             var aBtn2 = ce("a");
             var aBtn3 = ce("input");
             aBtn1.innerHTML = "Microphone";
-            aBtn1.addEventListener("click", function (e) {
-                this.requestMicrophone();
+            aBtn1.addEventListener("click", e => {
+                self.requestMicrophone();
             });
             aBtn2.innerHTML = "Select URL";
-            aBtn2.addEventListener("click", function (e) {
+            aBtn2.addEventListener("click", e => {
                 var uri = prompt("Please enter some audio file URL\r\n\r\nYouTube, Soundcloud etc. ARE NOT YET SUPPORTED!", "https://example.com/test.mp3");
-                this.initiateAudio(uri);
+                self.initiateAudio(uri);
             });
             aBtn3.id = "wewwaAudioInput";
             aBtn3.innerHTML = "Select File";
             aBtn3.setAttribute("type", "file");
-            aBtn3.addEventListener("change", function (e) {
+            aBtn3.addEventListener("change", e => {
                 var file = e.target.files[0];
                 if (!file) return;
-                this.initiateAudio(file);
+                self.initiateAudio(file);
             });
             td1.append(aBtn1, aBtn2, aBtn3);
             row.append(td1);
@@ -279,11 +291,11 @@ export class WEWWA {
                 evt.preventDefault();
                 evt.dataTransfer.dropEffect = 'copy';
             }, false);
-            dropArea.addEventListener("drop", (e) => {
+            dropArea.addEventListener("drop", e => {
                 e.stopPropagation();
                 e.preventDefault();
                 var droppedFiles = e.dataTransfer.files;
-                this.initiateAudio(droppedFiles[0]);
+                self.initiateAudio(droppedFiles[0]);
             }, false);
             dropt1.append(dropArea);
             dropRow.append(dropt1, dropt2);
@@ -294,8 +306,8 @@ export class WEWWA {
             var hrtd2 = ce("td");
             var hrstop = ce("a");
             hrstop.innerHTML = "Stop All Audio";
-            hrstop.addEventListener("click", function (e) {
-                this.stopAudioInterval();
+            hrstop.addEventListener("click", e => {
+                self.stopAudioInterval();
             });
             var hrhr = ce("hr")
             hrtd1.id = "audioMarker";
@@ -351,9 +363,9 @@ export class WEWWA {
             // if changed, do it all over again.
             lan.addEventListener("change", function (e) {
                 localStorage.setItem("wewwaLang", this.value);
-                this.AddMenu(this.value);
-                this.UpdateSettings();
-                this.html.icon.click();
+                self.AddMenu(this.value);
+                self.UpdateSettings();
+                (self.htmlIcon as any).click();
             });
             td2.setAttribute("colspan", 2);
             td2.append(lan);
@@ -379,7 +391,7 @@ export class WEWWA {
         preFoot.innerHTML = "<br><hr>";
         var reset = ce("a");
         reset.innerHTML = "Reset Settings";
-        reset.addEventListener("click", function (e) {
+        reset.addEventListener("click", e => {
             localStorage.clear();
             location = location;
         });
@@ -408,7 +420,9 @@ export class WEWWA {
         this.htmlIcon = icon;
     }
 
-    CreateItem = (prop, itm) => {
+    private CreateItem(prop, itm) {
+        var self = this;
+
         var ce = (e) => document.createElement(e);
         var row = ce("tr");
         row.setAttribute("id", "wewwa_" + prop);
@@ -462,7 +476,7 @@ export class WEWWA {
                 sliderVal.style.width = "75%";
                 if (canEdit) {
                     sliderVal.setAttribute("value", itm.value);
-                    sliderVal.addEventListener("change", function (e) { this.SetProperty(prop, this); });
+                    sliderVal.addEventListener("change", function (e) { self.SetProperty(prop, this); });
                 }
                 else {
                     sliderVal.innerHTML = itm.value;
@@ -490,7 +504,7 @@ export class WEWWA {
         td1.append(txt);
         // listen for changes if input type (no text)
         if (inp) {
-            inp.addEventListener("change", function (e) { this.SetProperty(prop, this); });
+            inp.addEventListener("change", function (e) { self.SetProperty(prop, this); });
             td2.prepend(inp);
         }
         // append td3 or stretch td2?
@@ -505,7 +519,7 @@ export class WEWWA {
     }
 
 
-    SetProperty = (prop, elm) => {
+    public SetProperty(prop, elm) {
         // get the type and apply the value
         var props = this.project.general.properties;
         // check for legit setting...
@@ -555,11 +569,12 @@ export class WEWWA {
         }
     }
 
+    // TODO REMVOE ?
 
     // will load the given file and return it as dataURL.
     // this way we can easily store whole files in the configuration/localStorage.
     // its not safe that this works with something else than image files.
-    XHRLoadAndSaveLocal = (url, resCall) => {
+    private XHRLoadAndSaveLocal(url, resCall) {
         // Create XHR and FileReader objects
         var xhr = new XMLHttpRequest();
         var fileReader = new FileReader();
@@ -581,7 +596,7 @@ export class WEWWA {
     }
 
 
-    UpdateSettings = () => {
+    private UpdateSettings() {
         var wewwaProps = this.project.general.properties;
         localStorage.setItem("wewwaLastProps", JSON.stringify(wewwaProps));
         for (var p in wewwaProps) {
@@ -608,7 +623,6 @@ export class WEWWA {
                         //Smallog.Debug("replace: " + onlyVal + " >> " + prefix + replW);
                         cprop = cprop.replace(onlyVal, prefix + replW);
                     }
-
                 }
                 try {
                     visible = eval(cprop) == true;
@@ -640,15 +654,14 @@ export class WEWWA {
         }
     }
 
-
-    ApplyProp = (prop) => {
+    public ApplyProp(prop) {
         var wpl = window['wallpaperPropertyListener'];
         if (wpl && wpl.applyUserProperties) {
             wpl.applyUserProperties(prop);
         }
     }
 
-    rgbToHex = (rgb) => {
+    private rgbToHex(rgb) {
         function cth(c) {
             var h = Math.floor(c * 255).toString(16);
             return h.length == 1 ? "0" + h : h;
@@ -657,15 +670,15 @@ export class WEWWA {
         return "#" + cth(spl[0]) + cth(spl[1]) + cth(spl[2]);
     }
 
-    hexToRgb = (hex) => {
+    private hexToRgb(hex) {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
         return result ? [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255].join(" ") : null;
     }
 
-    requestMicrophone = () => {
+    private requestMicrophone() {
         navigator.mediaDevices.getUserMedia({
             audio: true
-        }).then(function (stream) {
+        }).then((stream) => {
             this.stopAudioInterval();
             // hack for firefox to keep stream running
             window['persistAudioStream'] = stream;
@@ -677,7 +690,7 @@ export class WEWWA {
 
             this.source.connect(this.analyser);
             this.startAudioInterval();
-        }).catch(function (err) {
+        }).catch((err) => {
             Smallog.Error(err);
             if (location.protocol != "https:") {
                 var r = confirm("Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS for this feature to work! Press 'ok'/'yes' to get redirected to HTTPS and try again.");
@@ -690,7 +703,7 @@ export class WEWWA {
     // however, wallpaper engine expects stereo data in following format:
     // 0(L: low) to 63(L: treble) and 64(R: low) to 128(R: treble)
     // so we do some array transformation... and divide by 255 (8bit-uint becomes float)
-    convertAudio = (data) => {
+    private convertAudio(data) {
         var stereo = [];
         var sIdx = 0;
         for (var i = 0; i < 64; i++) {
@@ -701,7 +714,7 @@ export class WEWWA {
     }
 
 
-    initiateAudio = (data) => {
+    private initiateAudio(data) {
         // clear up
         this.stopAudioInterval();
         // create player
@@ -725,11 +738,11 @@ export class WEWWA {
     }
 
 
-    startAudioInterval = () => {
+    private startAudioInterval() {
         var data = new Uint8Array(128);
         // 33ms ~~ 30fps
         this.audioInterval = setInterval(() => {
-            if (this.audioCallback != null) {
+            if (this.audioCallback == null) {
                 this.stopAudioInterval();
                 alert("no AudioCallback!");
                 return;
@@ -742,7 +755,7 @@ export class WEWWA {
         this.ApplyProp({ audioprocessing: { value: true } })
     }
 
-    stopAudioInterval = () => {
+    public stopAudioInterval() {
         window['persistAudioStream'] = null;
         $("#wewwaAudioInput").val("");
         if (this.audio)

@@ -74,7 +74,7 @@ export class WEAS extends CComponent {
 
 	private realInit() {
 		// if wallpaper engine context given, listen
-		if (!['wallpaperRegisterAudioListener']) {
+		if (!window['wallpaperRegisterAudioListener']) {
 			Smallog.Info("'window.wallpaperRegisterAudioListener' not given!");
 			return;
 		}
@@ -87,7 +87,7 @@ export class WEAS extends CComponent {
 		this.weasWorker.onmessage = (e) => {
 			e.data.data = new Float32Array(e.data.data);
 			self.lastAudio = e.data;
-			Smallog.Debug("Got Data from Worker: " + JSON.stringify(e.data));
+			Smallog.Debug("Got Data from Worker! Offset= " + (performance.now() / 1000 - e.data.time) + ", Data= " + JSON.stringify(e.data));
 		};
 
 		// worker Error
@@ -108,13 +108,14 @@ export class WEAS extends CComponent {
 			// post web worker task
 			this.weasWorker.postMessage({
 				settings: this.GetSettingsObj(),
-				last: this.lastAudio,
+				last: Object.assign({}, this.lastAudio),
+				time: performance.now() / 1000,
 				audio: audBuff.buffer
 			}, [audBuff.buffer]);
 		});
 	}
 
-	hasAudio() {
+	public hasAudio() {
 		// return false if there is no data or its invalid due to time (> 3s old)
 		return this.lastAudio && !this.lastAudio.silent &&
 			(performance.now() / 1000 - this.lastAudio.time < 3);

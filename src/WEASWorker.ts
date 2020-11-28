@@ -54,7 +54,7 @@ class AudioProcessor {
         if (settings.value_smoothing > 0) this.smoothArray(data, settings.value_smoothing);
 
         // process with last data?
-        if (lastData) this.applyValueLeveling(data, lastData.data, settings);
+        if (lastData && lastData.data) this.applyValueLeveling(data, lastData.data, settings);
     }
 
     // correct pink noise for first and second half
@@ -193,7 +193,7 @@ ctx.addEventListener("message", (e) => {
         range: max - min,
         silent: (max < settings.minimum_volume / 1000),
         intensity: (bass * 8 - mids + peaks) / 6 / average,
-        time: performance.now() / 1000,
+        time: eventData.time,
         data: data.buffer,
     }, [data.buffer]);
 });
