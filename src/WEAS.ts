@@ -67,9 +67,7 @@ export class WEAS extends CComponent {
 	constructor() {
 		super();
 		// delay audio initialization for some time
-		Ready.On(() => {
-			setTimeout(() => this.realInit(), 3000);
-		});
+		Ready.On(() => this.realInit());
 	}
 
 	private realInit() {

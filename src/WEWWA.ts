@@ -36,11 +36,14 @@
  * 
  * @todo
  * - inject "audio processing" setting
+ * - Annoying Cookie Popup (Thanks DSGVO)
+ * 
 */
 
 import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
 import { OfflineHelper } from "./OfflineHelper";
+import { CC } from "cookieconsent";
 
 export class WEWWA {
 
@@ -75,6 +78,20 @@ export class WEWWA {
 
         // intialize when ready
         Ready.On(() => {
+            if(CC) {}
+            const cc = window['cookieconsent'].initialise({
+                palette: {
+                    popup: {
+                        background: "#000"
+                    },
+                    button: {
+                        background: "#f1d600"
+                    }
+                },
+                position: "bottom-left",
+                theme: "edgeless"
+            });
+
             // make the website available offline using service worker
             OfflineHelper.Register(() => {
                 // continue initializing
@@ -572,7 +589,7 @@ export class WEWWA {
     // TODO REMVOE ?
 
     // will load the given file and return it as dataURL.
-    // this way we can easily store whole files in the configuration/localStorage.
+    // this way we can easily store whole files in the configuration & localStorage.
     // its not safe that this works with something else than image files.
     private XHRLoadAndSaveLocal(url, resCall) {
         // Create XHR and FileReader objects
