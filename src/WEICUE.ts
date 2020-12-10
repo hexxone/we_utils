@@ -24,6 +24,10 @@ import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
 import { WEAS } from "./WEAS";
 
+const ClassName: string = "[WEICUE] ";
+const canvasX: number = 23;
+const canvasY: number = 7;
+
 export class CUESettings extends CSettings {
     icue_mode: number = 1;
     icue_area_xoff: number = 50;
@@ -41,21 +45,17 @@ export class CUESettings extends CSettings {
 export class WEICUE extends CComponent {
 
     private weas: WEAS = null;
-
-    public settings: CUESettings = new CUESettings();
+    private preview: HTMLDivElement = null;
+    private helperCanvas: HTMLCanvasElement = null;
+    private helperContext: CanvasRenderingContext2D = null;
+    private icueDevices = [];
+    private icueInterval = null;
 
     // runtime values
-    PAUSED = false;
-    isAvailable = false;
-    canvasX = 23;
-    canvasY = 7;
-    icueDevices = [];
-    preview = null;
-    icueInterval = null;
-    helperCanvas = null;
-    helperContext = null;
-
-
+    public settings: CUESettings = new CUESettings();
+    public isAvailable: boolean = false;
+    public PAUSED: boolean = false;
+    
     constructor(weas: WEAS) {
         super();
         this.weas = weas;
@@ -63,7 +63,7 @@ export class WEICUE extends CComponent {
         // Plugin handler
         window['wallpaperPluginListener'] = {
             onPluginLoaded: function (name, version) {
-                Smallog.Info("Plugin: " + name + ", Version: " + version + " : registered.");
+                Smallog.Info("Plugin: " + name + ", Version: " + version + " : registered.", ClassName);
                 if (name === 'cue') this.isAvailable = true;
                 if (name === 'led') this.isAvailable = true;
             }
@@ -289,7 +289,7 @@ AAAASUVORK5CYII=
 
     // show a message by icue
     icueMessage(msg) {
-        Smallog.Debug("WEICUE MSG:  " + msg);
+        Smallog.Debug("MSG:  " + msg, ClassName);
         $("#icueholder").css('opacity', 1);
         $("#icuetext").html(msg);
         $("#icueholder").fadeIn({ queue: false, duration: "slow" });
@@ -383,7 +383,7 @@ AAAASUVORK5CYII=
 
         this.initCUE(0);
 
-        Smallog.Debug("weiCUE: init...");
+        Smallog.Debug("init...", ClassName);
 
         // recreate if reinit
         if (this.icueInterval) clearInterval(this.icueInterval);
@@ -391,8 +391,8 @@ AAAASUVORK5CYII=
         // setup canvas
         this.helperCanvas = document.createElement("canvas");
         this.helperCanvas.id = "helpCvs";
-        this.helperCanvas.width = this.canvasX;
-        this.helperCanvas.height = this.canvasY;
+        this.helperCanvas.width = canvasX;
+        this.helperCanvas.height = canvasY;
         this.helperCanvas.style.display = "none";
         this.helperContext = this.helperCanvas.getContext("2d");
         document.body.appendChild(this.helperCanvas);
@@ -437,10 +437,10 @@ AAAASUVORK5CYII=
         // projection mode
         if (sett.icue_mode == 1) {
             // get scaled down image data and encode it for icue
-            var encDat = this.getEncodedCanvasImageData(this.helperContext.getImageData(0, 0, this.canvasX, this.canvasY));
+            var encDat = this.getEncodedCanvasImageData(this.helperContext.getImageData(0, 0, canvasX, canvasY));
             // update all icueDevices with data
             for (var xi = 0; xi < this.icueDevices.length; xi++) {
-                window['cue'].setLedColorsByImageData(xi, encDat, this.canvasX, this.canvasY);
+                window['cue'].setLedColorsByImageData(xi, encDat, canvasX, canvasY);
             }
         }
         // color mode
@@ -476,18 +476,16 @@ AAAASUVORK5CYII=
 
         if (sett.icue_mode == 1) {
             // get helper vars
-            var cueWid = this.canvasX;
-            var cueHei = this.canvasY;
-            var area = this.getArea();
+            var area: any = this.getArea(false);
             var hctx = this.helperContext;
             // get real rgb values
             var spl = sett.main_color.split(' ') as unknown[];
             for (var i = 0; i < spl.length; i++) spl[i] = (spl[i] as number * 255);
             // overlay "decay" style
             hctx.fillStyle = "rgba(" + spl.join(", ") + ", " + sett.icue_area_decay / 100 + ")";
-            hctx.fillRect(0, 0, cueWid, cueHei);
+            hctx.fillRect(0, 0, canvasX, canvasY);
             // scale down and copy the image to the helper canvas
-            hctx.drawImage(mainCanvas, area.left, area.top, area.width, area.height, 0, 0, cueWid, cueHei);
+            hctx.drawImage(mainCanvas, area.left, area.top, area.width, area.height, 0, 0, canvasX, canvasY);
             // blur the helper projection canvas
             if (sett.icue_area_blur > 0) this.gBlurCanvas(this.helperCanvas, hctx, sett.icue_area_blur);
         }

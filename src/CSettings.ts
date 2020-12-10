@@ -7,8 +7,10 @@
  * See LICENSE file in the project root for full license information.
  * 
  * @description
- * Settings interface, used for type-secure setting applying.
- * All Settings-classes should be dereived frrom this one.
+ * Core Settings interface, used for type-secure setting applying.
+ * 
+ * All Settings-classes should be dereived from this one.
+ * 
  */
 
 import { Smallog } from "./Smallog";
