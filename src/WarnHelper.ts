@@ -24,7 +24,7 @@ export class WarnHelper {
         });
     }
 
-    injectCSS() {
+    private injectCSS() {
         var st = document.createElement("style");
         st.innerHTML = `
         #triggerwarn {
@@ -41,7 +41,7 @@ export class WarnHelper {
         document.head.append(st);
     }
 
-    injectHTML() {
+    private injectHTML() {
         var outer = document.createElement("img");
         outer.id = "triggerwarn";
         outer.setAttribute("src", `
@@ -577,7 +577,7 @@ B/x9OcNpH2VDkjgAAAABJRU5ErkJggg==
         document.body.append(outer);
     }
 
-    Show(callback) {
+    public Show(callback) {
         // show it
         $("#triggerwarn").addClass("show");
         // wait some time

@@ -1,9 +1,32 @@
+/**
+ * 
+ * @author D.Thiele @https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2020 D.Thiele All rights reserved.  
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ * 
+ * @description
+ * This is a webpack plugin for easily making your webapp available Offline.
+ * It will simply output a json list of files to cache for the Service Worker on build.
+ * 
+ * In your source, you just 'require' and 'Register()' the OfflineHelper.
+ * The OfflineHelper will then require the OfflineWorker in background.
+ * 
+ * The OfflineWorker will then: 
+ * 1. launch itself
+ * 2. load the 'offlinefiles.json' list 
+ * 3. cache all files in it
+ * 4. return cached files if network fetching fails
+ * 
+ * @see
+ * You can also ignore this plugin and create the 'offlinefiles.json' yourself.
+ */
 
 
 const fs = require("fs");
 const validate = require('schema-utils');
-
-// eslint-disable-next-line global-require
 const { RawSource } = require('webpack-sources');
 
 const pluginName = 'OfflinePlugin';

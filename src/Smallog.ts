@@ -2,6 +2,21 @@
  * @author D.Thiele @https://hexx.one
  */
 
+
+function TraceCall(def: string) {
+    try {
+        throw new Error("TraceCall()");
+    }
+    catch (e) {
+        // Examine e.stack here
+        if (e.stack) {
+            const splt = e.stack.split(/\n/);
+            if (splt.length > 3) return "[" + splt[3].trim().substring(3) + "] ";
+        }
+    }
+    return def;
+}
+
 export enum LogLevel {
     Error = 0,
     Info = 1,
@@ -26,21 +41,22 @@ export module Smallog {
         preFix = pre;
     }
 
-    export function Error(msg: string) {
-        Log(console.error, msg);
+    export function Error(msg: string, hdr: string = preFix) {
+        Log(console.error, msg, TraceCall(hdr));
     }
 
-    export function Info(msg: string) {
-        if (logLevel >= 1) Log(console.info, msg);
+    export function Info(msg: string, hdr: string = preFix) {
+        if (logLevel >= 2) hdr = TraceCall(hdr);
+        if (logLevel >= 1) Log(console.info, msg, hdr);
     }
 
-    export function Debug(msg: string) {
-        if (logLevel >= 2) Log(console.debug, msg);
+    export function Debug(msg: string, hdr: string = preFix) {
+        if (logLevel >= 2) Log(console.debug, msg, TraceCall(hdr));
     }
 
-    function Log(call: any, msg: string) {
+    function Log(call: any, msg: string, hdr: string) {
         var m = msg;
         if (printTime) m = ("[" + new Date().toLocaleString() + "] ") + m;
-        call(preFix + m);
+        call(hdr + m);
     }
 }

@@ -10,6 +10,7 @@
  * @description
  * Generic Service Worker for Caching an app and making it available offline.
  * Needs to be passed the `?jsonPath=` argument with a path to a file json.
+ * Everything else is explained in between...
  * 
  * @see
  * Read more: https://ponyfoo.com/articles/progressive-networking-serviceworker
@@ -19,11 +20,9 @@
 
 const wrk: ServiceWorker = self as any;
 
-
-
 // A version number is useful when updating the worker logic,
 // allowing you to remove outdated cache entries during the update.
-const version = 'v1::';
+const version = 'v2.4::';
 const wName = "[OfflineWorker] ";
 
 console.info(wName + 'executing.');

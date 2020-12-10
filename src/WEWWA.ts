@@ -45,6 +45,8 @@ import { Smallog } from "./Smallog";
 import { OfflineHelper } from "./OfflineHelper";
 import { CC } from "cookieconsent";
 
+const LogHead = "[WEWWA] ";
+
 export class WEWWA {
 
     private project: any = null;
@@ -63,12 +65,12 @@ export class WEWWA {
 
     constructor(finished) {
         if (window['wallpaperRegisterAudioListener']) {
-            Smallog.Info("[WEWWA] detected wallpaper engine => Standby.");
+            Smallog.Info("detected wallpaper engine => Standby.", LogHead);
             finished();
             return;
         }
 
-        Smallog.Info("[WEWWA] wallpaper engine not detected => Init!");
+        Smallog.Info("wallpaper engine not detected => Init!", LogHead);
 
         // define audio listener first, so we dont miss when it gets registered.
         window['wallpaperRegisterAudioListener'] = (callback) => {
@@ -93,7 +95,7 @@ export class WEWWA {
             });
 
             // make the website available offline using service worker
-            OfflineHelper.Register(() => {
+            OfflineHelper.Register().then(() => {
                 // continue initializing
                 finished();
                 this.Init();
@@ -104,7 +106,7 @@ export class WEWWA {
     private Init() {
         this.LoadProjectJSON((proj) => {
             if (proj.type != "web") {
-                Smallog.Error("Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...");
+                Smallog.Error("Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...", LogHead);
                 return;
             }
             this.project = proj;
@@ -121,7 +123,7 @@ export class WEWWA {
             url: "project.json",
             beforeSend: (xhr) => xhr.overrideMimeType("text/plain;"),
             success: (result) => complete(JSON.parse(result)),
-            error: (xhr, status, error) => Smallog.Error(status + ": ajax error!\r\n" + error)
+            error: (xhr, status, error) => Smallog.Error(status + ": ajax error!\r\n" + error, LogHead)
         });
     }
 
@@ -131,7 +133,7 @@ export class WEWWA {
         if (last != null) {
             var merged = Object.assign(props, JSON.parse(last));
             this.project.general.properties = merged;
-            Smallog.Debug("Loaded & merged settings.")
+            Smallog.Debug("Loaded & merged settings.", LogHead)
         }
     }
 
@@ -409,14 +411,17 @@ export class WEWWA {
         var reset = ce("a");
         reset.innerHTML = "Reset Settings";
         reset.addEventListener("click", e => {
-            localStorage.clear();
-            location = location;
+            if(!window.confirm("This action will clear ALL local data!\r\n\r\nAre you sure?")) return;
+            OfflineHelper.Reset().then(() => {
+                localStorage.clear();
+                location = location;
+            });
         });
         preFoot.append(reset);
 
         // footer with ident
         var footer = ce("div");
-        footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a target=\"_blank\" href='https://hexx.one'>hexxone</a>";
+        footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a target=\"_blank\" href='https://hexx.one'>by hexxone</a>";
         // finish up menu
         menu.append(preview, header, link, tmain, preFoot, footer)
 
@@ -515,7 +520,7 @@ export class WEWWA {
                 inp.setAttribute("type", "file");
                 break;
             default:
-                Smallog.Error("unkown setting type: " + itm.type);
+                Smallog.Error("unkown setting type: " + itm.type, LogHead);
                 break;
         }
         td1.append(txt);
@@ -541,7 +546,7 @@ export class WEWWA {
         var props = this.project.general.properties;
         // check for legit setting...
         if (!props[prop]) {
-            Smallog.Error("SetProperty name not found!");
+            Smallog.Error("SetProperty name not found: " + prop, LogHead);
             return;
         }
         // enabled delayed call of settings update
@@ -572,12 +577,12 @@ export class WEWWA {
                 if (elm.name.includes("_out_")) {
                     var inpt: any = document.querySelector("#wewwa_" + prop);
                     if (inpt) inpt.value = elm.value;
-                    else Smallog.Error("Slider not found: " + prop);
+                    else Smallog.Error("Slider not found: " + prop, LogHead);
                 }
                 else {
                     var slide: any = document.querySelector("#wewwa_out_" + prop);
                     if (slide) slide.value = elm.value;
-                    else Smallog.Error("Numericupdown not found: " + prop);
+                    else Smallog.Error("Numericupdown not found: " + prop, LogHead);
                 }
             case "combo":
             case "textinput":
@@ -645,7 +650,7 @@ export class WEWWA {
                     visible = eval(cprop) == true;
                 }
                 catch (e) {
-                    Smallog.Error("Error: (" + cprop + ") for: " + p + " => " + e);
+                    Smallog.Error("Error: (" + cprop + ") for: " + p + " => " + e, LogHead);
                 }
             }
 
@@ -708,7 +713,7 @@ export class WEWWA {
             this.source.connect(this.analyser);
             this.startAudioInterval();
         }).catch((err) => {
-            Smallog.Error(err);
+            Smallog.Error(err, LogHead);
             if (location.protocol != "https:") {
                 var r = confirm("Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS for this feature to work! Press 'ok'/'yes' to get redirected to HTTPS and try again.");
                 if (r) window.location.href = window.location.href.replace("http", "https");
@@ -761,7 +766,7 @@ export class WEWWA {
         this.audioInterval = setInterval(() => {
             if (this.audioCallback == null) {
                 this.stopAudioInterval();
-                alert("no AudioCallback!");
+                Smallog.Error("no AudioCallback!", LogHead);
                 return;
             }
             this.analyser.getByteFrequencyData(data);

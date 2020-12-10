@@ -15,7 +15,7 @@ export class ReloadHelper {
         });
     }
 
-    injectCSS() {
+    private injectCSS() {
         var st = document.createElement("style");
         st.innerHTML = `
         #reload-bar {
@@ -60,7 +60,7 @@ export class ReloadHelper {
         document.head.append(st);
     }
 
-    injectHTML() {
+    private injectHTML() {
         var outer = document.createElement("div");
         outer.id = "reloader";
         var bar = document.createElement("div");
@@ -72,11 +72,11 @@ export class ReloadHelper {
         document.body.append(outer);
     }
 
-    Show() {
+    public Show() {
         $("#reload-bar, #reload-text").removeClass("done").addClass("show");
     }
 
-    Hide() {
+    public Hide() {
         $("#reload-bar, #reload-text").removeClass("show").addClass("done");
     }
 };

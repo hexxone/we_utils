@@ -2,7 +2,7 @@
  * @author D.Thiele @https://hexx.one
  * 
  * @description
- * represents a modular component for Wallpaper engine
+ * represents a Core Component for Wallpaper Engine Wallpaper
  * 
  */
 

@@ -21,19 +21,42 @@ import { Smallog } from "./Smallog";
 // this should pack the serviceworker like a webwoker.
 import OfflineWorker from 'worker-loader!./OfflineWorker';
 
+const LogHead = "[OfflineHelper] ";
+const LogErrS = "service-worker is not supported.";
+
 export module OfflineHelper {
     // function helper, so OfflineWorker is actually processed
     function DontRemove() { return new OfflineWorker() };
 
-    export async function Register(call: any = null, workerPath: string = "OfflineWorker.worker.js?jsonPath=offlinefiles.json") {
-        if ('serviceWorker' in navigator) {
-            await navigator.serviceWorker.register(workerPath)
-                .then(() => Smallog.Info('[OfflineHelper]: service-worker registration complete.'),
-                      () => Smallog.Error('[OfflineHelper]: service-worker registration failure.'))
-                .then(() => call ? call() : null);
-            return true;
-        }
-        else Smallog.Info('[OfflineHelper]: service-worker is not supported.');
-        return false;
+    export function Register(workerPath: string = "js/OfflineWorker.worker.js?jsonPath=/js/offlinefiles.json") {
+        return new Promise(async (resolve) => {
+            if ('serviceWorker' in navigator) {
+                await navigator.serviceWorker.register(workerPath)
+                    .then(() => Smallog.Info('service-worker registration complete.', LogHead),
+                        () => Smallog.Error('service-worker registration failure.', LogHead))
+                    .then(() => resolve(true));
+                return true;
+            }
+            else {
+                Smallog.Error(LogErrS, LogHead);
+                resolve(false);
+            }
+        });
+    }
+
+    export async function Reset() {
+        return new Promise((resolve) => {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(async registrations => {
+                    for (let registration of registrations)
+                        await registration.unregister();
+                    resolve(true);
+                });
+            }
+            else {
+                Smallog.Error(LogErrS, LogHead);
+                resolve(false);
+            }
+        });
     }
 }
