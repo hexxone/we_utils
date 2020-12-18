@@ -16,7 +16,7 @@
  * ServiceWorker is a progressive technology. Some browsers will be unsupported...
  */
 
-import { Smallog } from "./Smallog";
+import { Smallog } from "../Smallog";
 
 // this should pack the serviceworker like a webwoker.
 import OfflineWorker from 'worker-loader!./OfflineWorker';
@@ -28,10 +28,15 @@ export module OfflineHelper {
     // function helper, so OfflineWorker is actually processed
     function DontRemove() { return new OfflineWorker() };
 
-    export function Register(workerPath: string = "js/OfflineWorker.worker.js?jsonPath=/js/offlinefiles.json") {
+    // In order to intercept ALL fetch-requests offline, the scope "/" (root) is required.
+    // when you put in in a sub-directory like "/js/", the scope is also "/js/".
+    // Then, your HTTP Server will have to send the REPONSE HEADER `service-worker-allowed: /`
+    // otherwise it will cause an ERROR in your Browser. So: Putting the ServiceWorker in root folder is easiest.
+    // obviously with webpack, this causes a problem, when you are not outputting directly into the root dir...
+    export function Register(workerPath: string = "OfflineWorker.worker.js?jsonPath=offlinefiles.json") {
         return new Promise(async (resolve) => {
             if ('serviceWorker' in navigator) {
-                await navigator.serviceWorker.register(workerPath)
+                await navigator.serviceWorker.register(workerPath, { scope: "/" })
                     .then(() => Smallog.Info('service-worker registration complete.', LogHead),
                         () => Smallog.Error('service-worker registration failure.', LogHead))
                     .then(() => resolve(true));
@@ -44,6 +49,7 @@ export module OfflineHelper {
         });
     }
 
+    // unregister all service workers
     export async function Reset() {
         return new Promise((resolve) => {
             if ('serviceWorker' in navigator) {

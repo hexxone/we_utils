@@ -23,12 +23,14 @@
  * 
 */
 
-import { CComponent } from "./CComponent";
-import { CSettings } from "./CSettings";
-import { Ready } from "./Ready";
-import { Smallog } from "./Smallog";
+import { CComponent } from "../CComponent";
+import { CSettings } from "../CSettings";
+import { Ready } from "../Ready";
+import { Smallog } from "../Smallog";
 
 import WEASWorker from 'worker-loader!./WEASWorker';
+
+import wasmWorker from 'wasm-worker';
 
 export class WEASettings extends CSettings {
 	audioprocessing: boolean = true;
@@ -55,8 +57,6 @@ export class WEASettings extends CSettings {
 
 export class WEAS extends CComponent {
 
-	// audio processing worker
-	private weasWorker: WEASWorker = null;
 
 	// last processed audio object
 	public lastAudio = null;
@@ -77,40 +77,56 @@ export class WEAS extends CComponent {
 			return;
 		}
 
-		// initialize web worker
-		this.weasWorker = new WEASWorker();
-
 		var self = this;
-		// worker event data
-		this.weasWorker.onmessage = (e) => {
-			e.data.data = new Float32Array(e.data.data);
-			self.lastAudio = e.data;
-			Smallog.Debug("Got Data from Worker! Offset= " + (performance.now() / 1000 - e.data.time) + ", Data= " + JSON.stringify(e.data));
-		};
 
-		// worker Error
-		this.weasWorker.onerror = (e) => {
-			Smallog.Error("weas error: [" + e.filename + ", Line: " + e.lineno + "] " + e.message);
-		};
+		wasmWorker('WEAS.wasm')
+			.then(module => {
 
-		window['wallpaperRegisterAudioListener']((audioArray) => {
-			// check proof
-			if (!audioArray) return;
-			if (audioArray.length != 128) {
-				Smallog.Error("audioListener: received invalid audio data array. Length: " + audioArray.length);
-				return;
-			}
-			let audBuff = new Float32Array(audioArray);
+				window['wallpaperRegisterAudioListener']((audioArray) => {
+					// check proof
+					if (!audioArray) return;
+					if (audioArray.length != 128) {
+						Smallog.Error("audioListener: received invalid audio data array. Length: " + audioArray.length);
+						return;
+					}
+					let audBuff = new Float32Array(audioArray);
+					Smallog.Debug("Send Data to Worker: " + JSON.stringify(audioArray));
 
-			Smallog.Debug("Sent Data to Worker: " + JSON.stringify(audioArray));
-			// post web worker task
-			this.weasWorker.postMessage({
-				settings: this.GetSettingsObj(),
-				last: Object.assign({}, this.lastAudio),
-				time: performance.now() / 1000,
-				audio: audBuff.buffer
-			}, [audBuff.buffer]);
-		});
+					// post web worker task
+					module.run(({
+						importObject,
+						instance,
+						params
+					}
+					// the code ran in web worker
+					) => {
+						//const sum = instance.exports.message(...params);
+						const sum = instance.exports.message(params.time);
+						return 'got time message: ' + sum;
+					},
+					// the object posted to web worker
+					{
+						settings: this.GetSettingsObj(),
+						last: Object.assign({}, this.lastAudio),
+						time: performance.now() / 1000,
+						audio: audBuff.buffer
+					})
+					// the result from web worker
+					.then(e => {
+						e.data.data = new Float32Array(e.data.data);
+						self.lastAudio = e.data;
+						Smallog.Debug("Got Data from Worker! Offset= " + (performance.now() / 1000 - e.data.time) + ", Data= " + JSON.stringify(e.data));
+					});
+				});
+
+
+			})
+			.catch(ex => {
+				// ex is a string that represents the exception
+				Smallog.Error("weas error: [" + ex.filename + ", Line: " + ex.lineno + "] " + ex.message);
+			});
+
+
 	}
 
 	public hasAudio() {

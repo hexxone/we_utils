@@ -58,7 +58,8 @@ wrk.addEventListener("install", function (event: any) {
 // comprehends even the request for the HTML page on first load, as well as JS and
 // CSS resources, fonts, any images, etc.
 wrk.addEventListener("fetch", function (event: any) {
-  console.info(wName + 'fetch event in progress.');
+  //console.info(wName + 'fetch event in progress.');
+  
   if (event.request.method !== 'GET') {
     console.info(wName + 'fetch event ignored.', event.request.method, event.request.url);
     return;

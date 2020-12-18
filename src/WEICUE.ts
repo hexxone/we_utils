@@ -22,7 +22,7 @@ import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
 import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
-import { WEAS } from "./WEAS";
+import { WEAS } from "./weas/WEAS";
 
 const ClassName: string = "[WEICUE] ";
 const canvasX: number = 23;

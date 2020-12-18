@@ -8,6 +8,11 @@
  * 
  * @description
  * Displays a seizure warning image centered on html for a given Time.
+ * 
+ * @todo
+ * - add trigger warn languages to project json
+ * - add trigger warn as html
+ * - Remove embedded image
  */
 
 import { Ready } from "./Ready";
