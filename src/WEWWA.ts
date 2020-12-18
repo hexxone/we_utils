@@ -42,7 +42,7 @@
 
 import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
-import { OfflineHelper } from "./OfflineHelper";
+import { OfflineHelper } from "./offline/OfflineHelper";
 import { CC } from "cookieconsent";
 
 const LogHead = "[WEWWA] ";
@@ -256,6 +256,7 @@ export class WEWWA {
         header.innerHTML = "<h2>" + proj.title + "</h2>";
         // create workshop link
         var link = ce("a");
+        link.setAttribute("rel", "noreferrer");
         link.setAttribute("href", "https://steamcommunity.com/sharedfiles/filedetails/?id=" + proj.workshopid);
         link.setAttribute("target", "_blank");
         link.innerHTML = "<h3>Open Workshop Page</h3>";
@@ -351,7 +352,7 @@ export class WEWWA {
             // add html struct
             var row = ce("tr");
             var td1 = ce("td");
-            td1.innerHTML = "<h4>🇩🇪🇬🇧🇮🇹🇷🇺🇨🇳</h4>";
+            td1.innerHTML = "<h1>🇩🇪🇬🇧🇮🇹🇷🇺🇨🇳</h1>";
             var td2 = ce("td");
             var lan = ce("select");
             // process all
@@ -421,7 +422,7 @@ export class WEWWA {
 
         // footer with ident
         var footer = ce("div");
-        footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a target=\"_blank\" href='https://hexx.one'>by hexxone</a>";
+        footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a rel=\"noreferrer\" target=\"_blank\" href=\"https://hexx.one\">by hexxone</a>";
         // finish up menu
         menu.append(preview, header, link, tmain, preFoot, footer)
 

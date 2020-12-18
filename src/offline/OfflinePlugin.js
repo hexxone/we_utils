@@ -35,7 +35,7 @@ const pluginName = 'OfflinePlugin';
 const schema = {
     type: 'object',
     properties: {
-        outdir: {
+        staticdir: {
             type: 'string'
         },
         outfile: {
@@ -90,7 +90,7 @@ class OfflinePlugin {
                 var filelist = [];
 
                 // add static files from folder
-                var sFiles = getAllFiles(this.options.outdir, "");
+                var sFiles = getAllFiles(this.options.staticdir, "");
                 for (var staticFile in sFiles) {
                     filelist.push(sFiles[staticFile]);
                 }
@@ -98,7 +98,7 @@ class OfflinePlugin {
                 // Loop through all compiled assets,
                 // adding a new line item for each filename.
                 for (var filename in compilation.assets) {
-                    filelist.push('/' + filename);
+                    filelist.push('/'+ filename);
                 }
 
                 // add additional files anyway?
