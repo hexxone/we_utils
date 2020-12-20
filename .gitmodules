@@ -1,0 +1,3 @@
+[submodule "src/wasc-worker"]
+	path = src/wasc-worker
+	url = https://github.com/hexxone/wasc-worker.git
