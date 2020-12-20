@@ -119,14 +119,7 @@ export class WEAS extends CComponent {
 					});
 				});
 
-
-			})
-			.catch(ex => {
-				// ex is a string that represents the exception
-				Smallog.Error("weas error: [" + ex.filename + ", Line: " + ex.lineno + "] " + ex.message);
-			});
-
-
+			}).catch(ex => Smallog.Error(JSON.stringify(ex)));
 	}
 
 	public hasAudio() {
