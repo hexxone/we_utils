@@ -78,7 +78,7 @@ function compileWasm(inputPath) {
 }
 
 // actual webpack plugin
-class WasmPlugin {
+class WascPlugin {
 
     options = {};
 
@@ -124,4 +124,4 @@ class WasmPlugin {
     }
 }
 
-module.exports = WasmPlugin;
+module.exports = WascPlugin;
