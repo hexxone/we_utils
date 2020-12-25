@@ -1,14 +1,13 @@
 (module
- (type $i32_i32_=>_none (func (param i32 i32)))
- (type $i32_=>_none (func (param i32)))
  (type $i32_=>_i32 (func (param i32) (result i32)))
+ (type $i32_i32_=>_none (func (param i32 i32)))
  (type $i32_i32_=>_i32 (func (param i32 i32) (result i32)))
  (type $none_=>_none (func))
+ (type $i32_=>_none (func (param i32)))
  (type $i32_i32_i32_=>_none (func (param i32 i32 i32)))
+ (type $i32_i32_i32_=>_i32 (func (param i32 i32 i32) (result i32)))
  (type $i32_i32_i32_i32_=>_none (func (param i32 i32 i32 i32)))
  (type $i32_i32_f64_=>_none (func (param i32 i32 f64)))
- (type $i32_i32_i32_=>_i32 (func (param i32 i32 i32) (result i32)))
- (type $i32_=>_f64 (func (param i32) (result f64)))
  (type $i32_i32_=>_f64 (func (param i32 i32) (result f64)))
  (type $f64_f64_=>_f64 (func (param f64 f64) (result f64)))
  (import "env" "abort" (func $~lib/builtins/abort (param i32 i32 i32 i32)))
@@ -23,21 +22,24 @@
  (data (i32.const 1868) "&\00\00\00\01\00\00\00\00\00\00\00\01\00\00\00&\00\00\00~\00l\00i\00b\00/\00a\00r\00r\00a\00y\00b\00u\00f\00f\00e\00r\00.\00t\00s")
  (data (i32.const 1932) "$\00\00\00\01\00\00\00\00\00\00\00\01\00\00\00$\00\00\00I\00n\00d\00e\00x\00 \00o\00u\00t\00 \00o\00f\00 \00r\00a\00n\00g\00e")
  (data (i32.const 1996) "$\00\00\00\01\00\00\00\00\00\00\00\01\00\00\00$\00\00\00~\00l\00i\00b\00/\00t\00y\00p\00e\00d\00a\00r\00r\00a\00y\00.\00t\00s")
- (data (i32.const 2060) "\1a\00\00\00\01\00\00\00\00\00\00\00\01\00\00\00\1a\00\00\00~\00l\00i\00b\00/\00a\00r\00r\00a\00y\00.\00t\00s")
- (data (i32.const 2112) "\07\00\00\00 \00\00\00\00\00\00\00 \00\00\00\00\00\00\00 \00\00\00\00\00\00\00\"\1a\00\00\00\00\00\00!\1a\00\00\02\00\00\00a\00\00\00\02\00\00\00\"\t")
+ (data (i32.const 2064) "\08\00\00\00 \00\00\00\00\00\00\00 \00\00\00\00\00\00\00 \00\00\00\00\00\00\00\"\1a\00\00\00\00\00\00!\1a\00\00\02\00\00\00a\00\00\00\02\00\00\00!\01\00\00\02\00\00\00\"\t")
  (global $~lib/rt/tlsf/ROOT (mut i32) (i32.const 0))
- (global $assembly/index/audioData (mut i32) (i32.const 0))
+ (global $assembly/index/pinkNoise (mut i32) (i32.const 0))
+ (global $assembly/index/inputData (mut i32) (i32.const 0))
+ (global $assembly/index/outputData (mut i32) (i32.const 0))
  (global $assembly/index/audioProps (mut i32) (i32.const 0))
  (global $assembly/index/audioSettings (mut i32) (i32.const 0))
- (global $~lib/rt/__rtti_base i32 (i32.const 2112))
+ (global $~lib/rt/__rtti_base i32 (i32.const 2064))
  (export "memory" (memory $0))
  (export "__new" (func $~lib/rt/pure/__new))
  (export "__renew" (func $~lib/rt/pure/__renew))
  (export "__retain" (func $~lib/rt/pure/__retain))
  (export "__release" (func $~lib/rt/pure/__release))
- (export "__collect" (func $~lib/rt/pure/__collect))
  (export "__rtti_base" (global $~lib/rt/__rtti_base))
- (export "audioData" (global $assembly/index/audioData))
+ (export "allocF64Array" (func $assembly/index/allocF64Array))
+ (export "allocU32Array" (func $assembly/index/allocU32Array))
+ (export "inputData" (global $assembly/index/inputData))
+ (export "outputData" (global $assembly/index/outputData))
  (export "audioProps" (global $assembly/index/audioProps))
  (export "audioSettings" (global $assembly/index/audioSettings))
  (export "update" (func $assembly/index/update))
@@ -609,10 +611,10 @@
   if
    unreachable
   end
-  i32.const 2176
+  i32.const 2144
   i32.const 0
   i32.store
-  i32.const 3744
+  i32.const 3712
   i32.const 0
   i32.store
   loop $for-loop|0
@@ -623,7 +625,7 @@
     local.get $1
     i32.const 2
     i32.shl
-    i32.const 2176
+    i32.const 2144
     i32.add
     i32.const 0
     i32.store offset=4
@@ -641,7 +643,7 @@
       i32.add
       i32.const 2
       i32.shl
-      i32.const 2176
+      i32.const 2144
       i32.add
       i32.const 0
       i32.store offset=96
@@ -659,13 +661,13 @@
     br $for-loop|0
    end
   end
-  i32.const 2176
-  i32.const 3748
+  i32.const 2144
+  i32.const 3716
   memory.size
   i32.const 16
   i32.shl
   call $~lib/rt/tlsf/addMemory
-  i32.const 2176
+  i32.const 2144
   global.set $~lib/rt/tlsf/ROOT
  )
  (func $~lib/rt/tlsf/prepareSize (param $0 i32) (result i32)
@@ -1287,7 +1289,7 @@
   i32.and
   call $~lib/memory/memory.copy
   local.get $1
-  i32.const 2172
+  i32.const 2132
   i32.ge_u
   if
    local.get $0
@@ -1329,7 +1331,7 @@
   i32.add
   local.set $2
   local.get $0
-  i32.const 2172
+  i32.const 2132
   i32.lt_u
   if
    global.get $~lib/rt/tlsf/ROOT
@@ -1424,7 +1426,7 @@
   (local $1 i32)
   (local $2 i32)
   local.get $0
-  i32.const 2172
+  i32.const 2132
   i32.gt_u
   if
    local.get $0
@@ -1471,7 +1473,7 @@
  )
  (func $~lib/rt/pure/__release (param $0 i32)
   local.get $0
-  i32.const 2172
+  i32.const 2132
   i32.gt_u
   if
    local.get $0
@@ -1638,35 +1640,31 @@
    end
   end
  )
- (func $~lib/typedarray/Float64Array#constructor (param $0 i32) (result i32)
-  (local $1 i32)
-  (local $2 i32)
+ (func $~lib/arraybuffer/ArrayBufferView#constructor (param $0 i32) (param $1 i32) (param $2 i32) (result i32)
   (local $3 i32)
   (local $4 i32)
-  i32.const 12
-  i32.const 4
-  call $~lib/rt/pure/__new
-  call $~lib/rt/pure/__retain
-  local.tee $1
+  local.get $0
   i32.eqz
   if
    i32.const 12
    i32.const 2
    call $~lib/rt/pure/__new
    call $~lib/rt/pure/__retain
-   local.set $1
+   local.set $0
   end
-  local.get $1
+  local.get $0
   i32.const 0
   i32.store
-  local.get $1
+  local.get $0
   i32.const 0
   i32.store offset=4
-  local.get $1
+  local.get $0
   i32.const 0
   i32.store offset=8
-  local.get $0
-  i32.const 134217727
+  local.get $1
+  i32.const 1073741820
+  local.get $2
+  i32.shr_u
   i32.gt_u
   if
    i32.const 1840
@@ -1676,19 +1674,19 @@
    call $~lib/builtins/abort
    unreachable
   end
-  local.get $0
-  i32.const 3
+  local.get $1
+  local.get $2
   i32.shl
   local.tee $3
   i32.const 0
   call $~lib/rt/pure/__new
-  local.tee $0
+  local.tee $1
   local.get $3
   call $~lib/memory/memory.fill
-  local.get $0
-  local.set $2
-  local.get $0
   local.get $1
+  local.set $2
+  local.get $1
+  local.get $0
   i32.load
   local.tee $4
   i32.ne
@@ -1699,16 +1697,116 @@
    local.get $4
    call $~lib/rt/pure/__release
   end
-  local.get $1
+  local.get $0
   local.get $2
   i32.store
-  local.get $1
   local.get $0
-  i32.store offset=4
   local.get $1
+  i32.store offset=4
+  local.get $0
   local.get $3
   i32.store offset=8
+  local.get $0
+ )
+ (func $~lib/typedarray/Float64Array#constructor (param $0 i32) (result i32)
+  i32.const 12
+  i32.const 4
+  call $~lib/rt/pure/__new
+  call $~lib/rt/pure/__retain
+  local.get $0
+  i32.const 3
+  call $~lib/arraybuffer/ArrayBufferView#constructor
+ )
+ (func $~lib/typedarray/Float64Array#set<~lib/array/Array<f64>> (param $0 i32) (param $1 i32)
+  (local $2 i32)
   local.get $1
+  call $~lib/rt/pure/__retain
+  local.set $2
+  local.get $0
+  call $~lib/rt/pure/__retain
+  local.set $0
+  local.get $2
+  call $~lib/rt/pure/__retain
+  local.tee $1
+  i32.load offset=12
+  local.get $0
+  i32.load offset=8
+  i32.const 3
+  i32.shr_u
+  i32.gt_s
+  if
+   i32.const 1952
+   i32.const 2016
+   i32.const 1775
+   i32.const 47
+   call $~lib/builtins/abort
+   unreachable
+  end
+  local.get $0
+  i32.load offset=4
+  local.get $1
+  i32.load offset=4
+  local.get $1
+  i32.load offset=8
+  call $~lib/memory/memory.copy
+  local.get $1
+  call $~lib/rt/pure/__release
+  local.get $0
+  call $~lib/rt/pure/__release
+  local.get $2
+  call $~lib/rt/pure/__release
+ )
+ (func $~lib/typedarray/Float64Array#fill (param $0 i32) (result i32)
+  (local $1 i32)
+  (local $2 i32)
+  (local $3 i32)
+  local.get $0
+  call $~lib/rt/pure/__retain
+  local.tee $1
+  i32.load offset=4
+  local.set $3
+  i32.const 0
+  local.get $1
+  i32.load offset=8
+  i32.const 3
+  i32.shr_u
+  local.tee $2
+  local.get $2
+  select
+  local.set $0
+  loop $for-loop|0
+   local.get $0
+   local.get $2
+   i32.lt_s
+   if
+    local.get $3
+    local.get $0
+    i32.const 3
+    i32.shl
+    i32.add
+    f64.const 0
+    f64.store
+    local.get $0
+    i32.const 1
+    i32.add
+    local.set $0
+    br $for-loop|0
+   end
+  end
+  local.get $1
+ )
+ (func $assembly/index/allocF64Array (param $0 i32) (result i32)
+  local.get $0
+  call $~lib/typedarray/Float64Array#constructor
+ )
+ (func $assembly/index/allocU32Array (param $0 i32) (result i32)
+  i32.const 12
+  i32.const 6
+  call $~lib/rt/pure/__new
+  call $~lib/rt/pure/__retain
+  local.get $0
+  i32.const 2
+  call $~lib/arraybuffer/ArrayBufferView#constructor
  )
  (func $~lib/typedarray/Float64Array#__get (param $0 i32) (param $1 i32) (result f64)
   local.get $1
@@ -1728,27 +1826,6 @@
   local.get $0
   i32.load offset=4
   local.get $1
-  i32.const 3
-  i32.shl
-  i32.add
-  f64.load
- )
- (func $~lib/array/Array<f64>#__get (param $0 i32) (result f64)
-  local.get $0
-  i32.const 1804
-  i32.load
-  i32.ge_u
-  if
-   i32.const 1952
-   i32.const 2080
-   i32.const 104
-   i32.const 42
-   call $~lib/builtins/abort
-   unreachable
-  end
-  i32.const 1796
-  i32.load
-  local.get $0
   i32.const 3
   i32.shl
   i32.add
@@ -2833,9 +2910,10 @@
   f64.const 1e-300
   f64.mul
  )
- (func $assembly/index/update (param $0 i32)
+ (func $assembly/index/update
+  (local $0 f64)
   (local $1 f64)
-  (local $2 f64)
+  (local $2 i32)
   (local $3 i32)
   (local $4 i32)
   (local $5 i32)
@@ -2845,57 +2923,54 @@
   (local $9 f64)
   (local $10 f64)
   (local $11 f64)
-  (local $12 i32)
+  (local $12 f64)
   (local $13 f64)
   (local $14 f64)
-  (local $15 f64)
-  local.get $0
-  call $~lib/rt/pure/__retain
-  local.set $6
+  (local $15 i32)
   global.get $assembly/index/audioSettings
   i32.const 0
   call $~lib/typedarray/Float64Array#__get
   f64.const 0
   f64.gt
   if
-   i32.const 0
-   local.set $0
-   local.get $6
+   global.get $assembly/index/inputData
    call $~lib/rt/pure/__retain
    local.set $4
    i32.const 128
    call $~lib/typedarray/Float64Array#constructor
    local.set $5
    loop $for-loop|0
-    local.get $0
+    local.get $3
     i32.const 64
     i32.lt_s
     if
      local.get $5
-     local.get $0
+     local.get $3
      local.get $4
-     local.get $0
+     local.get $3
      call $~lib/typedarray/Float64Array#__get
-     local.get $0
-     call $~lib/array/Array<f64>#__get
+     global.get $assembly/index/pinkNoise
+     local.get $3
+     call $~lib/typedarray/Float64Array#__get
      f64.div
      call $~lib/typedarray/Float64Array#__set
      local.get $5
-     local.get $0
+     local.get $3
      i32.const -64
      i32.sub
      local.tee $7
      local.get $4
      local.get $7
      call $~lib/typedarray/Float64Array#__get
-     local.get $0
-     call $~lib/array/Array<f64>#__get
+     global.get $assembly/index/pinkNoise
+     local.get $3
+     call $~lib/typedarray/Float64Array#__get
      f64.div
      call $~lib/typedarray/Float64Array#__set
-     local.get $0
+     local.get $3
      i32.const 1
      i32.add
-     local.set $0
+     local.set $3
      br $for-loop|0
     end
    end
@@ -2914,45 +2989,45 @@
   f64.gt
   if
    i32.const 0
-   local.set $0
+   local.set $3
    i32.const 0
    local.set $7
-   local.get $6
+   global.get $assembly/index/inputData
    call $~lib/rt/pure/__retain
    local.set $4
    i32.const 128
    call $~lib/typedarray/Float64Array#constructor
    local.set $5
    loop $for-loop|01
-    local.get $0
+    local.get $3
     i32.const 64
     i32.lt_s
     if
      local.get $5
      local.get $7
      local.get $4
-     local.get $0
+     local.get $3
      call $~lib/typedarray/Float64Array#__get
      call $~lib/typedarray/Float64Array#__set
      local.get $7
      i32.const 1
      i32.add
-     local.tee $12
+     local.tee $15
      i32.const 1
      i32.add
      local.set $7
      local.get $5
-     local.get $12
+     local.get $15
      local.get $4
-     local.get $0
+     local.get $3
      i32.const -64
      i32.sub
      call $~lib/typedarray/Float64Array#__get
      call $~lib/typedarray/Float64Array#__set
-     local.get $0
+     local.get $3
      i32.const 1
      i32.add
-     local.set $0
+     local.set $3
      br $for-loop|01
     end
    end
@@ -2976,74 +3051,74 @@
    f64.const 0
    f64.gt
    if
-    local.get $6
+    global.get $assembly/index/inputData
     call $~lib/rt/pure/__retain
-    local.set $0
+    local.set $3
     loop $for-loop|04
-     local.get $3
+     local.get $2
      i32.const 64
      i32.lt_s
      if
-      local.get $0
       local.get $3
+      local.get $2
       call $~lib/typedarray/Float64Array#__get
-      local.set $2
-      local.get $0
+      local.set $1
       local.get $3
-      local.get $0
-      i32.const 128
+      local.get $2
       local.get $3
+      i32.const 127
+      local.get $2
       i32.sub
       local.tee $4
       call $~lib/typedarray/Float64Array#__get
       call $~lib/typedarray/Float64Array#__set
-      local.get $0
-      local.get $4
-      local.get $2
-      call $~lib/typedarray/Float64Array#__set
       local.get $3
+      local.get $4
+      local.get $1
+      call $~lib/typedarray/Float64Array#__set
+      local.get $2
       i32.const 1
       i32.add
-      local.set $3
+      local.set $2
       br $for-loop|04
      end
     end
-    local.get $0
+    local.get $3
     call $~lib/rt/pure/__release
    else
-    local.get $6
+    global.get $assembly/index/inputData
     call $~lib/rt/pure/__retain
-    local.set $0
+    local.set $3
     loop $for-loop|00
-     local.get $3
+     local.get $2
      i32.const 32
      i32.lt_s
      if
-      local.get $0
       local.get $3
+      local.get $2
       call $~lib/typedarray/Float64Array#__get
-      local.set $2
-      local.get $0
+      local.set $1
       local.get $3
-      local.get $0
-      i32.const 64
+      local.get $2
       local.get $3
+      i32.const 63
+      local.get $2
       i32.sub
       local.tee $4
       call $~lib/typedarray/Float64Array#__get
       call $~lib/typedarray/Float64Array#__set
-      local.get $0
-      local.get $4
-      local.get $2
-      call $~lib/typedarray/Float64Array#__set
       local.get $3
+      local.get $4
+      local.get $1
+      call $~lib/typedarray/Float64Array#__set
+      local.get $2
       i32.const 1
       i32.add
-      local.set $3
+      local.set $2
       br $for-loop|00
      end
     end
-    local.get $0
+    local.get $3
     call $~lib/rt/pure/__release
    end
   else
@@ -3053,42 +3128,42 @@
    f64.const 0
    f64.gt
    if
-    local.get $6
+    global.get $assembly/index/inputData
     call $~lib/rt/pure/__retain
-    local.set $0
+    local.set $2
     loop $for-loop|016
-     local.get $3
+     local.get $6
      i32.const 32
      i32.lt_s
      if
-      local.get $0
-      local.get $3
+      local.get $2
+      local.get $6
       i32.const -64
       i32.sub
-      local.tee $4
+      local.tee $3
       call $~lib/typedarray/Float64Array#__get
-      local.set $2
-      local.get $0
-      local.get $4
-      local.get $0
-      i32.const 128
-      local.get $3
-      i32.sub
-      local.tee $4
-      call $~lib/typedarray/Float64Array#__get
-      call $~lib/typedarray/Float64Array#__set
-      local.get $0
-      local.get $4
+      local.set $1
       local.get $2
-      call $~lib/typedarray/Float64Array#__set
       local.get $3
+      local.get $2
+      i32.const 127
+      local.get $6
+      i32.sub
+      local.tee $3
+      call $~lib/typedarray/Float64Array#__get
+      call $~lib/typedarray/Float64Array#__set
+      local.get $2
+      local.get $3
+      local.get $1
+      call $~lib/typedarray/Float64Array#__set
+      local.get $6
       i32.const 1
       i32.add
-      local.set $3
+      local.set $6
       br $for-loop|016
      end
     end
-    local.get $0
+    local.get $2
     call $~lib/rt/pure/__release
    end
   end
@@ -3098,6 +3173,7 @@
   f64.const 0
   f64.gt
   if
+   global.get $assembly/index/inputData
    global.get $assembly/index/audioSettings
    i32.const 3
    call $~lib/typedarray/Float64Array#__get
@@ -3105,35 +3181,34 @@
    f64.add
    local.set $11
    i32.const 0
-   local.set $0
-   f64.const 0
    local.set $2
-   local.get $6
+   f64.const 0
+   local.set $1
    call $~lib/rt/pure/__retain
    local.set $3
    i32.const 128
    call $~lib/typedarray/Float64Array#constructor
    local.set $4
    loop $for-loop|08
-    local.get $0
+    local.get $2
     i32.const 128
     i32.lt_s
     if
      local.get $3
-     local.get $0
-     call $~lib/typedarray/Float64Array#__get
      local.get $2
+     call $~lib/typedarray/Float64Array#__get
+     local.get $1
      f64.gt
      if
       local.get $3
-      local.get $0
+      local.get $2
       call $~lib/typedarray/Float64Array#__get
-      local.set $2
+      local.set $1
      end
      local.get $4
-     local.get $0
+     local.get $2
      local.get $3
-     local.get $0
+     local.get $2
      call $~lib/typedarray/Float64Array#__get
      local.get $11
      f64.mul
@@ -3141,46 +3216,46 @@
      call $~lib/math/NativeMath.pow
      call $~lib/typedarray/Float64Array#__set
      local.get $4
-     local.get $0
+     local.get $2
      call $~lib/typedarray/Float64Array#__get
-     local.get $1
+     local.get $0
      f64.gt
      if
       local.get $4
-      local.get $0
+      local.get $2
       call $~lib/typedarray/Float64Array#__get
-      local.set $1
+      local.set $0
      end
-     local.get $0
+     local.get $2
      i32.const 1
      i32.add
-     local.set $0
+     local.set $2
      br $for-loop|08
     end
    end
+   local.get $0
    local.get $1
-   local.get $2
    f64.div
    local.set $1
    i32.const 0
-   local.set $0
+   local.set $2
    loop $for-loop|1
-    local.get $0
+    local.get $2
     i32.const 128
     i32.lt_s
     if
      local.get $3
-     local.get $0
+     local.get $2
      local.get $4
-     local.get $0
+     local.get $2
      call $~lib/typedarray/Float64Array#__get
      local.get $1
      f64.div
      call $~lib/typedarray/Float64Array#__set
-     local.get $0
+     local.get $2
      i32.const 1
      i32.add
-     local.set $0
+     local.set $2
      br $for-loop|1
     end
    end
@@ -3195,40 +3270,41 @@
   f64.const 0
   f64.gt
   if
+   global.get $assembly/index/inputData
    global.get $assembly/index/audioSettings
    i32.const 4
    call $~lib/typedarray/Float64Array#__get
+   f64.floor
    i32.trunc_f64_s
    local.set $4
    i32.const 0
-   local.set $0
-   local.get $6
+   local.set $2
    call $~lib/rt/pure/__retain
    local.set $5
    i32.const 128
    call $~lib/typedarray/Float64Array#constructor
-   local.set $7
+   local.set $6
    loop $for-loop|010
-    local.get $0
+    local.get $2
     i32.const 128
     i32.lt_s
     if
      f64.const 0
-     local.set $2
-     local.get $0
+     local.set $1
+     local.get $2
      local.get $4
      i32.sub
      local.set $3
-     local.get $0
+     local.get $2
      local.get $4
      i32.add
-     local.set $12
+     local.set $7
      loop $for-loop|111
       local.get $3
-      local.get $12
+      local.get $7
       i32.le_s
       if
-       local.get $2
+       local.get $1
        local.get $5
        local.get $3
        i32.const 128
@@ -3242,7 +3318,7 @@
        i32.rem_s
        call $~lib/typedarray/Float64Array#__get
        f64.add
-       local.set $2
+       local.set $1
        local.get $3
        i32.const 1
        i32.add
@@ -3250,9 +3326,9 @@
        br $for-loop|111
       end
      end
-     local.get $7
-     local.get $0
+     local.get $6
      local.get $2
+     local.get $1
      local.get $4
      i32.const 1
      i32.shl
@@ -3261,103 +3337,102 @@
      f64.convert_i32_s
      f64.div
      call $~lib/typedarray/Float64Array#__set
-     local.get $0
+     local.get $2
      i32.const 1
      i32.add
-     local.set $0
+     local.set $2
      br $for-loop|010
     end
    end
    local.get $5
-   local.get $7
+   local.get $6
    call $~lib/typedarray/Float64Array#set<~lib/typedarray/Float64Array>
    local.get $5
    call $~lib/rt/pure/__release
-   local.get $7
-   call $~lib/rt/pure/__release
-  end
-  global.get $assembly/index/audioData
-  if
-   global.get $assembly/index/audioData
-   global.get $assembly/index/audioSettings
-   i32.const 5
-   call $~lib/typedarray/Float64Array#__get
-   local.set $2
-   global.get $assembly/index/audioSettings
-   i32.const 6
-   call $~lib/typedarray/Float64Array#__get
-   local.set $11
-   i32.const 0
-   local.set $0
    local.get $6
-   call $~lib/rt/pure/__retain
-   local.set $3
-   call $~lib/rt/pure/__retain
-   local.set $4
-   loop $for-loop|012
-    local.get $0
-    i32.const 128
-    i32.lt_s
-    if
-     local.get $3
-     local.get $0
-     call $~lib/typedarray/Float64Array#__get
-     local.get $4
-     local.get $0
-     call $~lib/typedarray/Float64Array#__get
-     f64.sub
-     local.set $1
-     local.get $3
-     local.get $0
-     local.get $3
-     local.get $0
-     call $~lib/typedarray/Float64Array#__get
-     local.get $1
-     f64.const 100
-     local.get $2
-     local.get $11
-     local.get $1
-     f64.const 0
-     f64.gt
-     select
-     f64.sub
-     f64.mul
-     f64.const 100
-     f64.div
-     f64.sub
-     call $~lib/typedarray/Float64Array#__set
-     local.get $0
-     i32.const 1
-     i32.add
-     local.set $0
-     br $for-loop|012
-    end
-   end
-   local.get $3
-   call $~lib/rt/pure/__release
-   local.get $4
    call $~lib/rt/pure/__release
   end
+  global.get $assembly/index/inputData
+  global.get $assembly/index/outputData
+  local.set $4
+  global.get $assembly/index/audioSettings
+  i32.const 5
+  call $~lib/typedarray/Float64Array#__get
+  local.set $0
+  global.get $assembly/index/audioSettings
+  i32.const 6
+  call $~lib/typedarray/Float64Array#__get
+  local.set $11
+  i32.const 0
+  local.set $2
+  call $~lib/rt/pure/__retain
+  local.set $3
+  local.get $4
+  call $~lib/rt/pure/__retain
+  local.set $4
+  loop $for-loop|012
+   local.get $2
+   i32.const 128
+   i32.lt_s
+   if
+    local.get $3
+    local.get $2
+    call $~lib/typedarray/Float64Array#__get
+    local.get $4
+    local.get $2
+    call $~lib/typedarray/Float64Array#__get
+    f64.sub
+    local.set $1
+    local.get $3
+    local.get $2
+    local.get $3
+    local.get $2
+    call $~lib/typedarray/Float64Array#__get
+    local.get $1
+    f64.const 100
+    local.get $0
+    local.get $11
+    local.get $1
+    f64.const 0
+    f64.gt
+    select
+    f64.sub
+    f64.mul
+    f64.const 100
+    f64.div
+    f64.sub
+    call $~lib/typedarray/Float64Array#__set
+    local.get $2
+    i32.const 1
+    i32.add
+    local.set $2
+    br $for-loop|012
+   end
+  end
+  local.get $3
+  call $~lib/rt/pure/__release
+  local.get $4
+  call $~lib/rt/pure/__release
   f64.const 1
-  local.set $1
+  local.set $0
   loop $for-loop|02
    local.get $8
    i32.const 128
    i32.lt_s
    if
-    local.get $1
-    local.get $6
+    local.get $0
+    global.get $assembly/index/inputData
     local.get $8
     call $~lib/typedarray/Float64Array#__get
-    local.tee $2
+    local.tee $1
     f64.gt
     if
-     local.get $2
-     local.set $1
+     local.get $1
+     local.set $0
     end
-    local.get $2
+    local.get $1
     local.get $9
-    local.get $2
+    local.get $1
     local.get $9
     f64.gt
     select
@@ -3366,40 +3441,40 @@
     i32.const 14
     i32.lt_s
     if
-     local.get $13
-     local.get $2
-     global.get $assembly/index/audioProps
-     i32.const 0
+     local.get $12
+     local.get $1
+     global.get $assembly/index/audioSettings
+     i32.const 9
      call $~lib/typedarray/Float64Array#__get
      f64.mul
      f64.add
-     local.set $13
+     local.set $12
     else
      local.get $8
      i32.const 69
      i32.gt_s
      if
+      local.get $13
+      local.get $1
+      global.get $assembly/index/audioSettings
+      i32.const 7
+      call $~lib/typedarray/Float64Array#__get
+      f64.mul
+      f64.add
+      local.set $13
+     else
       local.get $14
-      local.get $2
-      global.get $assembly/index/audioProps
-      i32.const 2
+      local.get $1
+      global.get $assembly/index/audioSettings
+      i32.const 8
       call $~lib/typedarray/Float64Array#__get
       f64.mul
       f64.add
       local.set $14
-     else
-      local.get $15
-      local.get $2
-      global.get $assembly/index/audioProps
-      i32.const 1
-      call $~lib/typedarray/Float64Array#__get
-      f64.mul
-      f64.add
-      local.set $15
      end
     end
     local.get $10
-    local.get $2
+    local.get $1
     f64.add
     local.set $10
     local.get $8
@@ -3413,135 +3488,121 @@
   f64.const 0
   local.get $9
   global.get $assembly/index/audioSettings
-  i32.const 7
+  i32.const 10
   call $~lib/typedarray/Float64Array#__get
   f64.const 1e3
   f64.div
   f64.lt
   select
-  local.set $2
-  global.get $assembly/index/audioData
-  local.get $6
+  local.set $1
+  global.get $assembly/index/outputData
+  global.get $assembly/index/inputData
   call $~lib/typedarray/Float64Array#set<~lib/typedarray/Float64Array>
   global.get $assembly/index/audioProps
   i32.const 16
   i32.const 3
   call $~lib/rt/pure/__new
-  local.tee $0
+  local.tee $2
   i32.const 80
   i32.const 0
   call $~lib/rt/pure/__new
-  local.tee $4
+  local.tee $3
   call $~lib/rt/pure/__retain
   i32.store
-  local.get $0
-  local.get $4
+  local.get $2
+  local.get $3
   i32.store offset=4
-  local.get $0
+  local.get $2
   i32.const 80
   i32.store offset=8
-  local.get $0
+  local.get $2
   i32.const 10
   i32.store offset=12
-  local.get $0
+  local.get $2
   call $~lib/rt/pure/__retain
-  local.tee $4
+  local.tee $3
   i32.load offset=4
-  local.tee $0
-  local.get $13
+  local.tee $2
+  local.get $12
   f64.store
-  local.get $0
-  local.get $15
-  f64.store offset=8
-  local.get $0
+  local.get $2
   local.get $14
+  f64.store offset=8
+  local.get $2
+  local.get $13
   f64.store offset=16
-  local.get $0
+  local.get $2
   local.get $10
   f64.store offset=24
+  local.get $2
   local.get $0
-  local.get $1
   f64.store offset=32
-  local.get $0
+  local.get $2
   local.get $9
   f64.store offset=40
-  local.get $0
+  local.get $2
   local.get $10
   f64.const 0.0078125
   f64.mul
   local.tee $10
   f64.store offset=48
-  local.get $0
+  local.get $2
   local.get $9
-  local.get $1
+  local.get $0
   f64.sub
   f64.store offset=56
-  local.get $0
   local.get $2
+  local.get $1
   f64.store offset=64
-  local.get $0
-  local.get $13
+  local.get $2
+  local.get $12
   f64.const 8
   f64.mul
-  local.get $15
-  f64.sub
   local.get $14
+  f64.sub
+  local.get $13
   f64.add
   f64.const 6
   f64.div
   local.get $10
   f64.div
   f64.store offset=72
-  local.get $4
-  call $~lib/rt/pure/__retain
-  local.set $8
-  call $~lib/rt/pure/__retain
-  local.set $0
-  local.get $8
-  call $~lib/rt/pure/__retain
-  local.tee $3
-  i32.load offset=12
-  local.get $0
-  i32.load offset=8
-  i32.const 3
-  i32.shr_u
-  i32.gt_s
-  if
-   i32.const 1952
-   i32.const 2016
-   i32.const 1775
-   i32.const 47
-   call $~lib/builtins/abort
-   unreachable
-  end
-  local.get $0
-  i32.load offset=4
   local.get $3
-  i32.load offset=4
+  call $~lib/typedarray/Float64Array#set<~lib/array/Array<f64>>
   local.get $3
-  i32.load offset=8
-  call $~lib/memory/memory.copy
-  local.get $3
-  call $~lib/rt/pure/__release
-  local.get $0
-  call $~lib/rt/pure/__release
-  local.get $8
-  call $~lib/rt/pure/__release
-  local.get $4
-  call $~lib/rt/pure/__release
-  local.get $6
   call $~lib/rt/pure/__release
  )
  (func $~start
+  i32.const 64
+  call $~lib/typedarray/Float64Array#constructor
+  global.set $assembly/index/pinkNoise
+  global.get $assembly/index/pinkNoise
+  i32.const 1792
+  call $~lib/typedarray/Float64Array#set<~lib/array/Array<f64>>
   i32.const 128
   call $~lib/typedarray/Float64Array#constructor
-  global.set $assembly/index/audioData
+  global.set $assembly/index/inputData
+  global.get $assembly/index/inputData
+  call $~lib/typedarray/Float64Array#fill
+  call $~lib/rt/pure/__release
+  i32.const 128
+  call $~lib/typedarray/Float64Array#constructor
+  global.set $assembly/index/outputData
+  global.get $assembly/index/outputData
+  call $~lib/typedarray/Float64Array#fill
+  call $~lib/rt/pure/__release
   i32.const 10
   call $~lib/typedarray/Float64Array#constructor
   global.set $assembly/index/audioProps
-  i32.const 8
+  global.get $assembly/index/audioProps
+  call $~lib/typedarray/Float64Array#fill
+  call $~lib/rt/pure/__release
+  i32.const 11
   call $~lib/typedarray/Float64Array#constructor
   global.set $assembly/index/audioSettings
+  global.get $assembly/index/audioSettings
+  call $~lib/typedarray/Float64Array#fill
+  call $~lib/rt/pure/__release
  )
  (func $~lib/rt/pure/decrement (param $0 i32)
   (local $1 i32)
@@ -3577,7 +3638,7 @@
         i32.const 12
         i32.add
         i32.load
-        br_table $__inlined_func$~lib/rt/__visit_members $__inlined_func$~lib/rt/__visit_members $~lib/arraybuffer/ArrayBufferView $folding-inner1 $folding-inner2 $folding-inner2 $folding-inner1 $invalid
+        br_table $__inlined_func$~lib/rt/__visit_members $__inlined_func$~lib/rt/__visit_members $~lib/arraybuffer/ArrayBufferView $folding-inner1 $folding-inner2 $folding-inner2 $folding-inner2 $folding-inner1 $invalid
        end
        local.get $0
        i32.load offset=20
@@ -3639,12 +3700,9 @@
    i32.store offset=4
   end
  )
- (func $~lib/rt/pure/__collect
-  nop
- )
  (func $~lib/rt/pure/__visit (param $0 i32)
   local.get $0
-  i32.const 2172
+  i32.const 2132
   i32.lt_u
   if
    return

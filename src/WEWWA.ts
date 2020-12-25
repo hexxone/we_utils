@@ -83,12 +83,8 @@ export class WEWWA {
             if(CC) {}
             const cc = window['cookieconsent'].initialise({
                 palette: {
-                    popup: {
-                        background: "#000"
-                    },
-                    button: {
-                        background: "#f1d600"
-                    }
+                    popup: { background: "#000" },
+                    button: { background: "#f1d600" }
                 },
                 position: "bottom-left",
                 theme: "edgeless"
@@ -132,6 +128,10 @@ export class WEWWA {
         var last = localStorage.getItem("wewwaLastProps");
         if (last != null) {
             var merged = Object.assign(props, JSON.parse(last));
+            merged.audioprocessing = { 
+                value: this.project.general.supportsaudioprocessing,
+                type: "hidden"
+            };
             this.project.general.properties = merged;
             Smallog.Debug("Loaded & merged settings.", LogHead)
         }
@@ -182,6 +182,18 @@ export class WEWWA {
         }
         .wewwaMenu a:hover {
             background: #4CAF50;
+        }
+        .wewwaMenu .red {
+            border-color: #FF7F50;
+        }
+        .wewwaMenu .red:hover {
+            background-color: #FF7F50;
+        }
+        .wewwaMenu .orange {
+            border-color: #FFA500;
+        }
+        .wewwaMenu .orange:hover {
+            background-color: #FFA500;
         }
         .wewwaMenu audio {
             width: 100%;
@@ -275,18 +287,23 @@ export class WEWWA {
             var td1 = ce("td");
             td1.innerHTML = "<br><hr><h2>Audio Input</h2><hr>";
             td1.setAttribute("colspan", 3);
+
             var aBtn1 = ce("a");
-            var aBtn2 = ce("a");
-            var aBtn3 = ce("input");
+            aBtn1.classList.add("orange");
             aBtn1.innerHTML = "Microphone";
             aBtn1.addEventListener("click", e => {
                 self.requestMicrophone();
             });
+
+            var aBtn2 = ce("a");
+            aBtn2.classList.add("orange");
             aBtn2.innerHTML = "Select URL";
             aBtn2.addEventListener("click", e => {
                 var uri = prompt("Please enter some audio file URL\r\n\r\nYouTube, Soundcloud etc. ARE NOT YET SUPPORTED!", "https://example.com/test.mp3");
                 self.initiateAudio(uri);
             });
+
+            var aBtn3 = ce("input");
             aBtn3.id = "wewwaAudioInput";
             aBtn3.innerHTML = "Select File";
             aBtn3.setAttribute("type", "file");
@@ -295,6 +312,7 @@ export class WEWWA {
                 if (!file) return;
                 self.initiateAudio(file);
             });
+
             td1.append(aBtn1, aBtn2, aBtn3);
             row.append(td1);
 
@@ -305,7 +323,7 @@ export class WEWWA {
             dropt1.setAttribute("colspan", 3);
             var dropArea = ce("div");
             dropArea.innerHTML = "Drag & Drop"
-            dropArea.classList.add("droparea");
+            dropArea.classList.add(...["droparea", "red"]);
             dropArea.addEventListener('dragover', (evt) => {
                 evt.stopPropagation();
                 evt.preventDefault();
@@ -325,6 +343,7 @@ export class WEWWA {
             var hrtd1 = ce("td");
             var hrtd2 = ce("td");
             var hrstop = ce("a");
+            hrstop.classList.add("red");
             hrstop.innerHTML = "Stop All Audio";
             hrstop.addEventListener("click", e => {
                 self.stopAudioInterval();
@@ -410,6 +429,7 @@ export class WEWWA {
         var preFoot = ce("div");
         preFoot.innerHTML = "<br><hr>";
         var reset = ce("a");
+        reset.classList.add("red")
         reset.innerHTML = "Reset Settings";
         reset.addEventListener("click", e => {
             if(!window.confirm("This action will clear ALL local data!\r\n\r\nAre you sure?")) return;
@@ -422,9 +442,9 @@ export class WEWWA {
 
         // footer with ident
         var footer = ce("div");
-        footer.innerHTML = "<br><hr><h3 style='width:130px;text-align:left;display:block;margin:0 auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a rel=\"noreferrer\" target=\"_blank\" href=\"https://hexx.one\">by hexxone</a>";
+        footer.innerHTML = "<br><hr><h3 style='width:169px;text-align:left;display:block;margin:auto;'>[W] allpaper<br>[E] ngine<br>[W] eb<br>[W] allpaper<br>[A] dapter<a rel=\"noreferrer\" target=\"_blank\" href=\"https://hexx.one\">by hexxone</a>";
         // finish up menu
-        menu.append(preview, header, link, tmain, preFoot, footer)
+        menu.append(preview, header, link, tmain, preFoot, footer);
 
         // create icon for opening & closing the menu
         var icon = ce("div");
@@ -444,8 +464,8 @@ export class WEWWA {
     }
 
     private CreateItem(prop, itm) {
+        if(!itm.type || itm.type == "hidden") return;
         var self = this;
-
         var ce = (e) => document.createElement(e);
         var row = ce("tr");
         row.setAttribute("id", "wewwa_" + prop);
@@ -660,7 +680,11 @@ export class WEWWA {
             else $("#wewwa_" + p).fadeOut();
 
             // get input dom element
-            var elm: any = document.getElementById("wewwa_" + p).childNodes[1].childNodes[0];
+
+            var elm: any = document.getElementById("wewwa_" + p);
+            if(!elm || elm.childNodes.length < 2) continue;
+
+            elm = elm.childNodes[1].childNodes[0];
             switch (prop.type) {
                 case "color":
                     elm.value = this.rgbToHex(prop.value);

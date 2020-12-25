@@ -21,6 +21,9 @@
  * It will automatically start to receive and process the audio data
  * which can then be accessed on the global object.
  * 
+ * @todo
+ * - use worker run instead of multiple messages
+ * 
 */
 
 import { CComponent } from "../CComponent";
@@ -28,9 +31,9 @@ import { CSettings } from "../CSettings";
 import { Ready } from "../Ready";
 import { Smallog } from "../Smallog";
 
-import WEASWorker from 'worker-loader!./WEASWorker';
+import wascModule from '../wasc-worker';
 
-import wasmWorker from 'wasm-worker';
+const DAT_LEN = 128;
 
 export class WEASettings extends CSettings {
 	audioprocessing: boolean = true;
@@ -55,8 +58,34 @@ export class WEASettings extends CSettings {
 	minimum_volume: number = 0.005;
 }
 
-export class WEAS extends CComponent {
+enum Sett {
+	equalize = 0,
+	mono_audio = 1,
+	audio_direction = 2,
+	peak_filter = 3,
+	value_smoothing = 4,
+	audio_increase = 5,
+	audio_decrease = 6,
+	treble_multiplier = 7,
+	mids_multiplier = 8,
+	bass_multiplier = 9,
+	minimum_volume = 10,
+}
 
+enum Props {
+	bass = 0,
+	mids = 1,
+	highs = 2,
+	sum = 3,
+	min = 4,
+	max = 5,
+	average = 6,
+	range = 7,
+	silent = 8,
+	intensity = 9
+}
+
+export class WEAS extends CComponent {
 
 	// last processed audio object
 	public lastAudio = null;
@@ -64,9 +93,12 @@ export class WEAS extends CComponent {
 	// settings object
 	public settings: WEASettings = new WEASettings();
 
+	// web assembly functions
+	private run: any = null;
+
 	constructor() {
 		super();
-		// delay audio initialization for some time
+		// delay audio initialization
 		Ready.On(() => this.realInit());
 	}
 
@@ -79,47 +111,117 @@ export class WEAS extends CComponent {
 
 		var self = this;
 
-		wasmWorker('WEAS.wasm')
-			.then(module => {
+		wascModule('WEAS.wasm', {}, false)
+			.then(r => {
+				// save module context
+				console.log(r);
+				const { module, instance, exports, run } = r as any;
+				this.run = run
 
-				window['wallpaperRegisterAudioListener']((audioArray) => {
+				const inBuff = new Float64Array(DAT_LEN);
+
+				// pass settings to module
+				this.updateSettings();
+
+				// register audio callback on module
+				window['wallpaperRegisterAudioListener'](async audioArray => {
 					// check proof
 					if (!audioArray) return;
-					if (audioArray.length != 128) {
+					if (audioArray.length != DAT_LEN) {
 						Smallog.Error("audioListener: received invalid audio data array. Length: " + audioArray.length);
 						return;
 					}
-					let audBuff = new Float32Array(audioArray);
-					Smallog.Debug("Send Data to Worker: " + JSON.stringify(audioArray));
 
-					// post web worker task
-					module.run(({
-						importObject,
-						instance,
-						params
-					}
-					// the code ran in web worker
-					) => {
-						//const sum = instance.exports.message(...params);
-						const sum = instance.exports.message(params.time);
-						return 'got time message: ' + sum;
-					},
-					// the object posted to web worker
-					{
-						settings: this.GetSettingsObj(),
-						last: Object.assign({}, this.lastAudio),
-						time: performance.now() / 1000,
-						audio: audBuff.buffer
-					})
-					// the result from web worker
-					.then(e => {
-						e.data.data = new Float32Array(e.data.data);
-						self.lastAudio = e.data;
-						Smallog.Debug("Got Data from Worker! Offset= " + (performance.now() / 1000 - e.data.time) + ", Data= " + JSON.stringify(e.data));
-					});
+					// prepare Transfer object
+					const start = performance.now();
+					inBuff.set(audioArray);
+
+					// WRAP UPDATE IN RUN
+					this.run(
+						// isolated Function ran inside worker
+						({ module, instance, importObject, params }) => {
+							const { exports } = instance;
+							const { data } = params[0];
+
+							console.debug("Send Data to Worker: " + JSON.stringify(data));
+
+							// apply data to module memory
+							const transfer = importObject.__getFloat64ArrayView(exports.inputData);
+							transfer.set(data);
+							// actual audio data processing 
+							exports.update();
+
+							// get updates Data & Properties
+							return {
+								data: importObject.__getFloat64ArrayView(exports.outputData),
+								props: importObject.__getFloat64ArrayView(exports.audioProps),
+							}
+						},
+						// Data passed to worker
+						{
+							data: inBuff
+						})
+						.then(
+							// worker result, back in main context
+							(result) => {
+								const { data, props } = result;
+								// apply actual last Data from worker
+								self.lastAudio = {
+									time: start,
+									data,
+									...this.getProps(props) // @TODO make props to Props mapping
+								};
+
+								// print info
+								Smallog.Debug("Got Data from Worker! Time= " + (performance.now() - start) + ", Data= " + JSON.stringify(data));
+
+							}
+						);
 				});
 
 			}).catch(ex => Smallog.Error(JSON.stringify(ex)));
+	}
+
+	private getProps(dProps: ArrayLike<number>) {
+		var keys = Object.keys(Props);
+		keys = keys.slice(keys.length / 2);
+		var res = {};
+		for (var index = 0; index < keys.length; index++) {
+			const key = keys[index];
+			res[key] = dProps[Props[key]];
+		}
+		return res;
+	}
+
+	// CAVEAT: only available after init and module load
+	public async updateSettings() {
+		if (!this.run) return;
+		const start = performance.now();
+
+		var keys = Object.keys(Sett);
+		keys = keys.slice(keys.length / 2);
+		const sett = new Float64Array(keys.length);
+		for (let index = 0; index < keys.length; index++) {
+			const key = keys[index];
+			sett[Sett[key]] = this.settings[key] || 0;
+		}
+
+		// WRAP IN RUN
+		this.run(
+			// isolated Function ran inside worker
+			({ module, instance, importObject, params }) => {
+				const { exports } = instance;
+				const { data } = params[0];
+
+				const transfer = importObject.__getFloat64ArrayView(exports.audioSettings);
+				transfer.set(data);
+
+				console.debug("Send Settings to Worker: " + JSON.stringify(data));
+			},
+			// Data passed to worker
+			{
+				data: sett
+			});
 	}
 
 	public hasAudio() {
