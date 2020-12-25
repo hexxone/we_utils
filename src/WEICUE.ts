@@ -367,7 +367,7 @@ AAAASUVORK5CYII=
                 document.body.removeChild(this.preview);
                 this.preview = null;
             }
-            else Object.apply(this.preview.style, this.getArea(true));
+            else Object.assign(this.preview.style, this.getArea(true));
         }
     }
 

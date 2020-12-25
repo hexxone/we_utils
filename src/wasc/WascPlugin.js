@@ -22,12 +22,17 @@ const { execSync } = require('child_process');
 
 const pluginName = 'WasmPlugin';
 const sourcePath = path.resolve(__dirname, 'assembly/index.ts');
-const targetPath = path.resolve(__dirname, 'build/optimized.wasm');
+const optPath = path.resolve(__dirname, 'build/optimized.wasm');
+const untPath = path.resolve(__dirname, 'build/untouched.wasm');
+const untMap = path.resolve(__dirname, 'build/untouched.wasm.map');
 
 // schema for options object
 const schema = {
     type: 'object',
     properties: {
+        production: {
+            typew: 'bool'
+        },
         relpath: {
             type: 'string'
         },
@@ -54,8 +59,8 @@ function getAllFiles(baseDir, subDir, arrayOfFiles) {
 
 
 // compile assemblyscript (typescript) module to wasm  and return binary
-function compileWasm(inputPath) {
-    return new Promise((resolve) => {
+function compileWasm(inputPath, production) {
+    return new Promise(resolve => {
         // copy <module>.wasm.ts -> index.ts
         // File destination.txt will be created or overwritten by default.
         fs.copyFile(inputPath, sourcePath, (err) => {
@@ -65,10 +70,17 @@ function compileWasm(inputPath) {
                 let output = execSync('npm run asbuild', { cwd: __dirname });
                 console.log("Compile result: " + output);
                 // none? -> read and resolve optimized.wasm string
-                var binary = fs.readFileSync(targetPath);
-                resolve(binary);
+                if (production)
+                    resolve({
+                        normal: fs.readFileSync(optPath)
+                    });
+                else
+                    resolve({
+                        normal: fs.readFileSync(untPath), 
+                        map: fs.readFileSync(untMap)
+                    });
             }
-            catch(ex) {
+            catch (ex) {
                 console.warn(pluginName + " Compile Error!");
                 console.error(ex);
             }
@@ -98,23 +110,27 @@ class WascPlugin {
             }, async () => {
                 if (addedOnce) return;
                 addedOnce = true;
-
                 console.log('This is an experimental plugin!');
 
                 // add static files from folder
                 const rPath = path.resolve(__dirname, this.options.relpath);
                 var sFiles = getAllFiles(rPath, "");
+
                 for (var staticFile in sFiles) {
+
                     const sFile = sFiles[staticFile];
                     const sName = sFile.replace(/^.*[\\\/]/, '');
-                    // @TODO if regex match wasm name, compile
+
+                    // if regex match wasm name, compile
                     if (sName.match(this.options.regexx)) {
-                        console.info("Compile wasm: " + sName);
-                        const cWasm = await compileWasm(rPath + sFile);
-                        // @todo keep ".wasm" and remove ".ts" part of name
-                        const newName = sName.replace(/\.[^/.]+$/, "");
-                        console.info("Success! File: " + newName);
-                        compilation.emitAsset(newName, new RawSource(cWasm));
+                        console.info(`Compile ${this.options.production ? "prod" : "debug"} wasm: ${sName}`);
+                        compileWasm(rPath + sFile, this.options.production).then(res => {
+                            // keep ".wasm" and remove ".ts" part of name
+                            const newName = sName.replace(/\.[^/.]+$/, "");
+                            console.info("Success! File: " + newName);
+                            if (res.normal) compilation.emitAsset(newName, new RawSource(res.normal));
+                            if (res.map) compilation.emitAsset(newName + ".map", new RawSource(res.map));
+                        });
                     }
                 }
 

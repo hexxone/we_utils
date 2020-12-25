@@ -10,11 +10,46 @@
  * Wallaper Engine Audio Supplier worker.
  */
 
-const DAT_LEN = 128;
-const HLF_LEN = 64;
-const QRT_LEN = 32;
 
-const pinkNoise = [1.1760367470305, 0.85207379418243, 0.68842437227852, 0.63767902570829,
+ //////////////////////////
+ //     CUSTOM API
+ //////////////////////////
+
+@external("env", "logf")
+declare function logf(value: f64): void;
+
+@external("env", "logi")
+declare function logi(value: u32): void;
+
+@external("env", "logU32Array")
+declare function logU32Array(arr: Uint32Array): void;
+
+@external("env", "logF64Array")
+declare function logF64Array(arr: Float64Array): void;
+
+export function allocF64Array(length: i32): Float64Array {
+  return new Float64Array(length);
+}
+
+export function allocU32Array(length: i32): Uint32Array {
+  return new Uint32Array(length);
+}
+
+@inline
+function deallocArray<T>(arr: T[]): void {
+  memory.free(changetype<usize>(arr.buffer_));
+  memory.free(changetype<usize>(arr));
+}
+
+ //////////////////////////
+ //     Main Program
+ //////////////////////////
+
+const DAT_LEN: i32 = 128;
+const HLF_LEN: i32 = 64;
+const QRT_LEN: i32 = 32;
+
+const pNoise = [1.1760367470305, 0.85207379418243, 0.68842437227852, 0.63767902570829,
     0.5452348949654, 0.50723325864167, 0.4677726234682, 0.44204182748767, 0.41956517802157,
     0.41517375040002, 0.41312118577934, 0.40618363960446, 0.39913707474975, 0.38207008614508,
     0.38329789106488, 0.37472136606245, 0.36586428412968, 0.37603017335105, 0.39762590761573,
@@ -27,6 +62,9 @@ const pinkNoise = [1.1760367470305, 0.85207379418243, 0.68842437227852, 0.637679
     1.8491987941428, 1.9238418849406, 2.0141596921333, 2.0786429508827, 2.1575522518646,
     2.2196355526005, 2.2660112509705, 2.320762171749, 2.3574848254513, 2.3986127976537,
     2.4043566176474, 2.4280476777842, 2.3917477397336, 2.4032522546622, 2.3614180150678];
+const pinkNoise = new Float64Array(HLF_LEN);
+pinkNoise.set(pNoise);
+
 
 // correct pink noise for first and second half
 function correctPinkNoise(data: Float64Array): void {
@@ -53,8 +91,8 @@ function stereoToMono(data: Float64Array): void {
 function invertFirst(data: Float64Array): void {
     for (var i = 0; i < QRT_LEN; i++) {
         var a = data[i];
-        data[i] = data[HLF_LEN - i];
-        data[HLF_LEN - i] = a;
+        data[i] = data[HLF_LEN - 1 - i];
+        data[HLF_LEN - 1 - i] = a;
     }
 }
 
@@ -62,8 +100,8 @@ function invertFirst(data: Float64Array): void {
 function invertSecond(data: Float64Array): void {
     for (var i = 0; i < QRT_LEN; i++) {
         var b = data[HLF_LEN + i];
-        data[HLF_LEN + i] = data[DAT_LEN - i];
-        data[DAT_LEN - i] = b;
+        data[HLF_LEN + i] = data[DAT_LEN - 1 - i];
+        data[DAT_LEN - 1 - i] = b;
     }
 }
 
@@ -71,8 +109,8 @@ function invertSecond(data: Float64Array): void {
 function invertAll(data: Float64Array): void {
     for (var i = 0; i < HLF_LEN; i++) {
         var a = data[i];
-        data[i] = data[DAT_LEN - i];
-        data[DAT_LEN - i] = a;
+        data[i] = data[DAT_LEN - 1 - i];
+        data[DAT_LEN - 1 - i] = a;
     }
 }
 
@@ -119,40 +157,25 @@ function applyValueLeveling(curr: Float64Array, prev: Float64Array, inc: f64, de
     }
 }
 
+// THEW INPUT VALUE TO WRITE TO
+export const inputData = new Float64Array(DAT_LEN);
+inputData.fill(0.0);
+
 // this will hold the current processed audio data
 // either:  B-H  |  H-B  |  HL-BL-BR-HR  |  BL-HL-HR-BR
 // where ( B=bass, H=high, L=left, R=right )
 // in range > 0.0 and ~< 1.5
-export const audioData = new Float64Array(DAT_LEN);
+export const outputData = new Float64Array(DAT_LEN);
+outputData.fill(0.0);
 
 // this will hold the current processed properties:
 export const audioProps = new Float64Array(10);
-enum Props {
-    bass = 0,
-    mids = 1,
-    highs = 2,
-    sum = 3,
-    min = 4,
-    max = 5,
-    average = 6,
-    range = 7,
-    silent = 8,
-    intensity = 9
-}
-
+audioProps.fill(0.0);
 
 // this will hold the current processing settings
-export const audioSettings = new Float64Array(8);
-enum Sett {
-    equalize = 0,
-    mono_audio = 1,
-    audio_direction = 2,
-    peak_filter = 3,
-    value_smoothing = 4,
-    audio_increase = 5,
-    audio_decrease = 6,
-    minimum_volume = 7
-}
+export const audioSettings = new Float64Array(11);
+audioSettings.fill(0.0);
+
 
 // check helper
 function isOn(a: f64): boolean {
@@ -160,48 +183,49 @@ function isOn(a: f64): boolean {
 }
 
 // this will update and process new data
-export function update(newData: Float64Array): void {
+export function update(): void {
 
     // fix pink noise?
-    if (isOn(audioSettings[Sett.equalize]))
-        correctPinkNoise(newData);
+    if (isOn(audioSettings[0]))
+        correctPinkNoise(inputData);
 
     // write botch channels to mono
-    if (isOn(audioSettings[Sett.mono_audio]))
-        stereoToMono(newData);
+    if (isOn(audioSettings[1]))
+        stereoToMono(inputData);
 
-    if (isOn(audioSettings[Sett.audio_direction])) {
+    if (isOn(audioSettings[2])) {
         // flipped high & low mapping
-        if (isOn(audioSettings[Sett.mono_audio]))
+        if (isOn(audioSettings[1]))
             // flip whole range
-            invertAll(newData);
+            invertAll(inputData);
         else {
             // only flip first half of stereo
-            invertFirst(newData);
+            invertFirst(inputData);
         }
-
     }
     else {
         // normal high & low mapping
-        if (isOn(audioSettings[Sett.mono_audio])) {
+        if (isOn(audioSettings[1])) {
             // only flip the second half of the data
-            invertSecond(newData);
+            invertSecond(inputData);
         }
     }
 
     // process peaks?
-    if (isOn(audioSettings[Sett.peak_filter]))
-        peakFilter(newData, audioSettings[Sett.peak_filter] + 1);
+    if (isOn(audioSettings[3]))
+        peakFilter(inputData, audioSettings[3] + 1);
 
     // smooth data?
-    if (isOn(audioSettings[Sett.value_smoothing]))
-        smoothArray(newData, audioSettings[Sett.value_smoothing] as i32);
+    if (isOn(audioSettings[4]))
+        smoothArray(inputData, Math.floor(audioSettings[4]) as i32);
 
-    // process with last data?
-    if (audioData)
-        applyValueLeveling(newData, audioData,
-            audioSettings[Sett.audio_increase],
-            audioSettings[Sett.audio_decrease]);
+    //logF64Array(inputData);
+    //logF64Array(outputData);
+
+    // process with last data
+    applyValueLeveling(inputData, outputData,
+            audioSettings[5],
+            audioSettings[6]);
 
     // process current frequency data and previous if given
     var sum: f64 = 0,
@@ -213,40 +237,26 @@ export function update(newData: Float64Array): void {
 
     for (var indx = 0; indx < DAT_LEN; indx++) {
         // parse current freq value
-        var idata: f64 = newData[indx];
+        var idata: f64 = inputData[indx];
         // process min max value
         if (idata < min) min = idata;
         if (idata > max) max = idata;
         // process ranges
-        if (indx < (42 / 3)) bass += idata * audioProps[Props.bass];
-        else if (indx > 69) peaks += idata * audioProps[Props.highs]; 
-        else mids += idata * audioProps[Props.mids]; 
+        if (indx < (42 / 3)) bass += idata * audioSettings[9];
+        else if (indx > 69) peaks += idata * audioSettings[7]; 
+        else mids += idata * audioSettings[8]; 
         // calc peak average
         sum += idata;
     }
 
     // calc average with previous entry
     var average: f64 = sum / (DAT_LEN as f64);
-    var silent: f64 = (max < audioSettings[Sett.minimum_volume] / 1000) ? 0.9999 : 0.00;
+    var silent: f64 = (max < audioSettings[10] / 1000) ? 0.9999 : 0.00;
     var intensity: f64 = (bass * 8 - mids + peaks) / 6 / average;
     var range: f64 = max - min;
 
     // Apply Data
-    audioData.set(newData);
-    audioProps.set([
-        bass,
-        mids,
-        peaks,
-        sum,
-        min,
-        max,
-        average,
-        range,
-        silent,
-        intensity
-    ]);
-
-    // clean
-    gc.collect();
+    outputData.set(inputData);
+    audioProps.set([bass,mids,peaks,sum,min,max,average,range,silent,intensity])
+    // DONE
 }
-
