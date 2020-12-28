@@ -116,8 +116,8 @@ export class WEAS extends CComponent {
 				// save module context
 				console.log(r);
 				const { module, instance, exports, run } = r as any;
-				this.run = run
-
+				this.run = run;
+				// create transfer buffer
 				const inBuff = new Float64Array(DAT_LEN);
 
 				// pass settings to module
@@ -132,7 +132,7 @@ export class WEAS extends CComponent {
 						return;
 					}
 
-					// prepare Transfer object
+					// prepare data
 					const start = performance.now();
 					inBuff.set(audioArray);
 
@@ -143,7 +143,7 @@ export class WEAS extends CComponent {
 							const { exports } = instance;
 							const { data } = params[0];
 
-							console.debug("Send Data to Worker: " + JSON.stringify(data));
+							//console.debug("Send Data to Worker: " + JSON.stringify(data));
 
 							// apply data to module memory
 							const transfer = importObject.__getFloat64ArrayView(exports.inputData);
@@ -196,7 +196,6 @@ export class WEAS extends CComponent {
 	// CAVEAT: only available after init and module load
 	public async updateSettings() {
 		if (!this.run) return;
-		const start = performance.now();
 
 		var keys = Object.keys(Sett);
 		keys = keys.slice(keys.length / 2);
@@ -207,7 +206,7 @@ export class WEAS extends CComponent {
 		}
 
 		// WRAP IN RUN
-		this.run(
+		await this.run(
 			// isolated Function ran inside worker
 			({ module, instance, importObject, params }) => {
 				const { exports } = instance;
