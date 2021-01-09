@@ -12,19 +12,15 @@
  * 
  */
 
-
 const fs = require("fs");
 const path = require('path');
 
+const asc = require("assemblyscript/bin/asc");
 const validate = require('schema-utils');
 const { RawSource } = require('webpack-sources');
-const { execSync } = require('child_process');
 
 const pluginName = 'WasmPlugin';
-const sourcePath = path.resolve(__dirname, 'assembly/index.ts');
-const optPath = path.resolve(__dirname, 'build/optimized.wasm');
-const untPath = path.resolve(__dirname, 'build/untouched.wasm');
-const untMap = path.resolve(__dirname, 'build/untouched.wasm.map');
+const outPath = path.resolve(__dirname, 'build');
 
 // schema for options object
 const schema = {
@@ -57,34 +53,37 @@ function getAllFiles(baseDir, subDir, arrayOfFiles) {
     return arrayOfFiles;
 }
 
-
-// compile assemblyscript (typescript) module to wasm  and return binary
-function compileWasm(inputPath, production) {
+// compile assemblyscript (typescript) module to wasm and return binary
+function compileWasm(inputPath, newName, production) {
     return new Promise(resolve => {
-        // copy <module>.wasm.ts -> index.ts
-        // File destination.txt will be created or overwritten by default.
-        fs.copyFile(inputPath, sourcePath, (err) => {
-            // check for and catch errors
-            try {
-                if (err) throw err;
-                let output = execSync('npm run asbuild', { cwd: __dirname });
-                console.log("Compile result: " + output);
+        try {
+            const newOut = path.resolve(outPath, newName);
+
+            asc.main([
+                inputPath,
+                "--extension", "asc",
+                "--binaryFile", newOut,
+                "--measure",
+                "--runtime", "full",
+                production ? "--optimize" : "--sourceMap"
+            ], (err) => {
+                //let output = execSync('npm run asbuild', { cwd: __dirname });
+                if(err) throw err;
                 // none? -> read and resolve optimized.wasm string
-                if (production)
-                    resolve({
-                        normal: fs.readFileSync(optPath)
-                    });
-                else
-                    resolve({
-                        normal: fs.readFileSync(untPath), 
-                        map: fs.readFileSync(untMap)
-                    });
-            }
-            catch (ex) {
-                console.warn(pluginName + " Compile Error!");
-                console.error(ex);
-            }
-        });
+                resolve(production ? {
+                    normal: fs.readFileSync(newOut)
+                } : {
+                    normal: fs.readFileSync(newOut),
+                    map: fs.readFileSync(newOut + ".map")
+                });
+
+                // TODO cleanup generated files
+            });
+        }
+        catch (ex) {
+            console.warn("[" + pluginName + "] Compile Error!");
+            console.error(ex);
+        }
     });
 
 }
@@ -110,7 +109,7 @@ class WascPlugin {
             }, async () => {
                 if (addedOnce) return;
                 addedOnce = true;
-                console.log('This is an experimental plugin!');
+                console.log("[" + pluginName + "] Gathering Infos....");
 
                 // add static files from folder
                 const rPath = path.resolve(__dirname, this.options.relpath);
@@ -123,13 +122,14 @@ class WascPlugin {
 
                     // if regex match wasm name, compile
                     if (sName.match(this.options.regexx)) {
-                        console.info(`Compile ${this.options.production ? "prod" : "debug"} wasm: ${sName}`);
-                        compileWasm(rPath + sFile, this.options.production).then(res => {
+                        console.info(`[${pluginName}] Compile ${this.options.production ? "prod" : "debug"} wasm: ${sName}`);
+                        const newName = sName.replace(/\.[^/.]+$/, "");
+
+                        await compileWasm(rPath + sFile, newName, this.options.production).then(({ normal, map }) => {
                             // keep ".wasm" and remove ".ts" part of name
-                            const newName = sName.replace(/\.[^/.]+$/, "");
-                            console.info("Success! File: " + newName);
-                            if (res.normal) compilation.emitAsset(newName, new RawSource(res.normal));
-                            if (res.map) compilation.emitAsset(newName + ".map", new RawSource(res.map));
+                            console.info("[" + pluginName + "] Success: " + newName);
+                            if (normal) compilation.emitAsset(newName, new RawSource(normal));
+                            if (map) compilation.emitAsset(newName + ".map", new RawSource(map));
                         });
                     }
                 }
