@@ -23,7 +23,7 @@ export class WarnHelper {
     waitSeconds = 10;
 
     constructor() {
-        Ready.On(() => {
+        Ready().then(() => {
             this.injectCSS();
             this.injectHTML();
         });
@@ -55,14 +55,16 @@ export class WarnHelper {
         document.body.append(outer);
     }
 
-    public Show(callback) {
-        // show it
-        $("#triggerwarn").addClass("show");
-        // wait some time
-        setTimeout(() => {
-            // hide it & wait again
-            $("#triggerwarn").removeClass("show");
-            setTimeout(callback, this.animationSeconds * 1000);
-        }, this.waitSeconds * 1000);
+    public Show() {
+        return new Promise(resolve => {
+            // show it
+            $("#triggerwarn").addClass("show");
+            // wait some time
+            setTimeout(() => {
+                // hide it & wait again
+                $("#triggerwarn").removeClass("show");
+                setTimeout(resolve, this.animationSeconds * 1000);
+            }, this.waitSeconds * 1000);
+        });
     }
 };

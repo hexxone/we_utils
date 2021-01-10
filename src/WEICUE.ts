@@ -68,7 +68,7 @@ export class WEICUE extends CComponent {
                 if (name === 'led') this.isAvailable = true;
             }
         }
-        Ready.On(() => {
+        Ready().then(() => {
             // inject helpers
             this.injectCSS();
             this.injectHTML();
@@ -76,7 +76,7 @@ export class WEICUE extends CComponent {
         });
     }
 
-    injectCSS() {
+    private injectCSS() {
         var st = document.createElement("style");
         st.innerHTML = `
         #icueholder {
@@ -109,11 +109,12 @@ export class WEICUE extends CComponent {
         document.head.append(st);
     }
 
-    injectHTML() {
+    private injectHTML() {
         var outer = document.createElement("div");
         outer.id = "icueholder";
         var imgg = document.createElement("img");
         imgg.id = "icuelogo";
+        // @TODO remove this abomination
         imgg.setAttribute("src", `
 data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABmJLR0QA/wD9AP+jOXP9AAAACXBIWXMAAC4jAAAuIwF4pT92AAAgAElEQ
 VR42u2dd3gU1frHP2e2ZNMrCSGhRZp0EBARVEREkY50URAQlCbivV7Fgg3bpYOCBRBU5IqoWFEQBJEOIihKTSghCSE92T7n98dmEX8iyW4myQb2+zw8msDMnDnnfOct

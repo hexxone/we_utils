@@ -1,5 +1,6 @@
 /**
- * @author D.Thiele @https://hexx.one
+ * @author D.Thiele
+ * @url https://hexx.one
  *
  * @license
  * Copyright (c) 2020 D.Thiele All rights reserved.  
@@ -10,14 +11,12 @@
  * Shorthand Document ready wrapper
  */
 
-export module Ready {
-    export function On(fn: any) {
-        if (typeof fn !== 'function')
-            return false;
+export function Ready() {
+    return new Promise(resolve => {
         // If document is already loaded, run method
         if (document.readyState === 'interactive' || document.readyState === 'complete')
-            return fn();
+            resolve(true);
         // Otherwise, wait until document is loaded
-        document.addEventListener('DOMContentLoaded', fn, false);
-    };
+        document.addEventListener('DOMContentLoaded', resolve, false);
+    });
 } 

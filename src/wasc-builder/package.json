@@ -1,10 +1,5 @@
 {
-  "scripts": {
-    "asbuild:untouched": "asc assembly/index.ts --runtime full --target debug",
-    "asbuild:optimized": "asc assembly/index.ts --runtime full --target release",
-    "asbuild": "npm run asbuild:untouched && npm run asbuild:optimized",
-    "test": "node tests"
-  },
+  "scripts": {},
   "dependencies": {
     "@assemblyscript/loader": "^0.17.7"
   },
