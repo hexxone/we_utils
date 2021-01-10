@@ -59,7 +59,7 @@ wrk.addEventListener("install", function (event: any) {
 // CSS resources, fonts, any images, etc.
 wrk.addEventListener("fetch", function (event: any) {
   //console.info(wName + 'fetch event in progress.');
-  
+
   if (event.request.method !== 'GET') {
     console.info(wName + 'fetch event ignored.', event.request.method, event.request.url);
     return;
