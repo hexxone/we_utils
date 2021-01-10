@@ -98,7 +98,7 @@ class OfflinePlugin {
                 // Loop through all compiled assets,
                 // adding a new line item for each filename.
                 for (var filename in compilation.assets) {
-                    filelist.push('/'+ filename);
+                    filelist.push('/' + filename);
                 }
 
                 // add additional files anyway?

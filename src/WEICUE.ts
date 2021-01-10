@@ -55,7 +55,7 @@ export class WEICUE extends CComponent {
     public settings: CUESettings = new CUESettings();
     public isAvailable: boolean = false;
     public PAUSED: boolean = false;
-    
+
     constructor(weas: WEAS) {
         super();
         this.weas = weas;

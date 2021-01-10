@@ -80,7 +80,7 @@ export class WEWWA {
 
         // intialize when ready
         Ready().then(() => {
-            if(CC) { /* This tells the compiler to include CookieConsent at this point. */ }
+            if (CC) { /* This tells the compiler to include CookieConsent at this point. */ }
             const cc = window['cookieconsent'].initialise({
                 palette: {
                     popup: { background: "#000" },
@@ -128,7 +128,7 @@ export class WEWWA {
         var last = localStorage.getItem("wewwaLastProps");
         if (last != null) {
             var merged = Object.assign(props, JSON.parse(last));
-            merged.audioprocessing = { 
+            merged.audioprocessing = {
                 value: this.project.general.supportsaudioprocessing,
                 type: "hidden"
             };
@@ -432,7 +432,7 @@ export class WEWWA {
         reset.classList.add("red")
         reset.innerHTML = "Reset Settings";
         reset.addEventListener("click", e => {
-            if(!window.confirm("This action will clear ALL local data!\r\n\r\nAre you sure?")) return;
+            if (!window.confirm("This action will clear ALL local data!\r\n\r\nAre you sure?")) return;
             OfflineHelper.Reset().then(() => {
                 localStorage.clear();
                 location = location;
@@ -464,7 +464,7 @@ export class WEWWA {
     }
 
     private CreateItem(prop, itm) {
-        if(!itm.type || itm.type == "hidden") return;
+        if (!itm.type || itm.type == "hidden") return;
         var self = this;
         var ce = (e) => document.createElement(e);
         var row = ce("tr");
@@ -680,7 +680,7 @@ export class WEWWA {
             // get input dom element
 
             var elm: any = document.getElementById("wewwa_" + p);
-            if(!elm || elm.childNodes.length < 2) continue;
+            if (!elm || elm.childNodes.length < 2) continue;
 
             elm = elm.childNodes[1].childNodes[0];
             switch (prop.type) {

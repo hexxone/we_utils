@@ -8,13 +8,13 @@
 
 import { CSettings } from "./CSettings";
 
- export class CComponent {
+export class CComponent {
 
     public settings: CSettings = null;
 
     // Important: Append your child objects, for settings to be applied correctly!
     public children: CComponent[] = [];
-    
+
     public GetComponents() {
         var list: CComponent[] = [this];
         this.children.forEach((ch) => list.push(...ch.GetComponents()));
@@ -31,9 +31,9 @@ import { CSettings } from "./CSettings";
     public GetSettingsObj() {
         let result = {}
         Object.getOwnPropertyNames(this.settings).forEach(p => {
-            if(typeof this.settings[p] == "function") return;
+            if (typeof this.settings[p] == "function") return;
             result[p] = this.settings[p];
         });
         return result;
     }
- }
+}
