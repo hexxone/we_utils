@@ -79,8 +79,8 @@ export class WEWWA {
         }
 
         // intialize when ready
-        Ready.On(() => {
-            if(CC) {}
+        Ready().then(() => {
+            if(CC) { /* This tells the compiler to include CookieConsent at this point. */ }
             const cc = window['cookieconsent'].initialise({
                 palette: {
                     popup: { background: "#000" },
@@ -611,8 +611,6 @@ export class WEWWA {
                 break;
         }
     }
-
-    // TODO REMVOE ?
 
     // will load the given file and return it as dataURL.
     // this way we can easily store whole files in the configuration & localStorage.

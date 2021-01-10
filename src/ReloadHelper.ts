@@ -9,7 +9,7 @@ export class ReloadHelper {
     waitSeconds = 3;
 
     constructor() {
-        Ready.On(() => {
+        Ready().then(() => {
             this.injectCSS();
             this.injectHTML();
         });

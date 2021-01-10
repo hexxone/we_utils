@@ -27,13 +27,16 @@ const schema = {
     type: 'object',
     properties: {
         production: {
-            typew: 'bool'
+            type: 'boolean'
         },
         relpath: {
             type: 'string'
         },
         regexx: {
             type: 'object'
+        },
+        cleanup: {
+            type: 'boolean'
         }
     }
 };
@@ -68,16 +71,14 @@ function compileWasm(inputPath, newName, production) {
                 production ? "--optimize" : "--sourceMap"
             ], (err) => {
                 //let output = execSync('npm run asbuild', { cwd: __dirname });
-                if(err) throw err;
+                if (err) throw err;
                 // none? -> read and resolve optimized.wasm string
                 resolve(production ? {
                     normal: fs.readFileSync(newOut)
                 } : {
-                    normal: fs.readFileSync(newOut),
-                    map: fs.readFileSync(newOut + ".map")
-                });
-
-                // TODO cleanup generated files
+                        normal: fs.readFileSync(newOut),
+                        map: fs.readFileSync(newOut + ".map")
+                    });
             });
         }
         catch (ex) {
@@ -85,11 +86,29 @@ function compileWasm(inputPath, newName, production) {
             console.error(ex);
         }
     });
+}
 
+// delete all files in the output dir
+function CleanUp() {
+    console.info("[" + pluginName + "] Cleaning...");
+    return new Promise(resolve => {
+        fs.readdir(outPath, (err, files) => {
+            if (err) throw err;
+            Promise.all(files.map(file => {
+                return new Promise(res => {
+                    fs.unlink(path.join(outPath, file), err => {
+                        if (err) throw err;
+                        console.info("[" + pluginName + "] delete: "+ file);
+                        res();
+                    });
+                })
+            })).then(resolve);
+        });
+    });
 }
 
 // actual webpack plugin
-class WascPlugin {
+class WascBuilderPlugin {
 
     options = {};
 
@@ -123,21 +142,25 @@ class WascPlugin {
                     // if regex match wasm name, compile
                     if (sName.match(this.options.regexx)) {
                         console.info(`[${pluginName}] Compile ${this.options.production ? "prod" : "debug"} wasm: ${sName}`);
+                        // keep ".wasm" and remove ".ts" part of name
                         const newName = sName.replace(/\.[^/.]+$/, "");
 
                         await compileWasm(rPath + sFile, newName, this.options.production).then(({ normal, map }) => {
-                            // keep ".wasm" and remove ".ts" part of name
                             console.info("[" + pluginName + "] Success: " + newName);
+                            // emit files into compilation
                             if (normal) compilation.emitAsset(newName, new RawSource(normal));
                             if (map) compilation.emitAsset(newName + ".map", new RawSource(map));
                         });
                     }
                 }
 
-                console.info("[" + pluginName + "] successfull!");
+                // finalize
+                if(this.options.cleanup) await CleanUp();
+
+                console.info("[" + pluginName + "] finished.");
             })
         );
     }
 }
 
-module.exports = WascPlugin;
+module.exports = WascBuilderPlugin;
