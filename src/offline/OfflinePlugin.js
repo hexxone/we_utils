@@ -43,6 +43,9 @@ const schema = {
         },
         extrafiles: {
             type: 'array'
+        },
+        pretty: {
+            type: 'boolean'
         }
     }
 };
@@ -106,7 +109,7 @@ class OfflinePlugin {
                     this.options.extrafiles.map(ef => filelist.push(ef));
 
                 // create the target file with all app-contents as json list
-                const jList = JSON.stringify(filelist, null, 1);
+                const jList = JSON.stringify(filelist, null, this.options.pretty ? 1 : 0);
                 compilation.emitAsset(this.options.outfile, new RawSource(jList));
 
                 console.info("[OfflinePlugin] successfull: " + jList);
