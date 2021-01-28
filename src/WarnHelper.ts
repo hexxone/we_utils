@@ -12,17 +12,30 @@
  * @todo
  * - add trigger warn languages to project json
  * - add trigger warn as html
- * - Remove embedded image
  */
 
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
 import { Ready } from "./Ready";
 
-export class WarnHelper {
+const ELM_ID = "triggerwarn";
 
-    animationSeconds = 1;
-    waitSeconds = 10;
+// TODO test getting text
+class WarnSettings extends CSettings {
+    seizure_text: string = "/* <!-- ## ERROR ## --> */";
+    animate_seconds: number = 1;
+    wait_seconds: number = 10;
+}
+
+export class WarnHelper extends CComponent {
+
+    public settings: WarnSettings = new WarnSettings();
+
+    private element: HTMLDivElement;
 
     constructor() {
+        super();
+
         Ready().then(() => {
             this.injectCSS();
             this.injectHTML();
@@ -32,14 +45,15 @@ export class WarnHelper {
     private injectCSS() {
         var st = document.createElement("style");
         st.innerHTML = `
-        #triggerwarn {
+        #${ELM_ID} {
             object-fit: contain;
+            text-align: center;
             max-height: 30vmax;
             top: 25vmin;
             opacity: 0;
-            transition: opacity ` + this.animationSeconds + `s ease;
+            transition: opacity ${this.settings.animate_seconds}s ease;
         }
-        #triggerwarn.show {
+        #${ELM_ID}.show {
             opacity: 1;
         }
         `;
@@ -47,24 +61,24 @@ export class WarnHelper {
     }
 
     private injectHTML() {
-        var outer = document.createElement("div");
-        outer.id = "triggerwarn";
-        outer.innerHTML = `
-        
-        `;
-        document.body.append(outer);
+        this.element = document.createElement("div");
+        this.element.id = ELM_ID;
+        document.body.append(this.element);
     }
 
     public Show() {
         return new Promise(resolve => {
+            // make text
+            const txtt = this.settings.seizure_text.replace("\r\n", "<br />");
+            this.element.innerHTML = txtt;
             // show it
-            $("#triggerwarn").addClass("show");
+            this.element.classList.add("show");
             // wait some time
             setTimeout(() => {
                 // hide it & wait again
-                $("#triggerwarn").removeClass("show");
-                setTimeout(resolve, this.animationSeconds * 1000);
-            }, this.waitSeconds * 1000);
+                this.element.classList.remove("show");
+                setTimeout(resolve, this.settings.animate_seconds * 1000);
+            }, this.settings.wait_seconds * 1000);
         });
     }
 };

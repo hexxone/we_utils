@@ -1,12 +1,26 @@
 /**
  * @author D.Thiele @https://hexx.one
+ * 
+ * @license
+ * Copyright (c) 2020 D.Thiele All rights reserved.  
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.  
+ * 
+ * @description
+ * Displays a html reload bar for a given Time.
+ * 
  */
 
+import { CSettings } from "./CSettings";
 import { Ready } from "./Ready";
+
+class ReloadSettings extends CSettings {
+    reload_seconds: number = 3;
+}
 
 export class ReloadHelper {
 
-    waitSeconds = 3;
+    public settings: ReloadSettings = new ReloadSettings();
 
     constructor() {
         Ready().then(() => {
@@ -25,7 +39,7 @@ export class ReloadHelper {
             height: 10px;
             width: 0%;
             background-color: #989a;
-            transition: all ` + this.waitSeconds + `s ease, opacity 0.33s ease;
+            transition: all ${this.settings.reload_seconds}s ease, opacity 0.33s ease;
         }
         #reload-bar.show {
             opacity: 1;
@@ -43,7 +57,7 @@ export class ReloadHelper {
             font-weight: 100;
             font-size: 3em;
             color: #fffa;
-            transition: all .33s ease, color ` + this.waitSeconds + `s ease, text-shadow ` + this.waitSeconds + `s ease;
+            transition: all .33s ease, color ${this.settings.reload_seconds}s ease, text-shadow ${this.settings.reload_seconds}s ease;
         }
         #reload-text.show {
             top: 10px;
@@ -72,6 +86,7 @@ export class ReloadHelper {
         document.body.append(outer);
     }
 
+    // @Todo make bar always reset to 0 on show
     public Show() {
         $("#reload-bar, #reload-text").removeClass("done").addClass("show");
     }

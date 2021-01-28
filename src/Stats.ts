@@ -1,7 +1,10 @@
 /**
  * @author D.Thiele @https://hexx.one
  * 
- * @description TypeScript Wrapper for mrdoob Stats.js
+ * @description
+ * TypeScript Wrapper for mrdoob Stats.js
+ * Still requires Stats.js to be included!
+ * 
  */
 
 

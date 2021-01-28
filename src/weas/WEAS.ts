@@ -8,21 +8,14 @@
  * 
  * @description
  * WEWWA
- * Wallpaper Engine Audio Supplier
- * 
- * DEPENDS ON:
- * - "./worker/weasWorker.js"
- * - jQuery (window loaded event)
- * - Wallpaper Engine Web Wallpaper environment
- * - audio-processing supported wallpaper...
- * 
- * This is an aditional JS file to be included in any Wallpaper Engine
- * Web-Wallpaper project to make working with audio easier.
+ * Wallpaper Engine Audio Supplier makes working with audio easier.
  * It will automatically start to receive and process the audio data
  * which can then be accessed on the global object.
  * 
- * @todo
- * - use worker run instead of multiple messages
+ * DEPENDS ON:
+ * - jQuery (window loaded event)
+ * - Wallpaper Engine Web Wallpaper environment
+ * - audio-processing supported web wallpaper...
  * 
 */
 

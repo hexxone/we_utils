@@ -27,6 +27,7 @@
 
 const fs = require("fs");
 const validate = require('schema-utils');
+const { Compilation } = require("webpack");
 const { RawSource } = require('webpack-sources');
 
 const pluginName = 'OfflinePlugin';
@@ -82,12 +83,12 @@ class OfflinePlugin {
         compiler.hooks.thisCompilation.tap(pluginName, (compilation) =>
             compilation.hooks.processAssets.tap({
                 name: pluginName,
-                stage: -2000,
+                stage: Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
             }, () => {
                 if (addedOnce) return;
                 addedOnce = true;
 
-                console.log('This is an experimental plugin!');
+                console.info("[" + pluginName + "] Gathering Infos...");
 
                 // list of all app-contents
                 var filelist = [];
@@ -111,8 +112,9 @@ class OfflinePlugin {
                 // create the target file with all app-contents as json list
                 const jList = JSON.stringify(filelist, null, this.options.pretty ? 1 : 0);
                 compilation.emitAsset(this.options.outfile, new RawSource(jList));
+                console.info("[" + pluginName + "] result: " + jList);
 
-                console.info("[OfflinePlugin] successfull: " + jList);
+                console.info("[" + pluginName + "] finished.");
             }
             ));
     }
