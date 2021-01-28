@@ -33,11 +33,16 @@
  *   - apply all settings once
  * - react to changes made in the ui and update them in the wallpaper
  * - save changes made in the ui to localStorage
+ * - Annoying Cookie Popup (Thanks DSGVO)
  * 
  * @todo
  * - inject "audio processing" setting
- * - Annoying Cookie Popup (Thanks DSGVO)
  * 
+ * lighthouse:
+ * - image explicit width/height
+ * - cf longer cache policy (2d?)
+ * - <img alt's
+ * - <form <input <label's
 */
 
 import { Ready } from "./Ready";

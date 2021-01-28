@@ -53,6 +53,7 @@ export class WEICUE extends CComponent {
 
     // runtime values
     public settings: CUESettings = new CUESettings();
+
     public isAvailable: boolean = false;
     public PAUSED: boolean = false;
 
