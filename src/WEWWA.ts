@@ -648,7 +648,7 @@ export class WEWWA {
         for (var p in wewwaProps) {
             var prop = wewwaProps[p];
 
-            // some eval magic
+            // some ev(a|i)l magic
             var visible = true;
             if (prop.condition != null) {
                 // copy our condition string to modify

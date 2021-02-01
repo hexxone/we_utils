@@ -194,11 +194,11 @@ export class WEAS extends CComponent {
 
 			const transfer = importObject.__getFloat64ArrayView(exports.audioSettings);
 			transfer.set(data);
-
-			console.debug("Send Settings to Worker: " + JSON.stringify(data));
 		}, {
 			// Data passed to worker
 			data: sett
+		}).then(() => {
+			Smallog.Debug("Sent Settings to WEAS: " + JSON.stringify(sett));
 		});
 	}
 
