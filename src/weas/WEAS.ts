@@ -24,7 +24,7 @@ import { CSettings } from "../CSettings";
 import { Ready } from "../Ready";
 import { Smallog } from "../Smallog";
 
-import wascModule from '../wasc-worker';
+import WascInit from '../wasc-worker';
 
 const DAT_LEN = 128;
 
@@ -107,9 +107,8 @@ export class WEAS extends CComponent {
 
 		var self = this;
 
-		this.weasModule = await wascModule('WEAS.wasm', {}, true);
+		this.weasModule = await WascInit('WEAS.wasm');
 		const { run } = this.weasModule;
-
 
 		// pass settings to module
 		this.updateSettings();
