@@ -49,8 +49,10 @@ import { Ready } from "./Ready";
 import { Smallog } from "./Smallog";
 import { OfflineHelper } from "./offline/OfflineHelper";
 import { CC } from "cookieconsent";
+import { myFetch } from "./wasc-worker/WascRT";
 
 const LogHead = "[WEWWA] ";
+const DefLang = "de-de";
 
 export class WEWWA {
 
@@ -86,7 +88,7 @@ export class WEWWA {
         // intialize when ready
         Ready().then(() => {
             if (CC) { /* This tells the compiler to include CookieConsent at this point. */ }
-            const cc = window['cookieconsent'].initialise({
+            window['cookieconsent'].initialise({
                 palette: {
                     popup: { background: "#000" },
                     button: { background: "#f1d600" }
@@ -100,12 +102,17 @@ export class WEWWA {
                 // continue initializing
                 finished();
                 this.Init();
+
+                // pause and resume on focus events
+                window.onblur = () => this.SetPaused(true);
+                window.onfocus = () => this.SetPaused(false);
             });
         });
     }
 
     private Init() {
-        this.LoadProjectJSON((proj) => {
+        myFetch("project.json", "json").then(proj => {
+
             if (proj.type != "web") {
                 Smallog.Error("Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...", LogHead);
                 return;
@@ -114,17 +121,8 @@ export class WEWWA {
             this.LoadStorage();
             this.AddStyle();
             this.AddMenu(localStorage.getItem("wewwaLang"));
-            this.UpdateSettings();
+            this.EvaluateSettings();
             this.ApplyProp(proj.general.properties);
-        });
-    }
-
-    private LoadProjectJSON(complete) {
-        $.ajax({
-            url: "project.json",
-            beforeSend: (xhr) => xhr.overrideMimeType("text/plain;"),
-            success: (result) => complete(JSON.parse(result)),
-            error: (xhr, status, error) => Smallog.Error(status + ": ajax error!\r\n" + error, LogHead)
         });
     }
 
@@ -249,7 +247,6 @@ export class WEWWA {
     }
 
     private AddMenu(lang) {
-        var self = this;
 
         if (this.htmlMenu) {
             document.body.removeChild(this.htmlMenu);
@@ -297,7 +294,7 @@ export class WEWWA {
             aBtn1.classList.add("orange");
             aBtn1.innerHTML = "Microphone";
             aBtn1.addEventListener("click", e => {
-                self.requestMicrophone();
+                this.requestMicrophone();
             });
 
             var aBtn2 = ce("a");
@@ -305,7 +302,7 @@ export class WEWWA {
             aBtn2.innerHTML = "Select URL";
             aBtn2.addEventListener("click", e => {
                 var uri = prompt("Please enter some audio file URL\r\n\r\nYouTube, Soundcloud etc. ARE NOT YET SUPPORTED!", "https://example.com/test.mp3");
-                self.initiateAudio(uri);
+                this.initiateAudio(uri);
             });
 
             var aBtn3 = ce("input");
@@ -315,7 +312,7 @@ export class WEWWA {
             aBtn3.addEventListener("change", e => {
                 var file = e.target.files[0];
                 if (!file) return;
-                self.initiateAudio(file);
+                this.initiateAudio(file);
             });
 
             td1.append(aBtn1, aBtn2, aBtn3);
@@ -337,8 +334,8 @@ export class WEWWA {
             dropArea.addEventListener("drop", e => {
                 e.stopPropagation();
                 e.preventDefault();
-                var droppedFiles = e.dataTransfer.files;
-                self.initiateAudio(droppedFiles[0]);
+                const droppedFiles = e.dataTransfer.files;
+                this.initiateAudio(droppedFiles[0]);
             }, false);
             dropt1.append(dropArea);
             dropRow.append(dropt1, dropt2);
@@ -351,7 +348,7 @@ export class WEWWA {
             hrstop.classList.add("red");
             hrstop.innerHTML = "Stop All Audio";
             hrstop.addEventListener("click", e => {
-                self.stopAudioInterval();
+                this.stopAudioInterval();
             });
             var hrhr = ce("hr")
             hrtd1.id = "audioMarker";
@@ -372,7 +369,7 @@ export class WEWWA {
         var local = proj.general.localization;
         if (local) {
             // set default language
-            if (!lang) lang = "en-us";
+            if (!lang) lang = DefLang;
             // add html struct
             var row = ce("tr");
             var td1 = ce("td");
@@ -405,10 +402,11 @@ export class WEWWA {
                 }
             }
             // if changed, do it all over again.
+            const self = this;
             lan.addEventListener("change", function (e) {
                 localStorage.setItem("wewwaLang", this.value);
                 self.AddMenu(this.value);
-                self.UpdateSettings();
+                self.EvaluateSettings();
                 (self.htmlIcon as any).click();
             });
             td2.setAttribute("colspan", 2);
@@ -568,26 +566,27 @@ export class WEWWA {
 
 
     public SetProperty(prop, elm) {
+
         // get the type and apply the value
         var props = this.project.general.properties;
+
         // check for legit setting...
         if (!props[prop]) {
             Smallog.Error("SetProperty name not found: " + prop, LogHead);
             return;
         }
+
         // enabled delayed call of settings update
         var applyCall = (val) => {
             // save the updated value to storage
             props[prop].value = val;
-
-            //Smallog.Debug("Property set: " + prop + " v: " + val);
-
             // update
-            this.UpdateSettings();
+            this.EvaluateSettings();
             var obj = {};
             obj[prop] = props[prop];
             this.ApplyProp(obj);
         };
+
         // process value based on DOM element type
         switch (props[prop].type) {
             case "bool":
@@ -621,28 +620,18 @@ export class WEWWA {
     // this way we can easily store whole files in the configuration & localStorage.
     // its not safe that this works with something else than image files.
     private XHRLoadAndSaveLocal(url, resCall) {
-        // Create XHR and FileReader objects
-        var xhr = new XMLHttpRequest();
-        var fileReader = new FileReader();
-        xhr.open("GET", url, true);
-        xhr.responseType = "blob";
-        xhr.addEventListener("load", function () {
-            if (xhr.status == 200) {
-                // onload needed since Google Chrome doesn't support addEventListener for FileReader
-                fileReader.onload = function (evt) {
-                    // Read out file contents as a Data URL
-                    resCall(evt.target.result)
-                };
-                // Load blob as Data URL
-                fileReader.readAsDataURL(xhr.response);
-            }
-        }, false);
-        // Send XHR
-        xhr.send();
+        myFetch(url, "blob").then(resp => {
+            // Read out file contents as a Data URL
+            const fReader = new FileReader();
+            // onload needed since Google Chrome doesn't support addEventListener for FileReader
+            fReader.onload = (evt) => resCall(evt.target.result)
+            // Load blob as Data URL
+            fReader.readAsDataURL(resp);
+        });
     }
 
 
-    private UpdateSettings() {
+    public EvaluateSettings() {
         var wewwaProps = this.project.general.properties;
         localStorage.setItem("wewwaLastProps", JSON.stringify(wewwaProps));
         for (var p in wewwaProps) {
@@ -708,6 +697,13 @@ export class WEWWA {
         var wpl = window['wallpaperPropertyListener'];
         if (wpl && wpl.applyUserProperties) {
             wpl.applyUserProperties(prop);
+        }
+    }
+
+    public SetPaused(val: boolean) {
+        var wpl = window['wallpaperPropertyListener'];
+        if (wpl && wpl.setPaused) {
+            wpl.setPaused(val);
         }
     }
 

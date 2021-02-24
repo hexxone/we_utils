@@ -22,6 +22,7 @@ const ELM_ID = "triggerwarn";
 
 // TODO test getting text
 class WarnSettings extends CSettings {
+    seizure_warning: boolean = true;
     seizure_text: string = "/* <!-- ## ERROR ## --> */";
     animate_seconds: number = 1;
     wait_seconds: number = 10;
@@ -32,6 +33,9 @@ export class WarnHelper extends CComponent {
     public settings: WarnSettings = new WarnSettings();
 
     private element: HTMLDivElement;
+
+    // promise behind showing the warning
+    private showResolve: any;
 
     constructor() {
         super();
@@ -66,19 +70,48 @@ export class WarnHelper extends CComponent {
         document.body.append(this.element);
     }
 
-    public Show() {
+    private setText() {
+        this.element.innerHTML = this.settings.seizure_text.replace("\r\n", "<br />");
+    }
+
+    public Show(): Promise<void> {
         return new Promise(resolve => {
+            // dont show
+            if (!this.settings.seizure_warning) {
+                resolve();
+                return;
+            }
+            // wait for resolve by "Hide()"
+            this.showResolve = resolve;
             // make text
-            const txtt = this.settings.seizure_text.replace("\r\n", "<br />");
-            this.element.innerHTML = txtt;
+            this.setText();
             // show it
             this.element.classList.add("show");
             // wait some time
-            setTimeout(() => {
-                // hide it & wait again
-                this.element.classList.remove("show");
-                setTimeout(resolve, this.settings.animate_seconds * 1000);
-            }, this.settings.wait_seconds * 1000);
+            setTimeout(this.Hide, this.settings.wait_seconds * 1000);
         });
+    }
+
+    public Hide(): Promise<void> {
+        return new Promise(resolve => {
+            // hide it & wait
+            this.element.classList.remove("show");
+            setTimeout(() => {
+                if(this.showResolve) this.showResolve();
+                this.showResolve = null;
+                resolve();
+            }, this.settings.animate_seconds * 1000);
+
+        });
+    }
+
+    public UpdateSettings(): Promise<void> {
+        // update text
+        this.setText();
+        // fix for instantly removing the warning while it shows
+        if(!this.settings.seizure_warning && this.element.classList.contains("show"))
+            return this.Hide();
+        // whatever
+        return;
     }
 };

@@ -24,7 +24,7 @@ export class CSettings {
                 this[key] = castedValue;
                 return true;
             }
-            else Smallog.Error("ISettings Error: invalid type on: '" + key +
+            else Smallog.Error("CSettings Error: invalid type on: '" + key +
                 "'. Is: '" + typeof this[key] + "', applied: '" + typeof castedValue + "'");
         }
         return false;

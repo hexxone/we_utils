@@ -19,6 +19,7 @@
  * 
 */
 
+import { ASUtil } from "@assemblyscript/loader";
 import { CComponent } from "../CComponent";
 import { CSettings } from "../CSettings";
 import { Ready } from "../Ready";
@@ -49,6 +50,8 @@ export class WEASettings extends CSettings {
 	bass_multiplier: number = 1.8;
 	// ignore value leveling for "silent" data
 	minimum_volume: number = 0.005;
+	// use low latency audio?
+	low_latency: boolean = false;
 }
 
 enum Sett {
@@ -107,16 +110,16 @@ export class WEAS extends CComponent {
 
 		var self = this;
 
-		this.weasModule = await WascInit('WEAS.wasm');
+		this.weasModule = await WascInit('WEAS.wasm', {}, !this.settings.low_latency);
 		const { run } = this.weasModule;
 
 		// pass settings to module
-		this.updateSettings();
+		await this.UpdateSettings();
 
 		// register audio callback on module
 		window['wallpaperRegisterAudioListener'](async audioArray => {
 			// check proof
-			if (!audioArray) return;
+			if (!audioArray || !this.settings.audioprocessing) return;
 			if (audioArray.length != DAT_LEN) {
 				Smallog.Error("audioListener: received invalid audio data array. Length: " + audioArray.length);
 				return;
@@ -130,19 +133,16 @@ export class WEAS extends CComponent {
 			run(({ module, instance, importObject, params }) => {
 				const { exports } = instance;
 				const { data } = params[0];
+				const io = importObject as ASUtil;
 
-				//console.debug("Send Data to Worker: " + JSON.stringify(data));
-
-				// apply data to module memory
-				const transfer = importObject.__getFloat64ArrayView(exports.inputData);
-				transfer.set(data);
-				// actual audio data processing 
+				// set audio data directly in module memory
+				io.__getFloat64ArrayView(exports.inputData).set(data);
+				// trigger processing processing 
 				exports.update();
-
-				// get updates Data & Properties
+				// get copy of updated Data & Properties
 				return {
-					data: importObject.__getFloat64ArrayView(exports.outputData),
-					props: importObject.__getFloat64ArrayView(exports.audioProps),
+					data: new Float64Array(io.__getFloat64ArrayView(exports.outputData)),
+					props: new Float64Array(io.__getFloat64ArrayView(exports.audioProps)),
 				}
 			}, {
 				// params passed to worker
@@ -162,6 +162,7 @@ export class WEAS extends CComponent {
 		});
 	}
 
+	// converts calculated output property number-array to string-associative-array
 	private getProps(dProps: ArrayLike<number>) {
 		var keys = Object.keys(Props);
 		keys = keys.slice(keys.length / 2);
@@ -174,7 +175,7 @@ export class WEAS extends CComponent {
 	}
 
 	// CAVEAT: only available after init and module load
-	public async updateSettings() {
+	public UpdateSettings(): Promise<void> {
 		if (!this.weasModule) return;
 		const { run } = this.weasModule;
 
@@ -187,12 +188,11 @@ export class WEAS extends CComponent {
 		}
 
 		// WRAP IN isolated Function ran inside worker
-		await run(({ module, instance, importObject, params }) => {
+		return run(({ module, instance, importObject, params }) => {
 			const { exports } = instance;
 			const { data } = params[0];
-
-			const transfer = importObject.__getFloat64ArrayView(exports.audioSettings);
-			transfer.set(data);
+			const io = importObject as ASUtil;
+			io.__getFloat64ArrayView(exports.audioSettings).set(data);
 		}, {
 			// Data passed to worker
 			data: sett
@@ -201,9 +201,16 @@ export class WEAS extends CComponent {
 		});
 	}
 
+	/**
+	 * return false if:
+	 * - processing is disabled
+	 * - there is no data
+	 * - the data is silent
+	 * - data is too old (> 3
+	 */
 	public hasAudio() {
-		// return false if there is no data or its invalid due to time (> 3s old)
-		return this.lastAudio && !this.lastAudio.silent &&
-			(performance.now() / 1000 - this.lastAudio.time < 3);
+		return this.settings.audioprocessing
+			&& this.lastAudio && this.lastAudio.silent == 0
+			&& (performance.now() / 1000 - this.lastAudio.time < 3);
 	}
 }

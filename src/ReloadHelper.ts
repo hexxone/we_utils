@@ -11,6 +11,7 @@
  * 
  */
 
+import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
 import { Ready } from "./Ready";
 
@@ -18,11 +19,12 @@ class ReloadSettings extends CSettings {
     reload_seconds: number = 3;
 }
 
-export class ReloadHelper {
+export class ReloadHelper extends CComponent {
 
     public settings: ReloadSettings = new ReloadSettings();
 
     constructor() {
+        super();
         Ready().then(() => {
             this.injectCSS();
             this.injectHTML();
@@ -94,4 +96,7 @@ export class ReloadHelper {
     public Hide() {
         $("#reload-bar, #reload-text").removeClass("show").addClass("done");
     }
+
+    // dont print IMPL error
+    public UpdateSettings(): Promise<void> { return; }
 };
