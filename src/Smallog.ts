@@ -3,7 +3,7 @@
  */
 
 
-function TraceCall(def: string) {
+export function TraceCall(def: string, depth: number = 3) {
     try {
         throw new Error("TraceCall()");
     }
@@ -11,7 +11,7 @@ function TraceCall(def: string) {
         // Examine e.stack here
         if (e.stack) {
             const splt = e.stack.split(/\n/);
-            if (splt.length > 3) return "[" + splt[3].trim().substring(3) + "] ";
+            if (splt.length > depth) return "[" + splt[depth].trim().substring(3) + "] ";
         }
     }
     return def;
@@ -25,7 +25,8 @@ export enum LogLevel {
 
 export module Smallog {
 
-    var logLevel: LogLevel = LogLevel.Info;
+    var logLevel: LogLevel = LogLevel.Debug; // todo level Info for release
+
     var preFix: string = "[Smallog] ";
     var printTime: boolean = false;
 

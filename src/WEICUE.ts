@@ -290,7 +290,7 @@ AAAASUVORK5CYII=
     }
 
     // show a message by icue
-    icueMessage(msg) {
+    private icueMessage(msg) {
         Smallog.Debug("MSG:  " + msg, ClassName);
         $("#icueholder").css('opacity', 1);
         $("#icuetext").html(msg);
@@ -303,7 +303,7 @@ AAAASUVORK5CYII=
     }
 
     // helper
-    getArea(inPx?) {
+    private getArea(inPx?) {
         var sett = this.settings;
         var wwid = window.innerWidth;
         var whei = window.innerHeight;
@@ -320,7 +320,7 @@ AAAASUVORK5CYII=
     }
 
     // get data for icue
-    getEncodedCanvasImageData(imageData) {
+    private getEncodedCanvasImageData(imageData) {
         var colorArray = [];
         for (var d = 0; d < imageData.data.length; d += 4) {
             var write = d / 4 * 3;
@@ -332,7 +332,7 @@ AAAASUVORK5CYII=
     }
 
     // canvas blur helper function
-    gBlurCanvas(canvas, ctx, blur) {
+    private gBlurCanvas(canvas, ctx, blur) {
         var sum = 0;
         var delta = 5;
         var alpha_left = 1 / (2 * Math.PI * delta * delta);
@@ -354,26 +354,7 @@ AAAASUVORK5CYII=
         ctx.globalAlpha = 1;
     }
 
-    // show or hide preview
-    updatePreview() {
-        var sett = this.settings;
-        // create preview?
-        if (!this.preview && sett.icue_area_preview) {
-            this.preview = document.createElement("div");
-            this.preview.classList.add("cuePreview");
-            document.body.appendChild(this.preview);
-        }
-        // update settings or destroy
-        if (this.preview) {
-            if (!sett.icue_area_preview) {
-                document.body.removeChild(this.preview);
-                this.preview = null;
-            }
-            else Object.assign(this.preview.style, this.getArea(true));
-        }
-    }
-
-    init() {
+    private init() {
         var sett = this.settings;
         // dont initialize if disabled
         if (sett.icue_mode == 0) return;
@@ -402,9 +383,30 @@ AAAASUVORK5CYII=
         // update devices about every 33ms/30fps. iCue doesnt really support higher values 
         this.icueInterval = setInterval(() => this.updateFrame(), 1000 / 30);
     }
+    
+
+    // show or hide preview
+    public UpdateSettings(): Promise<void> {
+        var sett = this.settings;
+        // create preview?
+        if (!this.preview && sett.icue_area_preview) {
+            this.preview = document.createElement("div");
+            this.preview.classList.add("cuePreview");
+            document.body.appendChild(this.preview);
+        }
+        // update settings or destroy
+        if (this.preview) {
+            if (!sett.icue_area_preview) {
+                document.body.removeChild(this.preview);
+                this.preview = null;
+            }
+            else Object.assign(this.preview.style, this.getArea(true));
+        }
+        return;
+    }
 
     // will initialize ICUE api & usage
-    initCUE(count) {
+    private initCUE(count) {
         // wait for plugins
         if (!this.isAvailable) {
             if (count < 100) {
@@ -433,7 +435,7 @@ AAAASUVORK5CYII=
     }
 
     // do the thing...
-    updateFrame() {
+    private updateFrame() {
         var sett = this.settings;
         if (this.PAUSED || !this.isAvailable || sett.icue_mode == 0 || this.icueDevices.length < 1) return;
         // projection mode
@@ -472,7 +474,7 @@ AAAASUVORK5CYII=
     }
 
     // prepare canvas
-    updateCanvas(mainCanvas) {
+    public updateCanvas(mainCanvas) {
         var sett = this.settings;
         if (!this.isAvailable || !mainCanvas || sett.icue_mode == 0 || this.icueDevices.length < 1) return;
 
@@ -493,13 +495,13 @@ AAAASUVORK5CYII=
         }
     }
 
-    showWaiting() {
+    private showWaiting() {
         $("#icuetext").html("LED: waiting for plugin.");
         $("#icueholder").fadeIn({ queue: false, duration: "fast" });
         $("#icueholder").animate({ top: "0px" }, "fast");
     }
 
-    hideWaiting() {
+    private hideWaiting() {
         $("#icueholder").fadeOut({ queue: false, duration: "fast" });
         $("#icueholder").animate({ top: "-120px" }, "fast");
     }
