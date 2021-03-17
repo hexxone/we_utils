@@ -20,13 +20,15 @@
 
 import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
-import { Ready } from "./Ready";
+import { Ready } from "./Util";
 import { Smallog } from "./Smallog";
 import { WEAS } from "./weas/WEAS";
 
 const ClassName: string = "[WEICUE] ";
 const canvasX: number = 23;
 const canvasY: number = 7;
+const WaitTime: number = 30;
+const Transition: number = 3;
 
 export class CUESettings extends CSettings {
     icue_mode: number = 1;
@@ -45,9 +47,13 @@ export class CUESettings extends CSettings {
 export class WEICUE extends CComponent {
 
     private weas: WEAS = null;
+
+    private holder: HTMLDivElement = null;
+    private texter: HTMLDivElement = null;
     private preview: HTMLDivElement = null;
     private helperCanvas: HTMLCanvasElement = null;
     private helperContext: CanvasRenderingContext2D = null;
+
     private icueDevices = [];
     private icueInterval = null;
 
@@ -81,13 +87,22 @@ export class WEICUE extends CComponent {
         var st = document.createElement("style");
         st.innerHTML = `
         #icueholder {
+            opacity: 0;
             position: absolute;
             top: -120px;
             left: 0;
             width: auto;
             height: auto;
             margin: 10px;
-            display: none;
+            transition: all ${Transition}s ease;
+        }
+        #icueholder.show {
+            opacity: 1;
+            top: 0px;
+        }
+        #icueholder.waiting {
+            opacity: 0.2;
+            transition: all 10s ease;
         }
         #icuelogo {
             float: left;
@@ -111,8 +126,10 @@ export class WEICUE extends CComponent {
     }
 
     private injectHTML() {
-        var outer = document.createElement("div");
-        outer.id = "icueholder";
+        // create container
+        this.holder = document.createElement("div");
+        this.holder.id = "icueholder";
+        // create icon (no ref needed)
         var imgg = document.createElement("img");
         imgg.id = "icuelogo";
         // @TODO remove this abomination
@@ -282,24 +299,27 @@ qPiqkr4Ha7SnT/gajTjh58gV7SNEge0B9oWG/a1i9UwO3Cm2KY4hKvg825c8VP+xfIT5KomTQiuMBC/h
 AAAASUVORK5CYII=
        `);
         // make text holder
-        var txtt = document.createElement("div");
-        txtt.id = "icuetext";
+        this.texter = document.createElement("div");
+        this.texter.id = "icuetext";
         // append image and text
-        outer.append(imgg, txtt);
-        document.body.append(outer);
+        this.holder.append(imgg, this.texter);
+        document.body.append(this.holder);
     }
 
     // show a message by icue
-    private icueMessage(msg) {
+    private icueMessage(msg, waiting :boolean = false) {
         Smallog.Debug("MSG:  " + msg, ClassName);
-        $("#icueholder").css('opacity', 1);
-        $("#icuetext").html(msg);
-        $("#icueholder").fadeIn({ queue: false, duration: "slow" });
-        $("#icueholder").animate({ top: "0px" }, "slow");
+        // set text
+        this.texter.innerHTML = msg;
+        // show
+        this.holder.classList.add("show");
+        if(waiting) this.holder.classList.add("waiting");
+        // hide again
+        const waiTime = waiting ? (WaitTime) : (Transition * 1000 + 4000);
         setTimeout(() => {
-            $("#icueholder").fadeOut({ queue: false, duration: "slow" });
-            $("#icueholder").animate({ top: "-120px" }, "slow");
-        }, 10000);
+            this.holder.classList.remove("show");
+            if(waiting) this.holder.classList.remove("waiting");
+        }, waiTime);
     }
 
     // helper
@@ -359,13 +379,8 @@ AAAASUVORK5CYII=
         // dont initialize if disabled
         if (sett.icue_mode == 0) return;
 
-        this.showWaiting();
-        setTimeout(() => {
-            this.hideWaiting();
-        }, 30000);
-
+        this.icueMessage("LED: waiting for plugin.", true);
         this.initCUE(0);
-
         Smallog.Debug("init...", ClassName);
 
         // recreate if reinit
@@ -409,10 +424,7 @@ AAAASUVORK5CYII=
     private initCUE(count) {
         // wait for plugins
         if (!this.isAvailable) {
-            if (count < 100) {
-                $("#icueholder").animate({ 'opacity': 0.1 + (100 - count) / 115 }, 250);
-                setTimeout(() => this.initCUE(count + 1), 300);
-            }
+            if (count < 100) setTimeout(() => this.initCUE(++count), 300);
             else this.icueMessage("LED: Plugin not found!");
             return;
         }
@@ -495,14 +507,4 @@ AAAASUVORK5CYII=
         }
     }
 
-    private showWaiting() {
-        $("#icuetext").html("LED: waiting for plugin.");
-        $("#icueholder").fadeIn({ queue: false, duration: "fast" });
-        $("#icueholder").animate({ top: "0px" }, "fast");
-    }
-
-    private hideWaiting() {
-        $("#icueholder").fadeOut({ queue: false, duration: "fast" });
-        $("#icueholder").animate({ top: "-120px" }, "fast");
-    }
 }

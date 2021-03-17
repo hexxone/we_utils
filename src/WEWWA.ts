@@ -45,7 +45,7 @@
  * - <form <input <label's
 */
 
-import { Ready } from "./Ready";
+import { Ready } from "./Util";
 import { Smallog } from "./Smallog";
 import { OfflineHelper } from "./offline/OfflineHelper";
 import { CC } from "cookieconsent";
@@ -61,7 +61,7 @@ export class WEWWA {
     private htmlIcon: Element = null;
     private htmlMenu: Element = null;
 
-    private audio: any = null;
+    private audio: HTMLAudioElement = null;
     private ctx: any = null;
     private source: any = null;
     private analyser: any = null;
@@ -143,7 +143,7 @@ export class WEWWA {
     private AddStyle() {
         var st = document.createElement("style");
         st.innerHTML = `
-        .wewwaMenu, .wewwaIcon {
+        #wewwaMenu, #wewwaIcon {
             transform: none;
             transition: transform 500ms ease;
             position:absolute;
@@ -152,7 +152,7 @@ export class WEWWA {
             margin:10px;
             z-index:9999;
         }
-        .wewwaMenu {
+        #wewwaMenu {
             border: solid 2px #444;
             width:400px;
             right:-440px;
@@ -165,59 +165,65 @@ export class WEWWA {
             font-family: Helvetica, Verdana, Arial;
             font-size: larger;
         }
-        .wewwaMenu.open {
+        #wewwaMenu.open {
             transform: translateX(-440px);
             transition: transform 500ms ease;
         }
         @media all and (max-width: 520px) {
-            .wewwaMenu.open {
+            #wewwaMenu.open {
                 max-height:85%;
                 transform: translateX(-440px) translateY(55px);
                 transition: transform 500ms ease;
             }
         }
-        .wewwaMenu a {
+        #wewwaMenu a {
             color: white;
             border: 2px solid #4CAF50;
             padding: 5px 20px;
             text-decoration: none;
             display: inline-block;
         }
-        .wewwaMenu a:hover {
+        #wewwaMenu a:hover {
             background: #4CAF50;
         }
-        .wewwaMenu .red {
+        #wewwaMenu .red {
             border-color: #FF7F50;
         }
-        .wewwaMenu .red:hover {
+        #wewwaMenu .red:hover {
             background-color: #FF7F50;
         }
-        .wewwaMenu .orange {
+        #wewwaMenu .orange {
             border-color: #FFA500;
         }
-        .wewwaMenu .orange:hover {
+        #wewwaMenu .orange:hover {
             background-color: #FFA500;
         }
-        .wewwaMenu audio {
+        #wewwaMenu audio {
             width: 100%;
         }
-        .wewwaMenu table {
+        #wewwaMenu table {
             width:100%;
             table-layout: fixed;
         }
-        .wewwaMenu td {
+        #wewwaMenu tr {
+            visibility: collapse;
+        }
+        #wewwaMenu tr.show {
+            visibility: visible;
+        }
+        #wewwaMenu td {
             width: 50%;
             padding: 5px;
         }
-        .wewwaMenu img {
+        #wewwaMenu img {
             width: 200px;
             max-width: 90%;
             heigth: auto;
         }
-        .wewwaMenu input[type='checkbox'][readonly]{
+        #wewwaMenu input[type='checkbox'][readonly]{
             pointer-events: none;
         }
-        .wewwaMenu .droparea {
+        #wewwaMenu .droparea {
             border: 2px dashed #bbb;
             -webkit-border-radius: 5px;
             border-radius: 5px;
@@ -226,18 +232,18 @@ export class WEWWA {
             font: 18pt;
             color: #bbb;
         }
-        .wewwaIcon {
+        #wewwaIcon {
             right:0px;
             cursor:pointer;
         }
-        .wewwaIcon div {
+        #wewwaIcon div {
             width:35px;
             height:5px;
             background-color:#888888;
             margin:6px 0;
         }
         @media all and (min-width: 520px) {
-            .wewwaIcon.open {
+            #wewwaIcon.open {
                 transform: translateX(-440px);
                 transition: transform 500ms ease;
             }
@@ -254,14 +260,15 @@ export class WEWWA {
             this.htmlMenu = null;
         }
         // quick wrapper, we need this a lot
-        var ce = (e) => document.createElement(e);
+        const ce = (e) => document.createElement(e);
+
         // local vars faster
         var proj = this.project;
         var props = proj.general.properties;
 
         // create root menu
         var menu = ce("div");
-        menu.classList.add("wewwaMenu");
+        menu.id = "wewwaMenu";
         // create preview img wrap
         var preview = ce("img");
         preview.setAttribute("src", proj.preview);
@@ -286,9 +293,11 @@ export class WEWWA {
 
             // audio input methods
             var row = ce("tr");
+            row.classList.add("show");
+
             var td1 = ce("td");
             td1.innerHTML = "<br><hr><h2>Audio Input</h2><hr>";
-            td1.setAttribute("colspan", 3);
+            td1.setAttribute("colspan", "3");
 
             var aBtn1 = ce("a");
             aBtn1.classList.add("orange");
@@ -310,7 +319,7 @@ export class WEWWA {
             aBtn3.innerHTML = "Select File";
             aBtn3.setAttribute("type", "file");
             aBtn3.addEventListener("change", e => {
-                var file = e.target.files[0];
+                var file = (e.target as any).files[0];
                 if (!file) return;
                 this.initiateAudio(file);
             });
@@ -320,9 +329,11 @@ export class WEWWA {
 
             // file drag & drop area
             var dropRow = ce("tr");
+            dropRow.classList.add("show");
+
             var dropt1 = ce("td");
             var dropt2 = ce("td");
-            dropt1.setAttribute("colspan", 3);
+            dropt1.setAttribute("colspan", "3");
             var dropArea = ce("div");
             dropArea.innerHTML = "Drag & Drop"
             dropArea.classList.add(...["droparea", "red"]);
@@ -342,6 +353,8 @@ export class WEWWA {
 
             // Player & Stop Btn
             var hrrow = ce("tr");
+            hrrow.classList.add("show");
+
             var hrtd1 = ce("td");
             var hrtd2 = ce("td");
             var hrstop = ce("a");
@@ -352,7 +365,7 @@ export class WEWWA {
             });
             var hrhr = ce("hr")
             hrtd1.id = "audioMarker";
-            hrtd1.setAttribute("colspan", 3);
+            hrtd1.setAttribute("colspan", "3");
             hrtd1.append(hrstop, hrhr);
             hrrow.append(hrtd1, hrtd2);
 
@@ -362,6 +375,7 @@ export class WEWWA {
 
         // create actual settings wrapper
         var settings = ce("tr");
+        settings.classList.add("show");
         settings.innerHTML = "<td colspan=3><h2>Settings</h2></td>";
         table.append(settings);
 
@@ -372,6 +386,7 @@ export class WEWWA {
             if (!lang) lang = DefLang;
             // add html struct
             var row = ce("tr");
+            row.classList.add("show");
             var td1 = ce("td");
             td1.innerHTML = "<h1>🇩🇪🇬🇧🇮🇹🇷🇺🇨🇳</h1>";
             var td2 = ce("td");
@@ -385,7 +400,7 @@ export class WEWWA {
                 lan.append(lcs);
                 // check for correct language code
                 if (loc != lang) continue;
-                else lcs.setAttribute("selected", true);
+                else lcs.setAttribute("selected", "true");
                 // set properties translated text
                 for (var p in props) {
                     var itm = props[p];
@@ -409,7 +424,7 @@ export class WEWWA {
                 self.EvaluateSettings();
                 (self.htmlIcon as any).click();
             });
-            td2.setAttribute("colspan", 2);
+            td2.setAttribute("colspan", "2");
             td2.append(lan);
             row.append(td1, td2);
             table.append(row);
@@ -417,6 +432,7 @@ export class WEWWA {
 
         // split content from actual settings
         var splitr = ce("tr");
+        splitr.classList.add("show");
         splitr.innerHTML = "<td colspan=3><hr></td>";
         table.append(splitr);
 
@@ -451,9 +467,12 @@ export class WEWWA {
 
         // create icon for opening & closing the menu
         var icon = ce("div");
-        icon.classList.add("wewwaIcon");
+        icon.id = "wewwaIcon";
         icon.addEventListener("click", () => {
-            $(".wewwaMenu, .wewwaIcon").toggleClass("open");
+            if(menu.classList.contains("open")) menu.classList.remove("open");
+            else menu.classList.add("open");
+            if(icon.classList.contains("open")) icon.classList.remove("open");
+            else icon.classList.add("open");
         });
         var bar1 = ce("div");
         var bar2 = ce("div");
@@ -469,7 +488,7 @@ export class WEWWA {
     private CreateItem(prop, itm) {
         if (!itm.type || itm.type == "hidden") return;
         var self = this;
-        var ce = (e) => document.createElement(e);
+        const ce = (e) => document.createElement(e);
         var row = ce("tr");
         row.setAttribute("id", "wewwa_" + prop);
         var td1 = ce("td");
@@ -667,16 +686,15 @@ export class WEWWA {
                 }
             }
 
-
-            if (visible) $("#wewwa_" + p).fadeIn();
-            else $("#wewwa_" + p).fadeOut();
-
             // get input dom element
+            const htElm = document.getElementById("wewwa_" + p);
+            if (!htElm || htElm.childNodes.length < 2) continue;
 
-            var elm: any = document.getElementById("wewwa_" + p);
-            if (!elm || elm.childNodes.length < 2) continue;
+            if (visible) htElm.classList.add("show");
+            else htElm.classList.remove("show");
 
-            elm = elm.childNodes[1].childNodes[0];
+            // set its value
+            const elm: any = htElm.childNodes[1].childNodes[0];
             switch (prop.type) {
                 case "color":
                     elm.value = this.rgbToHex(prop.value);
@@ -768,9 +786,11 @@ export class WEWWA {
         this.audio.src = data.name ? URL.createObjectURL(data) : data;
         this.audio.autoplay = true;
         this.audio.setAttribute("controls", "true");
-        this.audio.play = true;
+        this.audio.play();
 
-        $("#audioMarker").prepend(this.audio);
+        // insert before marker
+        const markr = document.getElementById("audioMarker");
+        markr.parentElement.insertBefore(this.audio, markr);
 
         this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
         this.source = this.ctx.createMediaElementSource(this.audio);
@@ -803,7 +823,7 @@ export class WEWWA {
 
     public stopAudioInterval() {
         window['persistAudioStream'] = null;
-        $("#wewwaAudioInput").val("");
+        document.getElementById("wewwaAudioInput").setAttribute("value", "");
         if (this.audio)
             this.audio.remove();
         if (this.audioInterval) {

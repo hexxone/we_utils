@@ -20,3 +20,7 @@ export function Ready() {
         document.addEventListener('DOMContentLoaded', resolve, false);
     });
 } 
+
+export function ToggleClass(id: string, clas: string) {
+    
+}
