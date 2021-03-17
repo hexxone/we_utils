@@ -16,7 +16,7 @@
 
 import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
-import { Ready } from "./Ready";
+import { Ready } from "./Util";
 
 const ELM_ID = "triggerwarn";
 

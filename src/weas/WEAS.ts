@@ -22,7 +22,7 @@
 import { ASUtil } from "@assemblyscript/loader";
 import { CComponent } from "../CComponent";
 import { CSettings } from "../CSettings";
-import { Ready } from "../Ready";
+import { Ready } from "../Util";
 import { Smallog } from "../Smallog";
 
 import WascInit from '../wasc-worker';

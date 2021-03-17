@@ -13,7 +13,7 @@
 
 import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
-import { Ready } from "./Ready";
+import { Ready } from "./Util";
 
 class ReloadSettings extends CSettings {
     reload_seconds: number = 3;
@@ -41,12 +41,12 @@ export class ReloadHelper extends CComponent {
             height: 10px;
             width: 0%;
             background-color: #989a;
-            transition: all ${this.settings.reload_seconds}s ease, opacity 0.33s ease;
         }
         #reload-bar.show {
             opacity: 1;
             width: 100%;
             background-color: #e11a;
+            transition: all ${this.settings.reload_seconds}s ease, opacity 0.33s ease;
         }
         #reload-bar.done {
             transition: opacity 0.33s ease;
@@ -59,12 +59,12 @@ export class ReloadHelper extends CComponent {
             font-weight: 100;
             font-size: 3em;
             color: #fffa;
-            transition: all .33s ease, color ${this.settings.reload_seconds}s ease, text-shadow ${this.settings.reload_seconds}s ease;
         }
         #reload-text.show {
             top: 10px;
             color: #e11a;
             text-shadow: 0 0 20px rgba(255, 50, 50, .5), 0 0 15px rgba(255, 50, 50, .5);
+            transition: all .33s ease, color ${this.settings.reload_seconds}s ease, text-shadow ${this.settings.reload_seconds}s ease;
         }
         #reload-text.done {
             transition: position 0.33s linear;
@@ -78,7 +78,7 @@ export class ReloadHelper extends CComponent {
 
     private injectHTML() {
         var outer = document.createElement("div");
-        outer.id = "reloader";
+        outer.id = "reloadhelper";
         var bar = document.createElement("div");
         bar.id = "reload-bar";
         var tex = document.createElement("h1");
@@ -88,13 +88,18 @@ export class ReloadHelper extends CComponent {
         document.body.append(outer);
     }
 
-    // @Todo make bar always reset to 0 on show
-    public Show() {
-        $("#reload-bar, #reload-text").removeClass("done").addClass("show");
-    }
-
-    public Hide() {
-        $("#reload-bar, #reload-text").removeClass("show").addClass("done");
+    // @Todo test: bar always reset to 0 on show ??
+    public Show(visible: boolean) {
+        const e1 = document.getElementById("reload-bar");
+        const e2 = document.getElementById("reload-text");
+        if(visible) {
+            e1.classList.add("show");   
+            e2.classList.add("show");
+        }
+        else {
+            e1.classList.remove("show");
+            e2.classList.remove("show");
+        }
     }
 
     // dont print IMPL error
