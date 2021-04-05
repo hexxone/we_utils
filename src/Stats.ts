@@ -1,12 +1,15 @@
 /**
- * @author D.Thiele @https://hexx.one
- * 
- * @description
- * TypeScript Wrapper for mrdoob Stats.js
- * Still requires Stats.js to be included!
- * 
- */
-
+* @author hexxone / https://hexx.one
+*
+* @license
+* Copyright (c) 2021 hexxone All rights reserved.
+* Licensed under the GNU GENERAL PUBLIC LICENSE.
+* See LICENSE file in the project root for full license information.
+*
+* TypeScript Wrapper for mrdoob Stats.js
+* Still requires Stats.js to be included!
+* @ignore
+*/
 
 declare interface Stats {
 	REVISION: number;
@@ -28,6 +31,7 @@ declare namespace Stats {
 		update(value: number, maxValue: number): void;
 	}
 
+	// eslint-disable-next-line no-unused-vars
 	function Panel(name?: string, fg?: string, bg?: string): Panel;
 }
 

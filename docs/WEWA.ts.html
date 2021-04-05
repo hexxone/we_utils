@@ -1,0 +1,1220 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> WEWA.ts</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    API Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WascBuilderPlugin.html">WascBuilderPlugin</a></li><li><a href="WascInterface.html">WascInterface</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#getTransferableParams">getTransferableParams</a></li><li><a href="global.html#myFetch">myFetch</a></li><li><a href="global.html#offliineSchema">offliineSchema</a></li><li><a href="global.html#waitReady">waitReady</a></li><li><a href="global.html#wascSchema">wascSchema</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>WEWA.ts</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* @author hexxone / https://hexx.one
+*
+* @license
+* Copyright (c) 2021 hexxone All rights reserved.
+* Licensed under the GNU GENERAL PUBLIC LICENSE.
+* See LICENSE file in the project root for full license information.
+*/
+
+import {waitReady} from './Util';
+import {Smallog} from './Smallog';
+import {OfflineHelper} from './offline/OfflineHelper';
+import {CC} from 'cookieconsent';
+import {myFetch} from './wasc-worker/WascRT';
+
+const LogHead = '[WEWWA] ';
+const DefLang = 'de-de';
+
+/**
+* WEWWA
+* &lt;br/>
+* Wallpaper Engine Web Wallpaper Adapter
+* &lt;br/>
+* This is an aditional TS class to be included in your Typescript/Webpack Wallpaper Engine
+* Web-Wallpaper project - so you can test, run &amp; configure it from a normal web browser.
+* &lt;br/>
+* REQUIREMENTS:
+* &lt;br/>
+* - HTML5 Browser
+* &lt;br/>
+* - the "project.json" needs to be in the root folder like "index.html"
+* &lt;br/>
+* - this file needs to be included/built in your "index.html"
+* &lt;br/>
+* &lt;br/>
+* FEATURES:
+* &lt;br/>
+* - automatically detecting if the web wallpaper is opened by wallpaper engine or browser
+* &lt;br/>
+* - if opened by wallpaper engine, nothing will happen
+* &lt;br/>
+* - if opened by a browser:
+* &lt;br/>
+*   - use a ServiceWorker to make page always available offline
+* &lt;br/>
+*   - automatically load the "project.json"
+* &lt;br/>
+*   - parse the settings, languages &amp; conditions
+* &lt;br/>
+*   - add respective html elements for each setting type &amp; condition
+* &lt;br/>
+*   - put these elements into an option menu which can be hidden
+* &lt;br/>
+*   - check localStorage for already saved/customized values
+* &lt;br/>
+*   - apply all settings once
+* &lt;br/>
+* - react to changes made in the ui and update them in the wallpaper
+* &lt;br/>
+* - save changes made in the ui to localStorage
+* &lt;br/>
+* - Annoying Cookie Popup (Thanks DSGVO)
+*
+*
+* @todo
+* - inject "audio processing" setting
+*
+* lighthouse:
+* - image explicit width/height
+* - cf longer cache policy (2d?)
+* - &lt;img alt's
+* - &lt;form &lt;input &lt;label's
+ */
+export class WEWWA {
+	private project: any = null;
+
+	private htmlMenu: Element = null;
+	private htmlIcon: Element = null;
+
+	private audio: HTMLAudioElement = null;
+	private ctx: any = null;
+	private source: any = null;
+	private analyser: any = null;
+
+	private audioInterval: any = null;
+	private audioCallback: any = null;
+
+	private pauseOnUnfocus: boolean = true;
+	private isPaused: boolean = false;
+
+	/**
+	 * Check if we are running in Web-Mode
+	 * if yes => iniitialize, else => do nothing
+	 * @param {Function} finished Callback
+	 */
+	constructor(finished) {
+		if (window['wallpaperRegisterAudioListener']) {
+			Smallog.info('detected wallpaper engine => Standby.', LogHead);
+			finished();
+			return;
+		}
+
+		Smallog.info('wallpaper engine not detected => Init!', LogHead);
+
+		// define audio listener first, so we dont miss when it gets registered.
+		window['wallpaperRegisterAudioListener'] = (callback) => {
+			// set callback to be called later with analysed audio data
+			this.audioCallback = callback;
+			Smallog.info('Registered wallpaper AudioListener.', LogHead);
+		};
+
+		// intialize when ready
+		waitReady().then(() => {
+			if (CC) {/* This tells the compiler to include CookieConsent at this point. */}
+
+			// Thanks DSGVO...
+			window['cookieconsent'].initialise({
+				palette: {
+					popup: {background: '#000'},
+					button: {background: '#f1d600'},
+				},
+				position: 'bottom-left',
+				theme: 'edgeless',
+			});
+
+			// make the website available offline using service worker
+			OfflineHelper.register(document.title.replace(' ', '')).then(() => {
+				// continue initializing
+				finished();
+				this.init();
+
+				// pause and resume on focus events
+				window.onblur = () => this.setPaused(true);
+				window.onfocus = () => this.setPaused(false);
+			});
+		});
+	}
+
+	/**
+	 * Initialize the Web Adapter
+	 */
+	private init() {
+		myFetch('project.json', 'json').then((proj) => {
+			if (proj.type != 'web') {
+				Smallog.Error('Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...', LogHead);
+				return;
+			}
+			this.project = proj;
+			this.loadStorage();
+			this.addStyle();
+			this.addMenu(localStorage.getItem('wewwaLang'));
+			this.evaluateSettings();
+			this.applyProp(proj.general.properties);
+		});
+	}
+
+	/**
+	 * Load last settings from localStorage
+	 */
+	private loadStorage() {
+		const props = this.project.general.properties;
+		const last = localStorage.getItem('wewwaLastProps');
+		if (last != null) {
+			const merged = Object.assign(props, JSON.parse(last));
+			merged.audioprocessing = {
+				value: this.project.general.supportsaudioprocessing,
+				type: 'hidden',
+			};
+			this.project.general.properties = merged;
+			Smallog.debug('Loaded &amp; merged settings.', LogHead);
+		}
+	}
+
+	/**
+	 * CSS Insertion
+	 */
+	private addStyle() {
+		const st = document.createElement('style');
+		// precalculation
+		const minWidthPx = 420;
+		const percentageWidth = 20;
+		const pwShort = `${percentageWidth}vw`;
+		st.innerHTML = `
+		#wewwaMenu, #wewwaIcon {
+			transform: none;
+			transition: transform 500ms ease;
+			position:absolute;
+			top:0px;
+			padding:15px;
+			z-index:9999;
+		}
+		#wewwaMenu {
+			top:10px;
+			border: solid 2px #444;
+			width:${pwShort};
+			left:100vw;
+			color:white;
+			background-color: rgba(0.6,0.6,0.6,0.8);
+			overflow-x:hidden;
+			overflow-y:scroll;
+			max-height:92.5%;
+			min-width: ${minWidthPx}px;
+			max-width: 100vw;
+			font-family: Helvetica, Verdana, Arial;
+			font-size: larger;
+		}
+		#wewwaMenu hr {
+			margin: 20px 0px;
+		}
+		#wewwaMenu a {
+			color: white;
+			border: 2px solid #4CAF50;
+			padding: 5px 10px;
+			margin: 5px;
+			text-decoration: none;
+			display: block;
+		}
+		#wewwaMenu a:hover {
+			background: #4CAF50;
+		}
+		#wewwaMenu .red {
+			border-color: #FF7F50;
+		}
+		#wewwaMenu .red:hover {
+			background-color: #FF7F50;
+		}
+		#wewwaMenu .audio {
+			border-color: #00a1ff;
+		}
+		#wewwaMenu .audio:hover {
+			background-color: #00a1ff;
+		}
+		#wewwaMenu audio, #wewwaMenu select {
+			width: 100%;
+		}
+		#wewwaMenu table {
+			width:100%;
+			table-layout: fixed;
+		}
+		#wewwaMenu tr.hide {
+			display: none;
+		}
+		#wewwaMenu td {
+			width: 50%;
+			padding: 5px;
+		}
+		#wewwaMenu .left {
+			text-align: left;
+		}
+		#wewwaMenu .right {
+			text-align: right;
+		}
+		#wewwaMenu img {
+			width: ${percentageWidth / 2}vw;
+			min-width: ${Math.floor(minWidthPx / 2)}px;
+			max-width: 90%;
+			heigth: auto;
+		}
+		#wewwaMenu .droparea {
+			border: 2px dashed #bbb;
+			-webkit-border-radius: 5px;
+			border-radius: 5px;
+			padding: 20px;
+			text-align: center;
+			font: 18pt;
+			color: #bbb;
+		}
+		/* Icon */
+		#wewwaIcon {
+			right:0px;
+			cursor:pointer;
+		}
+		#wewwaIcon div {
+			width:35px;
+			height:5px;
+			background-color:#888888;
+			margin:6px 0;
+		}
+		
+		#wewwaMenu.open, #wewwaIcon.open {
+			transform: translateX(min(-${percentageWidth * 1.1}vw, -${Math.floor(minWidthPx * 1.1)}px));
+			transition: transform 500ms ease;
+		}
+		
+		/* Smartphone format */
+		@media all and (max-width: 1000px) {
+			#wewwaMenu {
+				width:90vw;
+			}
+			#wewwaMenu.open {
+				transform: translateX(-95vw);
+				transition: transform 500ms ease;
+			}
+			#wewwaIcon.open {
+				transform: translateX(calc(-100vw + 60px));
+				transition: transform 500ms ease;
+			}
+		}
+		`;
+		document.head.append(st);
+	}
+
+	/**
+	* HTML Creation
+	* @param {string} lang WE language
+	*/
+	private addMenu(lang) {
+		const self = this;
+		if (this.htmlMenu) {
+			document.body.removeChild(this.htmlMenu);
+			document.body.removeChild(this.htmlIcon);
+			this.htmlMenu = null;
+		}
+
+		// quick wrapper, we need this a lot
+		const ce = (e) => document.createElement(e);
+
+		// local vars faster
+		const proj = this.project;
+		const props = proj.general.properties;
+
+		// create root menu
+		this.htmlMenu = ce('div');
+		this.htmlMenu.id = 'wewwaMenu';
+
+		// create preview img wrap
+		this.addMenuHeader(ce, proj);
+		// create table with settings
+		this.addMenuSettings(ce, proj, self, lang, props);
+		// Add Footer
+		this.addMenuFooter(ce);
+		// finally add the menu to the DOM
+		document.body.append(this.htmlMenu);
+
+		// last create the icon for opening &amp; closing the menu
+		this.addMenuIcon(ce);
+	}
+
+	/**
+	* Adds the Menu Icon
+	* @param {Function} ce CreateElement
+	* @param {Element} menu
+	*/
+	private addMenuIcon(ce: (e: any) => any, menu = this.htmlMenu) {
+		const icon = this.htmlIcon = ce('div');
+		icon.id = 'wewwaIcon';
+		icon.addEventListener('click', () => {
+			if (this.htmlMenu.classList.contains('open')) {
+				this.htmlMenu.classList.remove('open');
+			} else {
+				this.htmlMenu.classList.add('open');
+			}
+			if (icon.classList.contains('open')) {
+				icon.classList.remove('open');
+			} else {
+				icon.classList.add('open');
+			}
+		});
+		const bar1 = ce('div');
+		const bar2 = ce('div');
+		const bar3 = ce('div');
+		icon.append(bar1, bar2, bar3);
+		document.body.append(icon);
+	}
+
+	/**
+	 * Adds the actual Wallpaper Props as HTML
+	 * @param {Function} ce Create Element wrapper
+	 * @param {Object} proj project
+	 * @param {object} self this
+	 * @param {string} lang
+	 * @param {object} props
+	 * @param {Element} menu
+	 */
+	private addMenuSettings(ce: (e: any) => any, proj: any, self: this, lang: string, props: any, menu = this.htmlMenu) {
+		const tbl = ce('table');
+		tbl.innerHTML = '&lt;col style="width:50%"> &lt;col style="width:30%"> &lt;col style="width:20%">';
+		const tblBody = ce('tbody');
+		tbl.append(tblBody);
+
+		// if app supports audio, add input menu &amp; handlers
+		if (proj.general.supportsaudioprocessing) {
+			this.addMenuAudio(ce, tblBody);
+		}
+
+		// create actual settings wrapper
+		const settings = ce('tr');
+		settings.innerHTML = '&lt;td colspan=3>&lt;hr>&lt;h2>Settings&lt;/h2>&lt;hr>&lt;/td>';
+		tblBody.append(settings);
+
+		// pause checkbox
+		const pauseRow = ce('tr');
+		const pauseOne = ce('td');
+		pauseOne.innerHTML = '&lt;h4>Pause on Unfocus&lt;/h4>';
+		const pauseTwo = ce('td');
+		pauseTwo.setAttribute('colspan', '2');
+		const pauseBox = ce('input');
+		pauseBox.setAttribute('type', 'checkbox');
+		pauseBox.setAttribute('checked', this.pauseOnUnfocus);
+		pauseBox.addEventListener('change', function(e) {
+			// eslint-disable-next-line no-invalid-this
+			self.pauseOnUnfocus = this.checked;
+			// unpause if paused
+			if (!self.pauseOnUnfocus &amp;&amp; self.isPaused) {
+				self.setPaused(false);
+			}
+		});
+		pauseTwo.append(pauseBox);
+		pauseRow.append(pauseOne, pauseTwo);
+		tblBody.append(pauseRow);
+
+		// language select?
+		const local = proj.general.localization;
+		if (local) {
+			// set default language
+			if (!lang) {
+				lang = DefLang;
+			}
+			// add default strings
+			this.mergeLocals(local);
+			// add language menu row
+			const row = this.makeMenuLocalization(ce, lang, local, props);
+			tblBody.append(row);
+		}
+
+		// split content from actual settings
+		const splitr = ce('tr');
+		splitr.innerHTML = '&lt;td colspan=3>&lt;hr>&lt;/td>';
+		tblBody.append(splitr);
+
+		// sort settings by order
+		const sortable = [];
+		for (const p in props) {
+			if (p) sortable.push([p, props[p]]);
+		}
+		sortable.sort((a, b) => a[1].order - b[1].order);
+		// add setting html elements
+		for (const s of sortable) {
+			const itm = this.createItem(s[0], s[1]);
+			if (itm) tblBody.append(itm);
+		}
+
+		// pre-footer for resetting saved settings
+		// finish up menu
+		menu.append(tbl);
+	}
+
+	/**
+	 * Add missing default localization strings
+	 * @param {Object} local
+	 */
+	private mergeLocals(local: any) {
+		const locDefs = {
+			'ui_browse_properties_scheme_color': 'Scheme color',
+		};
+		for (const loc in local) {
+			if (!local[loc]) continue;
+			for (const def in locDefs) {
+				if (!local[loc][def]) {
+					local[loc][def] = locDefs[def];
+				}
+			}
+		}
+	}
+
+	/**
+	 * Adds the Footer Link to the Menu
+	 * @param {Function} ce create element
+	 * @param {Element} menu
+	 */
+	private addMenuFooter(ce: (e: any) => any, menu = this.htmlMenu) {
+		const preFoot = ce('div');
+		preFoot.innerHTML = '&lt;hr>';
+
+		const reset = ce('a');
+		reset.classList.add('red');
+		reset.innerHTML = 'Reset ↩️';
+		reset.addEventListener('click', (e) => {
+			if (!window.confirm('This action will clear ALL local data!\r\n\r\nAre you sure?')) {
+				return;
+			}
+			OfflineHelper.reset().then(() => {
+				localStorage.clear();
+				location = location;
+			});
+		});
+		preFoot.append(reset);
+
+		// footer with ident
+		const footer = ce('div');
+		footer.innerHTML = `
+		&lt;hr>
+		&lt;p style='text-align:left; width:11ch; margin:auto; padding:auto;'>
+		[W]allpaper&lt;br>
+		[E]ngine&lt;br>
+		[W]eb&lt;br>
+		[A]dapter
+		&lt;/p>
+		&lt;a rel=\"noreferrer\" target=\"_blank\" href=\"https://hexx.one\">by hexxone&lt;/a>
+		`;
+
+		menu.append(preFoot, footer);
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Add Language Menu
+	 */
+	private makeMenuLocalization(ce: (e: any) => any, lang, local, props) {
+		const self = this;
+		// add html struct
+		const row = ce('tr');
+		const td1 = ce('td');
+		td1.innerHTML = '&lt;h1>🌍&lt;/h1>';
+		const td2 = ce('td');
+		const lan = ce('select');
+		// process all
+		for (const loc in local) {
+			if (!loc) continue;
+			// build select option for this
+			const lcs = ce('option');
+			lcs.value = loc;
+			lcs.innerHTML = loc.toUpperCase();
+			lan.append(lcs);
+			// check for correct language code
+			if (loc != lang) continue;
+			else lcs.setAttribute('selected', 'true');
+			// set properties translated text
+			for (const p in props) {
+				if (!p) continue;
+				const itm = props[p];
+				const pTxt = itm.text;
+				const rTxt = local[loc][pTxt];
+				if (rTxt) itm.realText = rTxt;
+				// process combo box values
+				if (itm.type == 'combo') {
+					for (const o of itm.options) {
+						const lTxt = local[loc][o.label];
+						if (lTxt) o.realLabel = lTxt;
+					}
+				}
+			}
+		}
+		// if changed, do it all over again.
+		lan.addEventListener('change', function(e) {
+			// eslint-disable-next-line no-invalid-this
+			localStorage.setItem('wewwaLang', this.value);
+			// eslint-disable-next-line no-invalid-this
+			self.addMenu(this.value);
+			self.evaluateSettings();
+			(self.htmlIcon as any).click();
+		});
+		td2.setAttribute('colspan', '2');
+		td2.append(lan);
+		row.append(td1, td2);
+		return row;
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Add Audio Menu
+	 */
+	private addMenuAudio(ce: (e: any) => any, tblBody: any) {
+		// audio input methods
+		const row = ce('tr');
+
+		const td1 = ce('td');
+		td1.innerHTML = '&lt;hr>&lt;h2>Audio Input&lt;/h2>&lt;hr>';
+		td1.setAttribute('colspan', '3');
+
+		// Microphone input
+		const aBtn1 = ce('a');
+		aBtn1.classList.add('audio');
+		aBtn1.innerHTML = 'Microphone';
+		aBtn1.addEventListener('click', (e) => {
+			this.requestMicrophone();
+		});
+
+		// File Url input
+		const aBtn2 = ce('a');
+		aBtn2.classList.add('audio');
+		aBtn2.innerHTML = 'Select URL';
+		aBtn2.addEventListener('click', (e) => {
+			const uri = prompt('Please enter some audio file URL\r\n\r\nYouTube, Soundcloud etc. ARE NOT YET SUPPORTED!', 'https://example.com/test.mp3');
+			this.initiateAudio(uri);
+		});
+
+		// System file input
+		const aBtn3 = ce('input');
+		aBtn3.id = 'wewwaAudioInput';
+		aBtn3.innerHTML = 'Select File';
+		aBtn3.setAttribute('type', 'file');
+		aBtn3.addEventListener('change', (e) => {
+			const file = (e.target as any).files[0];
+			if (!file) {
+				return;
+			}
+			this.initiateAudio(file);
+		});
+
+		td1.append(aBtn1, aBtn2, aBtn3);
+		row.append(td1);
+
+
+		// file drag &amp; drop area
+		const dropRow = ce('tr');
+		const dropCol1 = ce('td');
+		const dropCol2 = ce('td');
+		dropCol1.setAttribute('colspan', '3');
+
+		const dropArea = ce('div');
+		dropArea.innerHTML = 'Drag &amp; Drop';
+		dropArea.classList.add(...['droparea', 'audio']);
+		dropArea.addEventListener('dragover', (evt) => {
+			evt.stopPropagation();
+			evt.preventDefault();
+			evt.dataTransfer.dropEffect = 'copy';
+		}, false);
+		dropArea.addEventListener('drop', (e) => {
+			e.stopPropagation();
+			e.preventDefault();
+			const droppedFiles = e.dataTransfer.files;
+			this.initiateAudio(droppedFiles[0]);
+		}, false);
+		dropCol1.append(dropArea);
+		dropRow.append(dropCol1, dropCol2);
+
+
+		// Play &amp; Stop Btn
+		const hrrow = ce('tr');
+		const hrtd1 = ce('td');
+		hrtd1.id = 'audioMarker';
+		hrtd1.setAttribute('colspan', '3');
+		const stopBtn = ce('a');
+		stopBtn.classList.add('red');
+		stopBtn.innerHTML = 'Stop All Audio';
+		stopBtn.addEventListener('click', (e) => {
+			this.stopAudioInterval();
+		});
+		hrtd1.append(stopBtn);
+		const hrtd2 = ce('td');
+		hrrow.append(hrtd1, hrtd2);
+
+		// finally add rows to table
+		tblBody.append(row, dropRow, hrrow);
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Add preview Image, Title and Link
+	 */
+	private addMenuHeader(ce: (e: any) => any, proj: any, menu = this.htmlMenu) {
+		const preview = ce('img');
+		preview.setAttribute('src', proj.preview);
+		// create menu app title
+		const header = ce('div');
+		header.innerHTML = '&lt;h2>' + proj.title + '&lt;/h2>';
+		// create workshop link
+		const link = ce('a');
+		link.setAttribute('rel', 'noreferrer');
+		link.setAttribute('href', 'https://steamcommunity.com/sharedfiles/filedetails/?id=' + proj.workshopid);
+		link.setAttribute('target', '_blank');
+		link.innerHTML = '&lt;h3>Open Workshop Page&lt;/h3>';
+		menu.append(preview, header, link);
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Create an HTML Menu Item from project json property
+	 */
+	private createItem(prop, itm) {
+		if (!itm.type || itm.type == 'hidden') return null;
+		const self = this;
+		const ce = (e) => document.createElement(e);
+		// table structure
+		const row = ce('tr');
+		row.setAttribute('id', 'wewwa_' + prop);
+		// Text
+		const column1 = ce('td');
+		column1.classList.add('left');
+		// Input
+		const column2 = ce('td');
+		column2.classList.add('right');
+		// optional NumericUpDown Column
+		let column3 = null;
+		// div or label text element
+		let txt = null;
+		// main input element
+		let inpt = null;
+
+		// Process actual prop type
+		switch (itm.type) {
+		// only text across 3 columns
+		case 'text':
+			txt = ce('div');
+			txt.innerHTML = itm.realText ? itm.realText : itm.text;
+			column1.setAttribute('colspan', 3);
+			break;
+
+			// combo select-box across 2 columns
+		case 'combo':
+			inpt = ce('select');
+			// set options
+			for (const o of itm.options) {
+				const opt = ce('option');
+				opt.setAttribute('value', o.value);
+				opt.innerText = o.realLabel ? o.realLabel : o.label;
+				if (itm.value == o.value) opt.setAttribute('selected', true);
+				inpt.appendChild(opt);
+			}
+			break;
+
+			// system color picker across 2 columns
+		case 'color':
+			inpt = ce('input');
+			inpt.setAttribute('type', 'color');
+			break;
+
+			// Checkbox across 2 columns
+		case 'bool':
+			inpt = ce('input');
+			inpt.setAttribute('type', 'checkbox');
+			inpt.setAttribute('readonly', true);
+			break;
+
+			// Slider input across 1 column; + 1 column Up/Down
+		case 'slider':
+			const canEdit = itm.editable;
+			// create numeric-up-down
+			const sliderVal = ce(canEdit ? 'input' : 'output');
+			sliderVal.name = 'wewwa_out_' + prop;
+			sliderVal.setAttribute('id', sliderVal.name);
+			sliderVal.setAttribute('type', 'number');
+			sliderVal.style.width = '75%';
+			if (canEdit) {
+				sliderVal.setAttribute('value', itm.value);
+				sliderVal.addEventListener('change', function(e) {
+					// eslint-disable-next-line no-invalid-this
+					self.setProperty(prop, this);
+				});
+			} else {
+				sliderVal.innerHTML = itm.value;
+			}
+			// create td3
+			column3 = ce('td');
+			column3.append(sliderVal);
+			// create actual slider &amp; values
+			inpt = ce('input');
+			inpt.setAttribute('type', 'range');
+			inpt.max = itm.max;
+			inpt.min = itm.min;
+			inpt.step = 0.1;
+			break;
+
+			// Text input across 2 columns
+		case 'textinput':
+			inpt = ce('input');
+			inpt.setAttribute('type', 'text');
+			break;
+
+			// File input across 2 columns
+		case 'file':
+			inpt = ce('input');
+			inpt.setAttribute('type', 'file');
+			break;
+
+		default:
+			Smallog.Error('unkown setting type: ' + itm.type, LogHead);
+			break;
+		}
+
+		const eid = 'wewwa_prop_' + prop;
+
+		// make input label if not text
+		if (!txt) {
+			txt = ce('label');
+			txt.setAttribute('for', eid);
+			txt.innerHTML = itm.realText ? itm.realText : itm.text;
+		}
+		column1.append(txt);
+
+		// listen for changes if input type (no text)
+		if (inpt) {
+			inpt.style.width = '100%';
+			inpt.setAttribute('id', eid);
+			inpt.addEventListener('change', function(e) {
+				// eslint-disable-next-line no-invalid-this
+				self.setProperty(prop, this);
+			});
+			column2.prepend(inpt);
+		}
+
+		// append td3 or stretch td2?
+		row.append(column1, column2);
+		if (column3) row.append(column3);
+		else column2.setAttribute('colspan', 2);
+
+		return row;
+	}
+
+
+	// -------------------------------------
+	//  Settings Helper
+	// -------------------------------------
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Callback for UI-Settings changes
+	 * Will apply them to the storage and running wallaper.
+	 */
+	public setProperty(prop, elm) {
+		// get the type and apply the value
+		const props = this.project.general.properties;
+
+		// check for legit setting...
+		if (!props[prop]) {
+			Smallog.Error('SetProperty name not found: ' + prop, LogHead);
+			return;
+		}
+
+		// enabled delayed call of settings update
+		const applyCall = (val) => {
+			// save the updated value to storage
+			props[prop].value = val;
+			// update
+			this.evaluateSettings();
+			const obj = {};
+			obj[prop] = props[prop];
+			this.applyProp(obj);
+		};
+
+		// process value based on DOM element type
+		switch (props[prop].type) {
+		case 'bool':
+			applyCall(elm.checked == true);
+			break;
+		case 'color':
+			applyCall(this.hexToRgb(elm.value));
+			break;
+		case 'file':
+			this.loadXHRSaveLocal(elm.value, (res) => applyCall(res));
+			break;
+		case 'slider':
+			if (elm.name.includes('_out_')) {
+				const inpt: any = document.querySelector('#wewwa_' + prop);
+				if (inpt) inpt.value = elm.value;
+				else Smallog.Error('Slider not found: ' + prop, LogHead);
+			} else {
+				const slide: any = document.querySelector('#wewwa_out_' + prop);
+				if (slide) slide.value = elm.value;
+				else Smallog.Error('Numericupdown not found: ' + prop, LogHead);
+			}
+		case 'combo':
+		case 'textinput':
+			applyCall(elm.value);
+			break;
+		}
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * will load the given file and return it as dataURL.
+	 * this way we can easily store whole files in the configuration &amp; localStorage.
+	 * its not safe that this works with something else than image files.
+	 */
+	private loadXHRSaveLocal(url, resCall) {
+		myFetch(url, 'blob').then((resp) => {
+			// Read out file contents as a Data URL
+			const fReader = new FileReader();
+			// onload needed since Google Chrome doesn't support addEventListener for FileReader
+			fReader.onload = (evt) => resCall(evt.target.result);
+			// Load blob as Data URL
+			fReader.readAsDataURL(resp);
+		});
+	}
+
+	/**
+	 * Show or hide menu items based on eval condition
+	 */
+	public evaluateSettings() {
+		const wewwaProps = this.project.general.properties;
+		localStorage.setItem('wewwaLastProps', JSON.stringify(wewwaProps));
+		for (const p in wewwaProps) {
+			if (!p) continue;
+			const prop = wewwaProps[p];
+
+			// some ev(a|i)l magic
+			let visible = true;
+			if (prop.condition != null) {
+				// copy our condition string to modify
+				let cprop = String(prop.condition).split(' ').join('');
+				// remove whitespaces and split to partials by logic operators
+				const partials = cprop.split(/&amp;&amp;|\|\|/);
+				// loop all partial values of the check
+				for (const part of partials) {
+					let prefix = 'wewwaProps.';
+					const onlyVal = part.match(/[!a-zA-Z0-9_\.]*/)[0];
+					if (!onlyVal.startsWith(prefix) &amp;&amp; !onlyVal.startsWith('!' + prefix)) {
+						// fix for inverted values
+						let replW = onlyVal;
+						if (replW.startsWith('!')) {
+							replW = replW.substr(1);
+							prefix = '!' + prefix;
+						}
+						// Smallog.Debug("replace: " + onlyVal + " >> " + prefix + replW);
+						cprop = cprop.replace(onlyVal, prefix + replW);
+					}
+				}
+				try {
+					visible = eval(cprop) == true;
+				} catch (e) {
+					Smallog.Error('Error: (' + cprop + ') for: ' + p + ' => ' + e, LogHead);
+				}
+			}
+
+			// get input dom element
+			const htElm = document.getElementById('wewwa_' + p);
+			if (!htElm || htElm.childNodes.length &lt; 2) continue;
+
+			if (visible) htElm.classList.remove('hide');
+			else htElm.classList.add('hide');
+
+			// set its value
+			const elm: any = htElm.childNodes[1].childNodes[0];
+			switch (prop.type) {
+			case 'color':
+				elm.value = this.rgbToHex(prop.value);
+				break;
+			case 'bool':
+				elm.checked = prop.value == true;
+				break;
+			case 'slider':
+			case 'combo':
+			case 'textinput':
+				elm.value = prop.value;
+				break;
+			}
+		}
+	}
+
+
+	// -------------------------------------
+	//  Wallpaper Interface
+	// -------------------------------------
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Send one or more properties to the Wallpaper
+	 */
+	public applyProp(prop) {
+		const wpl = window['wallpaperPropertyListener'];
+		if (wpl &amp;&amp; wpl.applyUserProperties) {
+			wpl.applyUserProperties(prop);
+		}
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Send paused-status to the Wallpaper
+	 */
+	public setPaused(val: boolean) {
+		const wpl = window['wallpaperPropertyListener'];
+		if (this.isPaused == val) return;
+		if (val &amp;&amp; !this.pauseOnUnfocus) return;
+		if (wpl &amp;&amp; wpl.setPaused) {
+			wpl.setPaused(val);
+			this.isPaused = val;
+		}
+	}
+
+
+	// -------------------------------------
+	//  UI Color Input conversion
+	// -------------------------------------
+
+	// eslint-disable-next-line require-jsdoc
+	private rgbToHex(rgb) {
+		// eslint-disable-next-line require-jsdoc
+		function cth(c) {
+			const h = Math.floor(c * 255).toString(16);
+			return h.length == 1 ? '0' + h : h;
+		}
+		const spl = rgb.split(' ');
+		return '#' + cth(spl[0]) + cth(spl[1]) + cth(spl[2]);
+	}
+
+	// eslint-disable-next-line require-jsdoc
+	private hexToRgb(hex) {
+		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+		return result ? [parseInt(result[1], 16) / 255, parseInt(result[2], 16) / 255, parseInt(result[3], 16) / 255].join(' ') : null;
+	}
+
+	// -------------------------------------
+	//  AUDIO PROCESSING
+	// -------------------------------------
+
+	/**
+	 * Request microphone from browser
+	 */
+	private requestMicrophone() {
+		navigator.mediaDevices.getUserMedia({
+			audio: true,
+		}).then((stream) => {
+			this.stopAudioInterval();
+			// hack for firefox to keep stream running
+			window['persistAudioStream'] = stream;
+			this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
+			this.source = this.ctx.createMediaStreamSource(stream);
+			this.analyser = this.ctx.createAnalyser();
+			this.analyser.smoothingTimeConstant = 0.35;
+			this.analyser.fftSize = 256;
+
+			this.source.connect(this.analyser);
+			this.startAudioInterval();
+		}).catch((err) => {
+			Smallog.Error(err, LogHead);
+			if (location.protocol != 'https:') {
+				const r = confirm('Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS for this feature to work! Press \'ok\'/\'yes\' to get redirected to HTTPS and try again.');
+				if (r) window.location.href = window.location.href.replace('http', 'https');
+			}
+		});
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * html5 audio analyser gives us mono data from 0(bass) to 128(treble)
+	 * however, wallpaper engine expects stereo data in following format:
+	 * 0(L: low) to 63(L: treble) and 64(R: low) to 128(R: treble)
+	 * so we do some array transformation... and divide by 255 (8bit-uint becomes float)
+	 */
+	private convertAudio(data) {
+		const stereo = [];
+		let sIdx = 0;
+		for (let i = 0; i &lt; 64; i++) {
+			stereo[i] = data[sIdx++] / 255;
+			stereo[127 - i] = data[sIdx++] / 255;
+		}
+		return stereo;
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	 * Start the audio processing &amp; analyzer
+	 */
+	private initiateAudio(data) {
+		// clear up
+		this.stopAudioInterval();
+		// create player
+		this.audio = document.createElement('audio');
+		this.audio.src = data.name ? URL.createObjectURL(data) : data;
+		this.audio.autoplay = true;
+		this.audio.setAttribute('controls', 'true');
+		this.audio.play();
+
+		// insert before marker
+		const markr = document.getElementById('audioMarker');
+		markr.parentElement.insertBefore(this.audio, markr);
+
+		this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
+		this.source = this.ctx.createMediaElementSource(this.audio);
+		this.analyser = this.ctx.createAnalyser();
+		this.analyser.smoothingTimeConstant = 0.35;
+		this.analyser.fftSize = 256;
+
+		this.source.connect(this.ctx.destination);
+		this.source.connect(this.analyser);
+		this.startAudioInterval();
+	}
+
+	/**
+	 * Start the processing loop
+	 */
+	private startAudioInterval() {
+		const data = new Uint8Array(128);
+		// 33ms ~~ 30fps
+		this.audioInterval = window.setInterval(() => {
+			if (this.audioCallback == null) {
+				this.stopAudioInterval();
+				Smallog.Error('no AudioCallback!', LogHead);
+				return;
+			}
+			this.analyser.getByteFrequencyData(data);
+			const stereo = this.convertAudio(data);
+			this.audioCallback(stereo);
+		}, 33);
+		// tell Wallpaper we are sending audio
+		this.applyProp({audioprocessing: {value: true}});
+	}
+
+	/**
+	 * Stop the processing loop
+	 */
+	public stopAudioInterval() {
+		window['persistAudioStream'] = null;
+		document.getElementById('wewwaAudioInput').setAttribute('value', '');
+		if (this.audio) {
+			this.audio.remove();
+		}
+		if (this.audioInterval) {
+			clearInterval(this.audioInterval);
+			this.audioInterval = null;
+		}
+	}
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by 
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+</body>
+</html>

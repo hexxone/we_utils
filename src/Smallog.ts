@@ -1,63 +1,73 @@
+
 /**
- * @author D.Thiele @https://hexx.one
- */
+* @author hexxone / https://hexx.one
+*
+* @license
+* Copyright (c) 2021 hexxone All rights reserved.
+* Licensed under the GNU GENERAL PUBLIC LICENSE.
+* See LICENSE file in the project root for full license information.
+*/
 
+/* eslint-disable no-unused-vars */
+/* eslint-disable require-jsdoc */
 
-export function TraceCall(def: string, depth: number = 3) {
-    try {
-        throw new Error("TraceCall()");
-    }
-    catch (e) {
-        // Examine e.stack here
-        if (e.stack) {
-            const splt = e.stack.split(/\n/);
-            if (splt.length > depth) return "[" + splt[depth].trim().substring(3) + "] ";
-        }
-    }
-    return def;
+export function traceCall(def: string, depth: number = 3) {
+	try {
+		throw new Error('TraceCall()');
+	} catch (e) {
+		// Examine e.stack here
+		if (e.stack) {
+			const splt = e.stack.split(/\n/);
+			if (splt.length > depth) return '[' + splt[depth].trim().substring(3) + '] ';
+		}
+	}
+	return def;
 }
 
 export enum LogLevel {
-    Error = 0,
-    Info = 1,
-    Debug = 2
+	Error = 0,
+	Info = 1,
+	Debug = 2
 }
 
 export module Smallog {
 
-    var logLevel: LogLevel = LogLevel.Debug; // todo level Info for release
+	let logLevel: LogLevel = LogLevel.Debug; // todo level Info for release
+	let preFix: string = '[Smallog] ';
+	let printTime: boolean = false;
 
-    var preFix: string = "[Smallog] ";
-    var printTime: boolean = false;
+	export function GetLevel() {
+		return logLevel;
+	}
 
-    export function GetLevel() {
-        return logLevel;
-    }
+	export function setLevel(level: LogLevel) {
+		logLevel = level;
+	}
 
-    export function SetLevel(level: LogLevel) {
-        logLevel = level;
-    }
+	export function setPrefix(pre: string) {
+		preFix = pre;
+	}
 
-    export function SetPrefix(pre: string) {
-        preFix = pre;
-    }
+	export function SetPrintTime(print: boolean) {
+		printTime = print;
+	}
 
-    export function Error(msg: string, hdr: string = preFix) {
-        Log(console.error, msg, TraceCall(hdr));
-    }
+	export function Error(msg: string, hdr: string = preFix) {
+		log(console.error, msg, traceCall(hdr));
+	}
 
-    export function Info(msg: string, hdr: string = preFix) {
-        if (logLevel >= 2) hdr = TraceCall(hdr);
-        if (logLevel >= 1) Log(console.info, msg, hdr);
-    }
+	export function info(msg: string, hdr: string = preFix) {
+		if (logLevel >= 2) hdr = traceCall(hdr);
+		if (logLevel >= 1) log(console.info, msg, hdr);
+	}
 
-    export function Debug(msg: string, hdr: string = preFix) {
-        if (logLevel >= 2) Log(console.debug, msg, TraceCall(hdr));
-    }
+	export function debug(msg: string, hdr: string = preFix) {
+		if (logLevel >= 2) log(console.debug, msg, traceCall(hdr));
+	}
 
-    function Log(call: any, msg: string, hdr: string) {
-        var m = msg;
-        if (printTime) m = ("[" + new Date().toLocaleString() + "] ") + m;
-        call(hdr + m);
-    }
+	function log(call: any, msg: string, hdr: string) {
+		let m = msg;
+		if (printTime) m = ('[' + new Date().toLocaleString() + '] ') + m;
+		call(hdr + m);
+	}
 }
