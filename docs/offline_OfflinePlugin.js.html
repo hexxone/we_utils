@@ -1,0 +1,266 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> offline/OfflinePlugin.js</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    API Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WascBuilderPlugin.html">WascBuilderPlugin</a></li><li><a href="WascInterface.html">WascInterface</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#getTransferableParams">getTransferableParams</a></li><li><a href="global.html#myFetch">myFetch</a></li><li><a href="global.html#offliineSchema">offliineSchema</a></li><li><a href="global.html#waitReady">waitReady</a></li><li><a href="global.html#wascSchema">wascSchema</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>offline/OfflinePlugin.js</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* @author hexxone / https://hexx.one
+*
+* @license
+* Copyright (c) 2021 hexxone All rights reserved.
+* Licensed under the GNU GENERAL PUBLIC LICENSE.
+* See LICENSE file in the project root for full license information.
+* @ignore
+*/
+
+
+const fs = require('fs');
+const validate = require('schema-utils');
+const {Compilation} = require('webpack');
+const {RawSource} = require('webpack-sources');
+
+const pluginName = 'OfflinePlugin';
+
+/**
+ * schema for options object
+ * @see {OfflinePlugin}
+ */
+const offliineSchema = {
+	type: 'object',
+	properties: {
+		staticdir: {
+			type: 'string',
+		},
+		outfile: {
+			type: 'string',
+		},
+		extrafiles: {
+			type: 'array',
+		},
+		pretty: {
+			type: 'boolean',
+		},
+	},
+};
+
+/**
+* list files recursively
+* @param {strring} baseDir start directory
+* @param {string} subDir sub directory
+* @param {array} arrayOfFiles result files
+* @return {array} arrayOfFiles
+*/
+function getAllFiles(baseDir, subDir, arrayOfFiles) {
+	const sub = baseDir + '/' + subDir;
+	const files = fs.readdirSync(sub);
+	arrayOfFiles = arrayOfFiles || [];
+	files.forEach((file) => {
+		const fle = sub + '/' + file;
+		if (fs.statSync(fle).isDirectory()) {
+			arrayOfFiles = getAllFiles(baseDir, subDir + '/' + file, arrayOfFiles);
+		} else {
+			arrayOfFiles.push(subDir + '/' + file);
+		}
+	});
+	return arrayOfFiles;
+}
+
+/**
+* This is a webpack plugin for easily making your webapp available Offline.
+* &lt;br/>
+* It will simply output a json list of files to cache for the Service Worker on build.
+* &lt;br/>
+* In your source, you just 'require' and 'Register()' the OfflineHelper.
+* &lt;br/>
+* The OfflineHelper will then require the OfflineWorker in background.
+* &lt;br/>
+* &lt;br/>
+*
+* The OfflineWorker will then:
+* &lt;br/>
+* 1. launch itself
+* &lt;br/>
+* 2. load the 'offlinefiles.json' list
+* &lt;br/>
+* 3. cache all files in it
+* &lt;br/>
+* 4. return cached files if network fetching fails
+* &lt;br/>
+* &lt;br/>
+* You can also ignore this plugin and create the 'offlinefiles.json' yourself.
+*/
+class OfflinePlugin {
+	options = {};
+
+	/**
+	* Intializes the plugin in the webpack build process
+	* @param {offliineSchema} options
+	*/
+	constructor(options = {}) {
+		validate.validate(offliineSchema, options);
+		this.options = options;
+	}
+
+	/**
+	* Hook into the compilation process,
+	* find all target files and put them into a json file
+	* @param {Webpack.compiler} compiler object from webpack
+	*/
+	apply(compiler) {
+		let addedOnce = false;
+		// Specify the event hook to attach to
+		compiler.hooks.thisCompilation.tap(pluginName, (compilation) =>
+			compilation.hooks.processAssets.tap({
+				name: pluginName,
+				stage: Compilation.PROCESS_ASSETS_STAGE_ANALYSE,
+			}, () => {
+				if (addedOnce) return;
+				addedOnce = true;
+
+				console.info('[' + pluginName + '] Gathering Infos...');
+
+				// list of all app-contents
+				const filelist = [];
+
+				// add static files from folder
+				const sFiles = getAllFiles(this.options.staticdir, '');
+				for (const staticFile in sFiles) {
+					if (!staticFile) continue;
+					filelist.push(sFiles[staticFile]);
+				}
+
+				// Loop through all compiled assets,
+				// adding a new line item for each filename.
+				for (const filename in compilation.assets) {
+					if (!filename) continue;
+					filelist.push('/' + filename);
+				}
+
+				// add additional files anyway?
+				if (this.options.extrafiles) {
+					this.options.extrafiles.map((ef) => filelist.push(ef));
+				}
+
+				// create the target file with all app-contents as json list
+				const jList = JSON.stringify(filelist, null, this.options.pretty ? 1 : 0);
+				compilation.emitAsset(this.options.outfile, new RawSource(jList));
+				console.info('[' + pluginName + '] result: ' + jList);
+
+				console.info('[' + pluginName + '] finished.');
+			},
+			));
+	}
+}
+
+module.exports = OfflinePlugin;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by 
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+</body>
+</html>

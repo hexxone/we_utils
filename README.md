@@ -8,7 +8,6 @@ Keeping track of this stuff manually is annoying...
 
 ### Dependencies / Libraries
 - [typescript](https://www.typescriptlang.org/) for typization
-- [jQuery](https://jquery.com/) gui editing
 - [three.js](https://threejs.org/) & Examples for webgl rendering
 
 
