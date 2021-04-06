@@ -1,4 +1,4 @@
-## we_utils
+# [we_utils](https://github.com/hexxone/we_utils)
 
 ### is a collection of utilities, mostly usefull when creating Wallpaper Engine Web Wallpapers with TypeScript / Webpack.
 
@@ -6,9 +6,13 @@ I created this repository since I was previously copying back-and-forth lots of 
 Keeping track of this stuff manually is annoying...
 
 
+## [Documentation](https://hexxone.github.io/we_utils)
+
+
 ### Dependencies / Libraries
 - [typescript](https://www.typescriptlang.org/) for typization
 - [three.js](https://threejs.org/) & Examples for webgl rendering
+- [wasc-worker](https://github.com/hexxone/wasc-worker) for ez AssemblyScript workers
 
 
 ### Features / Contents
@@ -20,11 +24,11 @@ Keeping track of this stuff manually is annoying...
 - "document.ready" shorthand
 - ReloadHelper for displaying a loading bar
 - Smallog Logging & Filtering
-- Stats.js definition file
 - WarnHelper for Seizure warnings
 - Wallpaper Engine iCUE Library (WEICUE)
 - Wallpaper Engine Wallpaper Adapter (WEWWA)
 - Worker-Loader definition file
+- Stats.js definition file
 
 
 ### Used by

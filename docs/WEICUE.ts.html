@@ -68,7 +68,7 @@
             
             <nav>
                 
-                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WascBuilderPlugin.html">WascBuilderPlugin</a></li><li><a href="WascInterface.html">WascInterface</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#getTransferableParams">getTransferableParams</a></li><li><a href="global.html#myFetch">myFetch</a></li><li><a href="global.html#offliineSchema">offliineSchema</a></li><li><a href="global.html#waitReady">waitReady</a></li><li><a href="global.html#wascSchema">wascSchema</a></li></ul></div>
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
                 
             </nav>
         </div>
@@ -147,7 +147,6 @@ export class WEICUE extends CComponent {
 
 	// runtime values
 	public settings: CUESettings = new CUESettings();
-
 	public isAvailable: boolean = false;
 	public PAUSED: boolean = false;
 
@@ -178,6 +177,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	* style for iCue messages, preview and helper
+	* @ignore
 	*/
 	private injectCSS() {
 		const st = document.createElement('style');
@@ -223,6 +223,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	* Prepare html elements
+	* @ignore
 	*/
 	private injectHTML() {
 		// create container
@@ -409,6 +410,7 @@ export class WEICUE extends CComponent {
 	* show a message by icue
 	* @param {string} msg
 	* @param {boolean} waiting
+	* @ignore
 	*/
 	private icueMessage(msg: string, waiting :boolean = false) {
 		Smallog.debug('MSG:  ' + msg, ClassName);
@@ -429,6 +431,7 @@ export class WEICUE extends CComponent {
 	* helper
 	* @param {boolean} inPx suffix "px" string to number (allows direct css use)
 	* @return {Object} area
+	* @ignore
 	*/
 	private getArea(inPx = false) {
 		const sett = this.settings;
@@ -450,6 +453,7 @@ export class WEICUE extends CComponent {
 	* convert data for icue
 	* @param {ImageData} imageData
 	* @return {string}
+	* @ignore
 	*/
 	private getEncodedCanvasImageData(imageData: ImageData) {
 		const colorArray = [];
@@ -467,6 +471,7 @@ export class WEICUE extends CComponent {
 	* @param {HTMLCanvasElement} canvas
 	* @param {CanvasRenderingContext2D} ctx
 	* @param {number} blur
+	* @ignore
 	*/
 	private gBlurCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, blur: number) {
 		let sum = 0;
@@ -492,6 +497,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	* Show waiting message and init canvas
+	* @ignore
 	*/
 	private init() {
 		const sett = this.settings;
@@ -544,6 +550,7 @@ export class WEICUE extends CComponent {
 	/**
 	* will initialize ICUE api &amp; usage
 	* @param {number} count Retries (will stop at 100)
+	* @ignore
 	*/
 	private initCUE(count) {
 		// wait for plugins
@@ -572,6 +579,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	*  do the thing...
+	* @ignore
 	*/
 	private updateFrame() {
 		const sett = this.settings;
@@ -612,9 +620,9 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	 * copy main canvas portion to our helper
-	 * @param {HTMLCanvasElementq} mainCanvas
-	 */
+	* copy main canvas portion to our helper
+	* @param {HTMLCanvasElementq} mainCanvas
+	*/
 	public updateCanvas(mainCanvas: HTMLCanvasElement) {
 		const sett = this.settings;
 		if (!this.isAvailable || !mainCanvas || sett.icue_mode == 0 || this.icueDevices.length &lt; 1) return;

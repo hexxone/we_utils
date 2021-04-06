@@ -7,7 +7,6 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {ASUtil} from '@assemblyscript/loader';
 import {CComponent} from './CComponent';
 import {CSettings} from './CSettings';
 import {waitReady} from './Util';
@@ -114,6 +113,7 @@ export class WEAS extends CComponent {
 	/**
 	* initializes audio processing pipeline
 	* and starts listening on audio data
+	* @ignore
 	*/
 	private async realInit() {
 		// if wallpaper engine context given, listen
@@ -135,7 +135,7 @@ export class WEAS extends CComponent {
 			// Smallog.debug('Get Audio Data!');
 			// check basic
 			if (!self.settings.audioprocessing || audioArray == null || audioArray.length != DAT_LEN) {
-				Smallog.Error('audioListener: received invalid audio data array: ' + JSON.stringify([audioArray.length || null, audioArray]));
+				Smallog.error('audioListener: received invalid audio data array: ' + JSON.stringify([audioArray.length || null, audioArray]));
 				return;
 			}
 			// check nulls
@@ -155,19 +155,18 @@ export class WEAS extends CComponent {
 			self.inBuff.set(audioArray);
 
 			// WRAP IN isolated Function ran inside worker
-			run(({module, instance, importObject, params}) => {
-				const {exports} = instance;
+			run(({module, instance, exports, params}) => {
+				const ex = instance.exports as any;
 				const {data} = params[0];
-				const io = importObject as ASUtil;
 
 				// set audio data directly in module memory
-				io.__getFloat64ArrayView(exports.inputData).set(data);
+				exports.__getFloat64ArrayView(ex.inputData).set(data);
 				// trigger processing processing
-				exports.update();
+				ex.update();
 				// get copy of updated Data & Properties
 				const r = { // => result
-					data: new Float64Array(io.__getFloat64ArrayView(exports.outputData)),
-					props: new Float64Array(io.__getFloat64ArrayView(exports.audioProps)),
+					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)),
+					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)),
 				};
 				return r;
 			}, // params passed to worker
@@ -194,6 +193,7 @@ export class WEAS extends CComponent {
 	* converts calculated output property number-array to string-associative-array
 	* @param {ArrayLike<number>} dProps processed properties
 	* @return {Object}
+	* @ignore
 	*/
 	private getProps(dProps: ArrayLike<number>) {
 		const keys = Object.keys(PropIDs);
@@ -224,11 +224,10 @@ export class WEAS extends CComponent {
 			}
 
 			// isolated Function running inside worker
-			run(({module, instance, importObject, params}) => {
-				const {exports} = instance;
+			run(({module, instance, exports, params}) => {
+				const ex = instance.exports as any;
 				const {data} = params[0];
-				const io = importObject as ASUtil;
-				io.__getFloat64ArrayView(exports.audioSettings).set(data);
+				exports.__getFloat64ArrayView(ex.audioSettings).set(data);
 			},
 			// Data passed to worker
 			{

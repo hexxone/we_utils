@@ -70,7 +70,7 @@ const DefLang = 'de-de';
 * - cf longer cache policy (2d?)
 * - <img alt's
 * - <form <input <label's
- */
+*/
 export class WEWWA {
 	private project: any = null;
 
@@ -89,10 +89,10 @@ export class WEWWA {
 	private isPaused: boolean = false;
 
 	/**
-	 * Check if we are running in Web-Mode
-	 * if yes => iniitialize, else => do nothing
-	 * @param {Function} finished Callback
-	 */
+	* Check if we are running in Web-Mode
+	* if yes => iniitialize, else => do nothing
+	* @param {Function} finished Callback for initializing the wallpaper
+	*/
 	constructor(finished) {
 		if (window['wallpaperRegisterAudioListener']) {
 			Smallog.info('detected wallpaper engine => Standby.', LogHead);
@@ -137,12 +137,13 @@ export class WEWWA {
 	}
 
 	/**
-	 * Initialize the Web Adapter
-	 */
+	* Initialize the Web Adapter
+	* @ignore
+	*/
 	private init() {
 		myFetch('project.json', 'json').then((proj) => {
 			if (proj.type != 'web') {
-				Smallog.Error('Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...', LogHead);
+				Smallog.error('Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...', LogHead);
 				return;
 			}
 			this.project = proj;
@@ -155,8 +156,9 @@ export class WEWWA {
 	}
 
 	/**
-	 * Load last settings from localStorage
-	 */
+	* Load last settings from localStorage
+	* @ignore
+	*/
 	private loadStorage() {
 		const props = this.project.general.properties;
 		const last = localStorage.getItem('wewwaLastProps');
@@ -172,8 +174,9 @@ export class WEWWA {
 	}
 
 	/**
-	 * CSS Insertion
-	 */
+	* CSS Insertion
+	* @ignore
+	*/
 	private addStyle() {
 		const st = document.createElement('style');
 		// precalculation
@@ -303,6 +306,7 @@ export class WEWWA {
 	/**
 	* HTML Creation
 	* @param {string} lang WE language
+	* @ignore
 	*/
 	private addMenu(lang) {
 		const self = this;
@@ -340,6 +344,7 @@ export class WEWWA {
 	* Adds the Menu Icon
 	* @param {Function} ce CreateElement
 	* @param {Element} menu
+	* @ignore
 	*/
 	private addMenuIcon(ce: (e: any) => any, menu = this.htmlMenu) {
 		const icon = this.htmlIcon = ce('div');
@@ -364,14 +369,15 @@ export class WEWWA {
 	}
 
 	/**
-	 * Adds the actual Wallpaper Props as HTML
-	 * @param {Function} ce Create Element wrapper
-	 * @param {Object} proj project
-	 * @param {object} self this
-	 * @param {string} lang
-	 * @param {object} props
-	 * @param {Element} menu
-	 */
+	* Adds the actual Wallpaper Props as HTML
+	* @param {Function} ce Create Element wrapper
+	* @param {Object} proj project
+	* @param {object} self this
+	* @param {string} lang
+	* @param {object} props
+	* @param {Element} menu
+	* @ignore
+	*/
 	private addMenuSettings(ce: (e: any) => any, proj: any, self: this, lang: string, props: any, menu = this.htmlMenu) {
 		const tbl = ce('table');
 		tbl.innerHTML = '<col style="width:50%"> <col style="width:30%"> <col style="width:20%">';
@@ -446,9 +452,10 @@ export class WEWWA {
 	}
 
 	/**
-	 * Add missing default localization strings
-	 * @param {Object} local
-	 */
+	* Add missing default localization strings
+	* @param {Object} local
+	* @ignore
+	*/
 	private mergeLocals(local: any) {
 		const locDefs = {
 			'ui_browse_properties_scheme_color': 'Scheme color',
@@ -464,10 +471,11 @@ export class WEWWA {
 	}
 
 	/**
-	 * Adds the Footer Link to the Menu
-	 * @param {Function} ce create element
-	 * @param {Element} menu
-	 */
+	* Adds the Footer Link to the Menu
+	* @param {Function} ce create element
+	* @param {Element} menu
+	* @ignore
+	*/
 	private addMenuFooter(ce: (e: any) => any, menu = this.htmlMenu) {
 		const preFoot = ce('div');
 		preFoot.innerHTML = '<hr>';
@@ -504,8 +512,9 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Add Language Menu
-	 */
+	* Add Language Menu
+	* @ignore
+	*/
 	private makeMenuLocalization(ce: (e: any) => any, lang, local, props) {
 		const self = this;
 		// add html struct
@@ -558,8 +567,9 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Add Audio Menu
-	 */
+	* Add Audio Menu
+	* @ignore
+	*/
 	private addMenuAudio(ce: (e: any) => any, tblBody: any) {
 		// audio input methods
 		const row = ce('tr');
@@ -647,8 +657,9 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Add preview Image, Title and Link
-	 */
+	* Add preview Image, Title and Link
+	* @ignore
+	*/
 	private addMenuHeader(ce: (e: any) => any, proj: any, menu = this.htmlMenu) {
 		const preview = ce('img');
 		preview.setAttribute('src', proj.preview);
@@ -666,8 +677,9 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Create an HTML Menu Item from project json property
-	 */
+	* Create an HTML Menu Item from project json property
+	* @ignore
+	*/
 	private createItem(prop, itm) {
 		if (!itm.type || itm.type == 'hidden') return null;
 		const self = this;
@@ -765,7 +777,7 @@ export class WEWWA {
 			break;
 
 		default:
-			Smallog.Error('unkown setting type: ' + itm.type, LogHead);
+			Smallog.error('unkown setting type: ' + itm.type, LogHead);
 			break;
 		}
 
@@ -805,16 +817,16 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Callback for UI-Settings changes
-	 * Will apply them to the storage and running wallaper.
-	 */
+	* Callback for UI-Settings changes
+	* Will apply them to the storage and running wallaper.
+	*/
 	public setProperty(prop, elm) {
 		// get the type and apply the value
 		const props = this.project.general.properties;
 
 		// check for legit setting...
 		if (!props[prop]) {
-			Smallog.Error('SetProperty name not found: ' + prop, LogHead);
+			Smallog.error('SetProperty name not found: ' + prop, LogHead);
 			return;
 		}
 
@@ -844,11 +856,11 @@ export class WEWWA {
 			if (elm.name.includes('_out_')) {
 				const inpt: any = document.querySelector('#wewwa_' + prop);
 				if (inpt) inpt.value = elm.value;
-				else Smallog.Error('Slider not found: ' + prop, LogHead);
+				else Smallog.error('Slider not found: ' + prop, LogHead);
 			} else {
 				const slide: any = document.querySelector('#wewwa_out_' + prop);
 				if (slide) slide.value = elm.value;
-				else Smallog.Error('Numericupdown not found: ' + prop, LogHead);
+				else Smallog.error('Numericupdown not found: ' + prop, LogHead);
 			}
 		case 'combo':
 		case 'textinput':
@@ -859,10 +871,11 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * will load the given file and return it as dataURL.
-	 * this way we can easily store whole files in the configuration & localStorage.
-	 * its not safe that this works with something else than image files.
-	 */
+	* will load the given file and return it as dataURL.
+	* this way we can easily store whole files in the configuration & localStorage.
+	* its not safe that this works with something else than image files.
+	* @ignore
+	*/
 	private loadXHRSaveLocal(url, resCall) {
 		myFetch(url, 'blob').then((resp) => {
 			// Read out file contents as a Data URL
@@ -875,8 +888,8 @@ export class WEWWA {
 	}
 
 	/**
-	 * Show or hide menu items based on eval condition
-	 */
+	* Show or hide menu items based on eval condition
+	*/
 	public evaluateSettings() {
 		const wewwaProps = this.project.general.properties;
 		localStorage.setItem('wewwaLastProps', JSON.stringify(wewwaProps));
@@ -909,7 +922,7 @@ export class WEWWA {
 				try {
 					visible = eval(cprop) == true;
 				} catch (e) {
-					Smallog.Error('Error: (' + cprop + ') for: ' + p + ' => ' + e, LogHead);
+					Smallog.error('Error: (' + cprop + ') for: ' + p + ' => ' + e, LogHead);
 				}
 			}
 
@@ -945,8 +958,8 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Send one or more properties to the Wallpaper
-	 */
+	* Send one or more properties to the Wallpaper
+	*/
 	public applyProp(prop) {
 		const wpl = window['wallpaperPropertyListener'];
 		if (wpl && wpl.applyUserProperties) {
@@ -956,8 +969,8 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Send paused-status to the Wallpaper
-	 */
+	* Send paused-status to the Wallpaper
+	*/
 	public setPaused(val: boolean) {
 		const wpl = window['wallpaperPropertyListener'];
 		if (this.isPaused == val) return;
@@ -995,8 +1008,9 @@ export class WEWWA {
 	// -------------------------------------
 
 	/**
-	 * Request microphone from browser
-	 */
+	* Request microphone from browser
+	* @ignore
+	*/
 	private requestMicrophone() {
 		navigator.mediaDevices.getUserMedia({
 			audio: true,
@@ -1013,7 +1027,7 @@ export class WEWWA {
 			this.source.connect(this.analyser);
 			this.startAudioInterval();
 		}).catch((err) => {
-			Smallog.Error(err, LogHead);
+			Smallog.error(err, LogHead);
 			if (location.protocol != 'https:') {
 				const r = confirm('Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS for this feature to work! Press \'ok\'/\'yes\' to get redirected to HTTPS and try again.');
 				if (r) window.location.href = window.location.href.replace('http', 'https');
@@ -1023,11 +1037,12 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * html5 audio analyser gives us mono data from 0(bass) to 128(treble)
-	 * however, wallpaper engine expects stereo data in following format:
-	 * 0(L: low) to 63(L: treble) and 64(R: low) to 128(R: treble)
-	 * so we do some array transformation... and divide by 255 (8bit-uint becomes float)
-	 */
+	* html5 audio analyser gives us mono data from 0(bass) to 128(treble)
+	* however, wallpaper engine expects stereo data in following format:
+	* 0(L: low) to 63(L: treble) and 64(R: low) to 128(R: treble)
+	* so we do some array transformation... and divide by 255 (8bit-uint becomes float)
+	* @ignore
+	*/
 	private convertAudio(data) {
 		const stereo = [];
 		let sIdx = 0;
@@ -1040,8 +1055,9 @@ export class WEWWA {
 
 	// eslint-disable-next-line valid-jsdoc
 	/**
-	 * Start the audio processing & analyzer
-	 */
+	* Start the audio processing & analyzer
+	* @ignore
+	*/
 	private initiateAudio(data) {
 		// clear up
 		this.stopAudioInterval();
@@ -1068,15 +1084,16 @@ export class WEWWA {
 	}
 
 	/**
-	 * Start the processing loop
-	 */
+	* Start the processing loop
+	* @ignore
+	*/
 	private startAudioInterval() {
 		const data = new Uint8Array(128);
 		// 33ms ~~ 30fps
 		this.audioInterval = window.setInterval(() => {
 			if (this.audioCallback == null) {
 				this.stopAudioInterval();
-				Smallog.Error('no AudioCallback!', LogHead);
+				Smallog.error('no AudioCallback!', LogHead);
 				return;
 			}
 			this.analyser.getByteFrequencyData(data);
@@ -1088,8 +1105,8 @@ export class WEWWA {
 	}
 
 	/**
-	 * Stop the processing loop
-	 */
+	* Stop the processing loop
+	*/
 	public stopAudioInterval() {
 		window['persistAudioStream'] = null;
 		document.getElementById('wewwaAudioInput').setAttribute('value', '');

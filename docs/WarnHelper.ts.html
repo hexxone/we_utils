@@ -68,7 +68,7 @@
             
             <nav>
                 
-                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WascBuilderPlugin.html">WascBuilderPlugin</a></li><li><a href="WascInterface.html">WascInterface</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#getTransferableParams">getTransferableParams</a></li><li><a href="global.html#myFetch">myFetch</a></li><li><a href="global.html#offliineSchema">offliineSchema</a></li><li><a href="global.html#waitReady">waitReady</a></li><li><a href="global.html#wascSchema">wascSchema</a></li></ul></div>
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
                 
             </nav>
         </div>
@@ -109,6 +109,7 @@ const ELM_ID = 'triggerwarn';
 
 /**
 * @TODO test getting text
+* @extends {CSettings}
 */
 class WarnSettings extends CSettings {
 	seizure_warning: boolean = true;
@@ -119,6 +120,7 @@ class WarnSettings extends CSettings {
 
 /**
 * Seizure warning display
+* @extends {CComponent}
 */
 export class WarnHelper extends CComponent {
 	public settings: WarnSettings = new WarnSettings();
@@ -142,6 +144,7 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Make custom style
+	* @ignore
 	*/
 	private injectCSS() {
 		const st = document.createElement('style');
@@ -163,6 +166,7 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Make custom html
+	* @ignore
 	*/
 	private injectHTML() {
 		this.element = document.createElement('div');
@@ -172,6 +176,7 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Set html text value
+	* @ignore
 	*/
 	private setText() {
 		this.element.innerHTML = this.settings.seizure_text.replace('\r\n', '&lt;br />');

@@ -49,11 +49,11 @@ export module OfflineHelper {
 				const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
 				await navigator.serviceWorker.register(workerPath, {scope: '/'})
 					.then(() => Smallog.info('service-worker registration complete.', LogHead),
-						() => Smallog.Error('service-worker registration failure.', LogHead))
+						() => Smallog.error('service-worker registration failure.', LogHead))
 					.then(() => resolve(true));
 				return true;
 			} else {
-				Smallog.Error(LogErrS, LogHead);
+				Smallog.error(LogErrS, LogHead);
 				resolve(false);
 			}
 		});
@@ -73,7 +73,7 @@ export module OfflineHelper {
 					resolve(true);
 				});
 			} else {
-				Smallog.Error(LogErrS, LogHead);
+				Smallog.error(LogErrS, LogHead);
 				resolve(false);
 			}
 		});
