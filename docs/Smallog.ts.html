@@ -7,7 +7,7 @@
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> Stats.ts</title>
+  <title> Smallog.ts</title>
 
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -68,7 +68,7 @@
             
             <nav>
                 
-                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WascBuilderPlugin.html">WascBuilderPlugin</a></li><li><a href="WascInterface.html">WascInterface</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Interfaces</h3><ul><li><a href="Stats.html">Stats</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#getTransferableParams">getTransferableParams</a></li><li><a href="global.html#INITIAL_MEM">INITIAL_MEM</a></li><li><a href="global.html#myFetch">myFetch</a></li><li><a href="global.html#offliineSchema">offliineSchema</a></li><li><a href="global.html#waitReady">waitReady</a></li><li><a href="global.html#wascSchema">wascSchema</a></li></ul></div>
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
                 
             </nav>
         </div>
@@ -76,7 +76,7 @@
             <div class="content">
                 <header class="page-title">
                     <p>Source</p>
-                    <h1>Stats.ts</h1>
+                    <h1>Smallog.ts</h1>
                 </header>
                 
 
@@ -85,7 +85,8 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
+            <pre class="prettyprint source linenums"><code>
+/**
 * @author hexxone / https://hexx.one
 *
 * @license
@@ -94,36 +95,128 @@
 * See LICENSE file in the project root for full license information.
 */
 
+/* eslint-disable no-unused-vars */
+
 /**
-* @ignore
-* TypeScript Wrapper for mrdoob Stats.js
-* Still requires Stats.js to be included!
-*/
-declare interface Stats {
-	REVISION: number;
-	dom: HTMLDivElement;
-	addPanel(panel: Stats.Panel): Stats.Panel;
-	showPanel(id: number): void;
-	begin(): void;
-	end(): void;
-	update(): void;
-	domElement: HTMLDivElement;
-	setMode(id: number): void;
+ * trace exception calls
+ * @param {string} def error message
+ * @param {number} depth which call to pick
+ * @return {string}
+ * @ignore
+ */
+function traceCall(def: string, depth: number = 3) {
+	try {
+		throw new Error('TraceCall()');
+	} catch (e) {
+		// Examine e.stack here
+		if (e.stack) {
+			const splt = e.stack.split(/\n/);
+			if (splt.length > depth) return '[' + splt[depth].trim().substring(3) + '] ';
+		}
+	}
+	return def;
 }
 
-declare function Stats(): Stats;
+/**
+ * @see {Smallog}
+ */
+export enum LogLevel {
+	/**
+	 * Print only error messages
+	 */
+	Error = 0,
+	/**
+	 * Print error and info messages
+	 */
+	Info = 1,
+	/**
+	 * Print all messages
+	 */
+	Debug = 2
+}
 
-declare namespace Stats {
-	interface Panel {
-		dom: HTMLCanvasElement;
-		update(value: number, maxValue: number): void;
+/**
+ * Small logging util, with name/time prefix &amp; log levels
+ */
+export module Smallog {
+
+	let logLevel: LogLevel = LogLevel.Debug; // todo level Info for release
+	let preFix: string = '[Smallog] ';
+	let printTime: boolean = false;
+
+	/**
+	 * get logging output level
+	 * @return {LogLevel} current
+	 */
+	export function getLevel() {
+		return logLevel;
 	}
 
-	// eslint-disable-next-line no-unused-vars
-	function Panel(name?: string, fg?: string, bg?: string): Panel;
-}
+	/**
+	 * set logging output level
+	 * @param {LogLevel} level new
+	 */
+	export function setLevel(level: LogLevel) {
+		logLevel = level;
+	}
 
-export default Stats;
+	/**
+	 * set logging prefix
+	 * @param {string} pre
+	 */
+	export function setPrefix(pre: string) {
+		preFix = pre;
+	}
+
+	/**
+	 * set time prefix
+	 * @param {boolean} print
+	 */
+	export function setPrintTime(print: boolean) {
+		printTime = print;
+	}
+
+	/**
+	 * print error message
+	 * @param {string} msg log
+	 * @param {string} hdr overwrite header
+	 */
+	export function error(msg: string, hdr: string = preFix) {
+		log(console.error, msg, traceCall(hdr));
+	}
+
+	/**
+	 * print info message
+	 * @param {string} msg log
+	 * @param {string} hdr overwrite header
+	 */
+	export function info(msg: string, hdr: string = preFix) {
+		if (logLevel >= 2) hdr = traceCall(hdr);
+		if (logLevel >= 1) log(console.info, msg, hdr);
+	}
+
+	/**
+	 * print debug message
+	 * @param {string} msg log
+	 * @param {string} hdr overwrite header
+	 */
+	export function debug(msg: string, hdr: string = preFix) {
+		if (logLevel >= 2) log(console.debug, msg, traceCall(hdr));
+	}
+
+	/**
+	 * internal logging function
+	 * @param {Function} call log callback
+	 * @param {string} msg text to print
+	 * @param {string} hdr header to include
+	 * @ignore
+	 */
+	function log(call: (...data: any) => void, msg: string, hdr: string) {
+		let m = msg;
+		if (printTime) m = ('[' + new Date().toLocaleString() + '] ') + m;
+		call(hdr + m);
+	}
+}
 </code></pre>
         </article>
     </section>

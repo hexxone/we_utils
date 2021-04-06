@@ -41,6 +41,7 @@ export class ReloadHelper extends CComponent {
 
 	/**
 	 * Make custom style
+	 * @ignore
 	 */
 	private injectCSS() {
 		const st = document.createElement('style');
@@ -89,6 +90,7 @@ export class ReloadHelper extends CComponent {
 
 	/**
 	 * Make custom html elements
+	 * @ignore
 	 */
 	private injectHTML() {
 		const outer = document.createElement('div');

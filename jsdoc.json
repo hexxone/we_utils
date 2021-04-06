@@ -1,6 +1,6 @@
 {
 	"opts": {
-		"template": "./../../node_modules/better-docs",
+		"template": "./src/wasc-worker/better-docs",
 		"encoding": "utf8",
 		"destination": "./docs/",
 		"recurse": true,
@@ -8,12 +8,12 @@
 		"access": "all"
 	},
 	"plugins": [
-		"./../../node_modules/better-docs/typescript"
+		"./src/wasc-worker/better-docs/typescript"
 	],
 	"recurseDepth": 10,
 	"source": {
 		"include": ["./src"],
-		"exclude": ["./src/wasc-worker/node_modules"],
+		"exclude": ["./src/wasc-worker/"],
 		"includePattern": ".+\\.(jsx|js|tsx|ts)$",
 		"excludePattern": "(^|\\/|\\\\)_"
 	},

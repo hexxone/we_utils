@@ -20,7 +20,7 @@ const pluginName = 'OfflinePlugin';
  * schema for options object
  * @see {OfflinePlugin}
  */
-const offliineSchema = {
+const offlineSchema = {
 	type: 'object',
 	properties: {
 		staticdir: {
@@ -92,7 +92,7 @@ class OfflinePlugin {
 	* @param {offliineSchema} options
 	*/
 	constructor(options = {}) {
-		validate.validate(offliineSchema, options);
+		validate.validate(offlineSchema, options);
 		this.options = options;
 	}
 

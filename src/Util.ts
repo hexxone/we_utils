@@ -11,8 +11,8 @@
 */
 
 /**
-* Helper function
-* @return {Promise} resolve when site ready
+* Helper function, resolves when html document is ready
+* @return {Promise}
 */
 export function waitReady() {
 	return new Promise((resolve) => {

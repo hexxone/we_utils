@@ -68,7 +68,7 @@
             
             <nav>
                 
-                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WascBuilderPlugin.html">WascBuilderPlugin</a></li><li><a href="WascInterface.html">WascInterface</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#getTransferableParams">getTransferableParams</a></li><li><a href="global.html#myFetch">myFetch</a></li><li><a href="global.html#offliineSchema">offliineSchema</a></li><li><a href="global.html#waitReady">waitReady</a></li><li><a href="global.html#wascSchema">wascSchema</a></li></ul></div>
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
                 
             </nav>
         </div>
@@ -94,7 +94,6 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {ASUtil} from '@assemblyscript/loader';
 import {CComponent} from './CComponent';
 import {CSettings} from './CSettings';
 import {waitReady} from './Util';
@@ -201,6 +200,7 @@ export class WEAS extends CComponent {
 	/**
 	* initializes audio processing pipeline
 	* and starts listening on audio data
+	* @ignore
 	*/
 	private async realInit() {
 		// if wallpaper engine context given, listen
@@ -219,11 +219,22 @@ export class WEAS extends CComponent {
 
 		// register audio callback on module
 		window['wallpaperRegisterAudioListener']((audioArray) => {
-			// check proof
-			if (!audioArray || !self.settings.audioprocessing) return;
-			if (audioArray.length != DAT_LEN) {
-				Smallog.Error('audioListener: received invalid audio data array. Length: ' + audioArray.length);
+			// Smallog.debug('Get Audio Data!');
+			// check basic
+			if (!self.settings.audioprocessing || audioArray == null || audioArray.length != DAT_LEN) {
+				Smallog.error('audioListener: received invalid audio data array: ' + JSON.stringify([audioArray.length || null, audioArray]));
 				return;
+			}
+			// check nulls
+			let consecutiveNull = 0;
+			for (let i = 0; i &lt; 15; i++) {
+				const aA = audioArray[Math.floor(Math.random() * audioArray.length)];
+				if (aA == 0.0) consecutiveNull++;
+				else consecutiveNull = 0;
+				if (consecutiveNull > 10) {
+					Smallog.debug('Skipping received Null data!: ' + JSON.stringify(audioArray));
+					return;
+				}
 			}
 
 			// prepare data
@@ -231,21 +242,19 @@ export class WEAS extends CComponent {
 			self.inBuff.set(audioArray);
 
 			// WRAP IN isolated Function ran inside worker
-			run(({module, instance, importObject, params}) => {
-				const {exports} = instance;
+			run(({module, instance, exports, params}) => {
+				const ex = instance.exports as any;
 				const {data} = params[0];
-				const io = importObject as ASUtil;
 
 				// set audio data directly in module memory
-				io.__getFloat64ArrayView(exports.inputData).set(data);
+				exports.__getFloat64ArrayView(ex.inputData).set(data);
 				// trigger processing processing
-				exports.update();
+				ex.update();
 				// get copy of updated Data &amp; Properties
 				const r = { // => result
-					data: new Float64Array(io.__getFloat64ArrayView(exports.outputData)),
-					props: new Float64Array(io.__getFloat64ArrayView(exports.audioProps)),
+					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)),
+					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)),
 				};
-				console.log(r);
 				return r;
 			}, // params passed to worker
 			{
@@ -257,12 +266,12 @@ export class WEAS extends CComponent {
 					const realProps = self.getProps(props);
 					// apply actual last Data from worker
 					self.lastAudio = {
-						time: start,
+						time: start / 1000,
 						data,
 						...realProps,
 					};
 					// print info
-					Smallog.info('Got Data from Worker! Time= ' + (performance.now() - start) + ', Data= ' + JSON.stringify(realProps));
+					Smallog.debug('Got Data from Worker! Time= ' + (performance.now() - start) + ', Data= ' + JSON.stringify(realProps));
 				});
 		});
 	}
@@ -271,6 +280,7 @@ export class WEAS extends CComponent {
 	* converts calculated output property number-array to string-associative-array
 	* @param {ArrayLike&lt;number>} dProps processed properties
 	* @return {Object}
+	* @ignore
 	*/
 	private getProps(dProps: ArrayLike&lt;number>) {
 		const keys = Object.keys(PropIDs);
@@ -301,11 +311,10 @@ export class WEAS extends CComponent {
 			}
 
 			// isolated Function running inside worker
-			run(({module, instance, importObject, params}) => {
-				const {exports} = instance;
+			run(({module, instance, exports, params}) => {
+				const ex = instance.exports as any;
 				const {data} = params[0];
-				const io = importObject as ASUtil;
-				io.__getFloat64ArrayView(exports.audioSettings).set(data);
+				exports.__getFloat64ArrayView(ex.audioSettings).set(data);
 			},
 			// Data passed to worker
 			{

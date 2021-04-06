@@ -16,12 +16,14 @@ import {Smallog} from './Smallog';
 export class CComponent {
 	private needsUpdate = false;
 
-	/** main Settings, need to be overwritten with Specific settings
-	 * @see {CSettings}
-	 */
+	/**
+	*  main Settings, need to be overwritten with Specific settings
+	*/
 	public settings: CSettings = null;
 
-	/* Important: Append your child objects, for settings to be applied correctly! */
+	/**
+	* Important: Append your child objects, for settings to be applied correctly!
+	*/
 	public children: CComponent[] = [];
 
 	/**

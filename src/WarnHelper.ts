@@ -22,6 +22,7 @@ const ELM_ID = 'triggerwarn';
 
 /**
 * @TODO test getting text
+* @extends {CSettings}
 */
 class WarnSettings extends CSettings {
 	seizure_warning: boolean = true;
@@ -32,6 +33,7 @@ class WarnSettings extends CSettings {
 
 /**
 * Seizure warning display
+* @extends {CComponent}
 */
 export class WarnHelper extends CComponent {
 	public settings: WarnSettings = new WarnSettings();
@@ -55,6 +57,7 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Make custom style
+	* @ignore
 	*/
 	private injectCSS() {
 		const st = document.createElement('style');
@@ -76,6 +79,7 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Make custom html
+	* @ignore
 	*/
 	private injectHTML() {
 		this.element = document.createElement('div');
@@ -85,6 +89,7 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Set html text value
+	* @ignore
 	*/
 	private setText() {
 		this.element.innerHTML = this.settings.seizure_text.replace('\r\n', '<br />');

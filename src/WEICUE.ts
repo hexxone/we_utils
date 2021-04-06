@@ -60,7 +60,6 @@ export class WEICUE extends CComponent {
 
 	// runtime values
 	public settings: CUESettings = new CUESettings();
-
 	public isAvailable: boolean = false;
 	public PAUSED: boolean = false;
 
@@ -91,6 +90,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	* style for iCue messages, preview and helper
+	* @ignore
 	*/
 	private injectCSS() {
 		const st = document.createElement('style');
@@ -136,6 +136,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	* Prepare html elements
+	* @ignore
 	*/
 	private injectHTML() {
 		// create container
@@ -322,6 +323,7 @@ export class WEICUE extends CComponent {
 	* show a message by icue
 	* @param {string} msg
 	* @param {boolean} waiting
+	* @ignore
 	*/
 	private icueMessage(msg: string, waiting :boolean = false) {
 		Smallog.debug('MSG:  ' + msg, ClassName);
@@ -342,6 +344,7 @@ export class WEICUE extends CComponent {
 	* helper
 	* @param {boolean} inPx suffix "px" string to number (allows direct css use)
 	* @return {Object} area
+	* @ignore
 	*/
 	private getArea(inPx = false) {
 		const sett = this.settings;
@@ -363,6 +366,7 @@ export class WEICUE extends CComponent {
 	* convert data for icue
 	* @param {ImageData} imageData
 	* @return {string}
+	* @ignore
 	*/
 	private getEncodedCanvasImageData(imageData: ImageData) {
 		const colorArray = [];
@@ -380,6 +384,7 @@ export class WEICUE extends CComponent {
 	* @param {HTMLCanvasElement} canvas
 	* @param {CanvasRenderingContext2D} ctx
 	* @param {number} blur
+	* @ignore
 	*/
 	private gBlurCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, blur: number) {
 		let sum = 0;
@@ -405,6 +410,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	* Show waiting message and init canvas
+	* @ignore
 	*/
 	private init() {
 		const sett = this.settings;
@@ -457,6 +463,7 @@ export class WEICUE extends CComponent {
 	/**
 	* will initialize ICUE api & usage
 	* @param {number} count Retries (will stop at 100)
+	* @ignore
 	*/
 	private initCUE(count) {
 		// wait for plugins
@@ -485,6 +492,7 @@ export class WEICUE extends CComponent {
 
 	/**
 	*  do the thing...
+	* @ignore
 	*/
 	private updateFrame() {
 		const sett = this.settings;
@@ -525,9 +533,9 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	 * copy main canvas portion to our helper
-	 * @param {HTMLCanvasElementq} mainCanvas
-	 */
+	* copy main canvas portion to our helper
+	* @param {HTMLCanvasElementq} mainCanvas
+	*/
 	public updateCanvas(mainCanvas: HTMLCanvasElement) {
 		const sett = this.settings;
 		if (!this.isAvailable || !mainCanvas || sett.icue_mode == 0 || this.icueDevices.length < 1) return;
