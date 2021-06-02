@@ -17,20 +17,22 @@ export class CComponent {
 	private needsUpdate = false;
 
 	/**
-	*  main Settings, need to be overwritten with Specific settings
-	*/
-	public settings: CSettings = null;
-
-	/**
 	* Important: Append your child objects, for settings to be applied correctly!
 	*/
-	public children: CComponent[] = [];
+	_internal_children: CComponent[] = [];
+
+	/**
+	*  main Settings, need to be overwritten with Specific settings
+	* @public
+	*/
+	public settings: CSettings = null;
 
 	/**
 	* will recursively try to set a setting with type and return success
 	* <br/>
 	* will also flag the module as needs-Update.
 	*
+	* @public
 	* @param {Object} key
 	* @param {Object} value
 	* @return {boolean} found
@@ -41,7 +43,7 @@ export class CComponent {
 			this.needsUpdate = true;
 			Smallog.debug(`ApplySetting: ${key}:${value}`);
 		}
-		this.children.forEach((ch) => found = (found || ch.applySetting(key, value)));
+		this._internal_children.forEach((ch) => found = ch.applySetting(key, value) || found);
 		return found;
 	}
 
@@ -49,9 +51,11 @@ export class CComponent {
 	* DO NOT OVERWWRITE !!!
 	* <br/>
 	* will recursively update all needed modules after settings changes
+	*
+	* @public
 	*/
-	public updateAll() {
-		this.children.forEach((c) => c.updateAll());
+	public updateAll(): void {
+		this._internal_children.forEach((c) => c.updateAll());
 		if (this.needsUpdate) this.updateSettings();
 		this.needsUpdate = false;
 	}
@@ -61,6 +65,7 @@ export class CComponent {
 	* <br/>
 	* should usually get called automatically when needed.. no need for extra calling
 	*
+	* @public
 	* @return {Promise} async commpletion event
 	*/
 	public updateSettings(): Promise<void> {

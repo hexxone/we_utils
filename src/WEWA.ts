@@ -9,9 +9,9 @@
 
 import {waitReady} from './Util';
 import {Smallog} from './Smallog';
-import {OfflineHelper} from './offline/OfflineHelper';
+import {register, reset} from './offline/OfflineHelper';
 import {CC} from 'cookieconsent';
-import {myFetch} from './wasc-worker/WascRT';
+import {myFetch} from './wasc-worker/WascUtil';
 
 const LogHead = '[WEWWA] ';
 const DefLang = 'de-de';
@@ -70,6 +70,8 @@ const DefLang = 'de-de';
 * - cf longer cache policy (2d?)
 * - <img alt's
 * - <form <input <label's
+*
+* @public
 */
 export class WEWWA {
 	private project: any = null;
@@ -124,7 +126,7 @@ export class WEWWA {
 			});
 
 			// make the website available offline using service worker
-			OfflineHelper.register(document.title.replace(' ', '')).then(() => {
+			register(document.title.replace(' ', '')).then(() => {
 				// continue initializing
 				finished();
 				this.init();
@@ -480,19 +482,19 @@ export class WEWWA {
 		const preFoot = ce('div');
 		preFoot.innerHTML = '<hr>';
 
-		const reset = ce('a');
-		reset.classList.add('red');
-		reset.innerHTML = 'Reset ↩️';
-		reset.addEventListener('click', (e) => {
+		const rst = ce('a');
+		rst.classList.add('red');
+		rst.innerHTML = 'Reset ↩️';
+		rst.addEventListener('click', (e) => {
 			if (!window.confirm('This action will clear ALL local data!\r\n\r\nAre you sure?')) {
 				return;
 			}
-			OfflineHelper.reset().then(() => {
+			reset().then(() => {
 				localStorage.clear();
 				location = location;
 			});
 		});
-		preFoot.append(reset);
+		preFoot.append(rst);
 
 		// footer with ident
 		const footer = ce('div');
@@ -819,6 +821,7 @@ export class WEWWA {
 	/**
 	* Callback for UI-Settings changes
 	* Will apply them to the storage and running wallaper.
+	* @public
 	*/
 	public setProperty(prop, elm) {
 		// get the type and apply the value
@@ -869,11 +872,12 @@ export class WEWWA {
 		}
 	}
 
-	// eslint-disable-next-line valid-jsdoc
 	/**
 	* will load the given file and return it as dataURL.
 	* this way we can easily store whole files in the configuration & localStorage.
 	* its not safe that this works with something else than image files.
+	* @param {string} url
+	* @param {function (data: (string | ArrayBuffer)): void} resCall
 	* @ignore
 	*/
 	private loadXHRSaveLocal(url, resCall) {
@@ -889,6 +893,7 @@ export class WEWWA {
 
 	/**
 	* Show or hide menu items based on eval condition
+	* @public
 	*/
 	public evaluateSettings() {
 		const wewwaProps = this.project.general.properties;
@@ -959,6 +964,7 @@ export class WEWWA {
 	// eslint-disable-next-line valid-jsdoc
 	/**
 	* Send one or more properties to the Wallpaper
+	* @public
 	*/
 	public applyProp(prop) {
 		const wpl = window['wallpaperPropertyListener'];
@@ -970,6 +976,7 @@ export class WEWWA {
 	// eslint-disable-next-line valid-jsdoc
 	/**
 	* Send paused-status to the Wallpaper
+	* @public
 	*/
 	public setPaused(val: boolean) {
 		const wpl = window['wallpaperPropertyListener'];
@@ -1021,7 +1028,7 @@ export class WEWWA {
 			this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
 			this.source = this.ctx.createMediaStreamSource(stream);
 			this.analyser = this.ctx.createAnalyser();
-			this.analyser.smoothingTimeConstant = 0.35;
+			this.analyser.smoothingTimeConstant = 0.15;
 			this.analyser.fftSize = 256;
 
 			this.source.connect(this.analyser);
@@ -1048,7 +1055,7 @@ export class WEWWA {
 		let sIdx = 0;
 		for (let i = 0; i < 64; i++) {
 			stereo[i] = data[sIdx++] / 255;
-			stereo[127 - i] = data[sIdx++] / 255;
+			stereo[64 + i] = data[sIdx++] / 255;
 		}
 		return stereo;
 	}
@@ -1070,13 +1077,13 @@ export class WEWWA {
 
 		// insert before marker
 		const markr = document.getElementById('audioMarker');
-		markr.parentElement.insertBefore(this.audio, markr);
+		markr.prepend(this.audio);
 
 		this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
 		this.source = this.ctx.createMediaElementSource(this.audio);
 		this.analyser = this.ctx.createAnalyser();
-		this.analyser.smoothingTimeConstant = 0.35;
-		this.analyser.fftSize = 256;
+		this.analyser.smoothingTimeConstant = 0.1;
+		this.analyser.fftSize = 512;
 
 		this.source.connect(this.ctx.destination);
 		this.source.connect(this.analyser);
@@ -1106,6 +1113,7 @@ export class WEWWA {
 
 	/**
 	* Stop the processing loop
+	* @public
 	*/
 	public stopAudioInterval() {
 		window['persistAudioStream'] = null;

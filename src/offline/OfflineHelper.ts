@@ -13,9 +13,6 @@ import {Smallog} from '../Smallog';
 // this should pack the serviceworker like a webwoker.
 import OfflineWorker from 'worker-loader!./Offline';
 
-const LogHead = '[OfflineHelper] ';
-const LogErrS = 'service-worker is not supported.';
-
 /**
 * @ignore
 * Helper class for loading and registering the ServiceWorker
@@ -29,53 +26,62 @@ const LogErrS = 'service-worker is not supported.';
 * the ServiceWorker will cache these files and automatically load them if the website is ran offline.
 * <br/>
 * ServiceWorker is a progressive technology. Some browsers will be unsupported...
+* @public
 */
-export module OfflineHelper {
-	// function helper, so OfflineWorker is actually processed
-	// eslint-disable-next-line require-jsdoc
-	function DontRemove() {
-		return new OfflineWorker();
-	};
 
-	// In order to intercept ALL fetch-requests offline, the scope "/" (root) is required.
-	// when you put in in a sub-directory like "/js/", the scope is also "/js/".
-	// Then, your HTTP Server will have to send the REPONSE HEADER `service-worker-allowed: /`
-	// otherwise it will cause an ERROR in your Browser. So: Putting the ServiceWorker in root folder is easiest.
-	// obviously with webpack, this causes a problem, when you are not outputting directly into the root dir...
-	// eslint-disable-next-line require-jsdoc
-	export function register(name: string, worker = 'Offline.worker.js', oFile = 'offlinefiles.json') {
-		return new Promise(async (resolve) => {
-			if ('serviceWorker' in navigator) {
-				const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
-				await navigator.serviceWorker.register(workerPath, {scope: '/'})
-					.then(() => Smallog.info('service-worker registration complete.', LogHead),
-						() => Smallog.error('service-worker registration failure.', LogHead))
-					.then(() => resolve(true));
-				return true;
-			} else {
-				Smallog.error(LogErrS, LogHead);
-				resolve(false);
-			}
-		});
-	}
+// function helper, so OfflineWorker is actually processed
+// eslint-disable-next-line require-jsdoc
+function DontRemove() {
+	return new OfflineWorker();
+};
 
-	/**
-	* unregister all service workers
-	* @return {Promise} finished
-	*/
-	export async function reset() {
-		return new Promise((resolve) => {
-			if ('serviceWorker' in navigator) {
-				navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-					for (const registration of registrations) {
-						await registration.unregister();
-					}
-					resolve(true);
-				});
-			} else {
-				Smallog.error(LogErrS, LogHead);
-				resolve(false);
-			}
-		});
-	}
+/**
+* In order to intercept ALL fetch-requests offline, the scope "/" (root) is required.
+* when you put in in a sub-directory like "/js/", the scope is also "/js/".
+* Then, your HTTP Server will have to send the REPONSE HEADER `service-worker-allowed: /`
+* otherwise it will cause an ERROR in your Browser. So: Putting the ServiceWorker in root folder is easiest.
+* obviously with webpack, this causes a problem, when you are not outputting directly into the root dir...
+* eslint-disable-next-line require-jsdoc
+*
+* @public
+* @param {string} name
+* @param {string} worker
+* @param {string} oFile
+* @return {Promise<boolean>}
+*/
+export function register(name: string, worker = 'Offline.worker.js', oFile = 'offlinefiles.json') {
+	return new Promise(async (resolve) => {
+		if ('serviceWorker' in navigator) {
+			const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
+			await navigator.serviceWorker.register(workerPath, {scope: '/'})
+				.then(() => Smallog.info('service-worker registration complete.', '[OfflineHelper] '),
+					() => Smallog.error('service-worker registration failure.', '[OfflineHelper] '))
+				.then(() => resolve(true));
+			return true;
+		} else {
+			Smallog.error('not supported!', '[OfflineHelper] ');
+			resolve(false);
+		}
+	});
+}
+
+/**
+* unregister all service workers
+* @return {Promise<boolean>} finished
+* @public
+*/
+export async function reset() {
+	return new Promise((resolve) => {
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+				for (const registration of registrations) {
+					await registration.unregister();
+				}
+				resolve(true);
+			});
+		} else {
+			Smallog.error('not supported!', '[OfflineHelper] ');
+			resolve(false);
+		}
+	});
 }

@@ -10,9 +10,12 @@ Keeping track of this stuff manually is annoying...
 
 
 ### Dependencies / Libraries
-- [typescript](https://www.typescriptlang.org/) for typization
+- [TypeScript](https://www.typescriptlang.org/) for typization
 - [three.js](https://threejs.org/) & Examples for webgl rendering
+- [WebAssembly](https://webassembly.org/) for more efficient processing
+- [AssemblyScript](https://www.assemblyscript.org/) for compiling "ASC" -> "WASM"
 - [wasc-worker](https://github.com/hexxone/wasc-worker) for ez AssemblyScript workers
+- [cookieconsent](https://github.com/osano/cookieconsent) thanks to EU laws
 
 
 ### Features / Contents

@@ -6,12 +6,22 @@
 * Licensed under the GNU GENERAL PUBLIC LICENSE.
 * See LICENSE file in the project root for full license information.
 *
-* @description
-* Shorthand Document ready wrapper
+* @ignore
 */
 
+// promise resolve queue
+const promQueue: ((val) => void)[] = [];
+const workQueue = () => {
+	while (promQueue.length > 0) {
+		const call = promQueue.shift();
+		call(true);
+	}
+};
+document.addEventListener('DOMContentLoaded', workQueue, false);
+
 /**
-* Helper function, resolves when html document is ready
+* Shorthand Document ready wrapper,\n resolves promise when html document is ready
+* @public
 * @return {Promise}
 */
 export function waitReady() {
@@ -21,6 +31,6 @@ export function waitReady() {
 			resolve(true);
 		}
 		// Otherwise, wait until document is loaded
-		document.addEventListener('DOMContentLoaded', resolve, false);
+		promQueue.push(resolve);
 	});
 }
