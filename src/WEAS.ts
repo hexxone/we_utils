@@ -12,41 +12,67 @@ import {CSettings} from './CSettings';
 import {waitReady} from './Util';
 import {Smallog} from './Smallog';
 
-import wascWorker from './wasc-worker/WascWorker';
-import {WascInterface} from './wasc-worker/WascInterface';
+import {wascWorker, WascInterface} from './wasc-worker';
 
 const DAT_LEN = 128;
 
 /**
 * Audio processing settings
+* @public
 * @extends {CSettings}
 */
 export class WEASettings extends CSettings {
+	debugging: boolean = false;
 	/** do audio processing? */
-	public audioprocessing: boolean = true;
+	audioprocessing: boolean = true;
 	// do pink-noise processing?
-	public equalize: boolean = true;
+	equalize: boolean = true;
 	// convert to mono?
-	public mono_audio: boolean = true;
+	mono_audio: boolean = true;
 	// invert low & high freqs?
-	public audio_direction: number = 0;
+	audio_direction: number = 0;
 	// peak filtering
-	public peak_filter: number = 1;
+	peak_filter: number = 1;
 	// neighbour-smoothing value
-	public value_smoothing: number = 2;
+	value_smoothing: number = 2;
 	// time-value smoothing ratio
-	public audio_increase: number = 75;
-	public audio_decrease: number = 35;
+	audio_increase: number = 75;
+	audio_decrease: number = 25;
 	// multipliers
-	public treble_multiplier: number = 0.5;
-	public mids_multiplier: number = 0.75;
-	public bass_multiplier: number = 1.8;
+	treble_multiplier: number = 0.5;
+	mids_multiplier: number = 0.75;
+	bass_multiplier: number = 1.8;
 	// ignore value leveling for "silent" data
-	public minimum_volume: number = 0.005;
+	minimum_volume: number = 0.005;
 	// use low latency audio?
-	public low_latency: boolean = false;
+	low_latency: boolean = false;
+	// show debug rendering?
+	show_canvas: boolean = true;
 }
 
+/**
+* Processed audio data representation
+* @public
+*/
+export interface WEAudio {
+	time: number;
+	ellapsed: number;
+	data: Float64Array;
+	bass: number;
+	mids: number;
+	highs: number;
+	sum: number;
+	min: number;
+	max: number;
+	average: number;
+	range: number;
+	silent: number;
+	intensity: number;
+}
+
+/**
+* @public
+*/
 const SettIDs = {
 	equalize: 0,
 	mono_audio: 1,
@@ -61,6 +87,9 @@ const SettIDs = {
 	minimum_volume: 10,
 };
 
+/**
+* @public
+*/
 const PropIDs = {
 	bass: 0,
 	mids: 1,
@@ -87,20 +116,29 @@ const PropIDs = {
 * - Wallpaper Engine Web Wallpaper environment
 * <br/>
 * - audio-processing supported web wallpaper
+* @public
 * @extends {CComponent}
 */
 export class WEAS extends CComponent {
-	// last processed audio object
-	public lastAudio = null;
+	/** @public last processed audio object */
+	public lastAudio: WEAudio = null;
 
-	// settings object
+	/** @public settings object */
 	public settings: WEASettings = new WEASettings();
 
-	// create transfer buffer
-	private inBuff = new Float64Array(DAT_LEN);
+	/** @public transfer buffer (last raw data) */
+	public inBuff = new Float64Array(DAT_LEN);
 
 	// web assembly functions
 	private weasModule: WascInterface = null;
+
+	// debug render elements
+	private mainElm: HTMLDivElement;
+	private canvas1: HTMLCanvasElement;
+	private context1: CanvasRenderingContext2D;
+	private canvas2: HTMLCanvasElement;
+	private context2: CanvasRenderingContext2D;
+	private display: HTMLElement;
 
 	/**
 	* delay audio initialization until page ready
@@ -116,18 +154,28 @@ export class WEAS extends CComponent {
 	* @ignore
 	*/
 	private async realInit() {
-		// if wallpaper engine context given, listen
+		// only listen if wallpaper engine context given
 		if (!window['wallpaperRegisterAudioListener']) {
 			Smallog.info('\'window.wallpaperRegisterAudioListener\' not given!');
 			return;
 		}
 
-		this.weasModule = await wascWorker('WEAS.wasm', {}, !this.settings.low_latency);
-		const {run} = this.weasModule;
+		this.injectCSS();
+		this.injectHTML();
+
+		this.weasModule = await wascWorker('WEAS.wasm', 4096, {}, !this.settings.low_latency);
+
+		// assert
+		if (this.weasModule) Smallog.debug('Got Audio provider!');
+		else {
+			Smallog.error('Could not create WebAssembly Audio provider! [Null-Object]');
+			return;
+		}
 
 		// pass settings to module
 		await this.updateSettings();
 
+		const {run} = this.weasModule;
 		const self = this;
 
 		// register audio callback on module
@@ -140,11 +188,11 @@ export class WEAS extends CComponent {
 			}
 			// check nulls
 			let consecutiveNull = 0;
-			for (let i = 0; i < 15; i++) {
-				const aA = audioArray[Math.floor(Math.random() * audioArray.length)];
+			for (let i = 1; i < 18; i++) {
+				const aA = audioArray[i * 2];
 				if (aA == 0.0) consecutiveNull++;
 				else consecutiveNull = 0;
-				if (consecutiveNull > 10) {
+				if (consecutiveNull > 16) {
 					Smallog.debug('Skipping received Null data!: ' + JSON.stringify(audioArray));
 					return;
 				}
@@ -177,16 +225,75 @@ export class WEAS extends CComponent {
 				.then((result) => {
 					const {data, props} = result;
 					const realProps = self.getProps(props);
+					const teim = performance.now() - start;
 					// apply actual last Data from worker
 					self.lastAudio = {
-						time: start / 1000,
+						time: start,
+						ellapsed: teim,
 						data,
 						...realProps,
-					};
-					// print info
-					Smallog.debug('Got Data from Worker! Time= ' + (performance.now() - start) + ', Data= ' + JSON.stringify(realProps));
+					} as any;
+				// print info
+				// Smallog.debug('Got Data from Worker! Time= ' + teim + ', Data= ' + JSON.stringify(realProps));
 				});
 		});
+	}
+
+	/**
+	* Inject preview CSS
+	* @ignore
+	*/
+	private injectCSS() {
+		const st = document.createElement('style');
+		st.innerHTML = `
+		#weas-preview {
+			opacity: 0;
+			position: absolute;
+			z-index: 2;
+			background: #000000aa;
+		}
+		#weas-preview canvas {
+			background: none;
+			border: white 2px dotted;
+		}
+		#weas-preview.show {
+			opacity: 1;
+		}
+		`;
+		document.head.append(st);
+	}
+
+	/**
+	* Inject preview canvas
+	* @ignore
+	*/
+	private injectHTML() {
+		this.mainElm = document.createElement('div');
+		this.mainElm.id = 'weas-preview';
+		this.mainElm.innerHTML = `
+		<div style="font-size: 300%">
+		<span>Raw Data:</span>
+		<br />
+		<span style="float:left">Left</span>
+		<span style="float:right">Right</span>
+		<canvas id="WEASCanvas1" style="height: 30vh; width: 95%;"></canvas>
+		<span>Processed:</span>
+		</div>
+		<span id="WEASDisplay"></span>
+		<br />
+		<canvas id="WEASCanvas2" style="height: 30vh; width: 95%;"></canvas>
+		`;
+		document.body.append(this.mainElm);
+
+		this.canvas1 = (document.getElementById('WEASCanvas1') as HTMLCanvasElement);
+		this.canvas1.width = window.innerWidth;
+		this.context1 = this.canvas1.getContext('2d');
+
+		this.canvas2 = (document.getElementById('WEASCanvas2') as HTMLCanvasElement);
+		this.canvas2.width = window.innerWidth;
+		this.context2 = this.canvas2.getContext('2d');
+
+		this.display = document.getElementById('WEASDisplay');
 	}
 
 	/**
@@ -209,10 +316,21 @@ export class WEAS extends CComponent {
 	* !! CAVEAT: only available after init and module load !!
 	* <br/>
 	* Will send the processing settings to the WebAssembly module
+	* @public
 	* @return {Promise} finished event
 	*/
 	public updateSettings(): Promise<void> {
 		if (!this.weasModule) return;
+
+		// show or hide debug info
+		if (this.settings.debugging) {
+			if (!this.mainElm.classList.contains('show')) {
+				this.mainElm.classList.add('show');
+			}
+		} else {
+			this.mainElm.classList.remove('show');
+		}
+
 		const {run} = this.weasModule;
 
 		return new Promise((resolve) => {
@@ -235,7 +353,7 @@ export class WEAS extends CComponent {
 			})
 			// Back to main context
 				.then(() => {
-					Smallog.info('Sent Settings to WEAS: ' + JSON.stringify(sett));
+					Smallog.debug('Sent Settings to WEAS: ' + JSON.stringify(sett));
 					resolve();
 				});
 		});
@@ -251,10 +369,51 @@ export class WEAS extends CComponent {
 	* - the data is silent
 	* <br/>
 	* - data is too old (> 3s)
+	* @public
 	*/
 	public hasAudio() {
+		if (this.settings.show_canvas) this.updateCanvas();
+
 		return this.settings.audioprocessing &&
 		this.lastAudio && this.lastAudio.silent == 0 &&
-		(performance.now() / 1000 - this.lastAudio.time < 3);
+		(performance.now() - this.lastAudio.time < 3000);
+	}
+
+	/**
+	* Update the debug canvas
+	*/
+	private updateCanvas() {
+		// update "raw" canvas
+
+		// clear the intersection
+		this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
+		this.context1.fillStyle = 'rgb(255,0,0)';
+		const barWidth = Math.round(1.0 / this.inBuff.length * this.canvas1.width);
+		const halfCount = this.inBuff.length / 2;
+		for (let i = 0; i < halfCount; ++i) {
+			const height = this.canvas1.height * this.inBuff[i] / 2;
+			this.context1.fillRect(barWidth * i, this.canvas1.height - height, barWidth, height);
+		}
+		this.context1.fillStyle = 'rgb(0,0,255)';
+		for (let i = halfCount; i < this.inBuff.length; ++i) {
+			const height = this.canvas1.height * this.inBuff[191 - i] / 2;
+			this.context1.fillRect(barWidth * i, this.canvas1.height - height, barWidth, height);
+		}
+
+		// update "processed" data
+		const tmpData = Object.assign({}, this.lastAudio);
+		tmpData.data = null;
+		this.display.innerText = JSON.stringify(tmpData, null, '\t');
+
+		// update "processed" canvas
+		this.context2.clearRect(0, 0, this.canvas2.width, this.canvas2.height);
+
+		if (this.lastAudio && this.lastAudio.data) {
+			this.context2.fillStyle = 'rgb(0,255,0)';
+			for (let index = 0; index < this.lastAudio.data.length; index++) {
+				const height = this.canvas1.height * this.lastAudio.data[index] / 2;
+				this.context2.fillRect(barWidth * index, this.canvas1.height - height, barWidth, height);
+			}
+		}
 	}
 }

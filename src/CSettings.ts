@@ -16,20 +16,27 @@ import {Smallog} from './Smallog';
 *
 * All Settings-classes should be dereived from this one.
 *
+* @public
 * @see {CComponent}
 */
 export class CSettings {
 	/**
-	* check if a certain key exists on a (dereived) object and the value type matches
+	* check if a certain key exists on a (dereived) object.
+	* if it exists, the value type matches and the value is not already equal, apply & return true
+	* otherwise return false
+	*
+	* @public
 	* @param {string} key
 	* @param {Object} castedValue
-	* @return {boolean} success
+	* @return {boolean} value was found & changed
 	*/
-	public apply(key: string, castedValue: any) {
+	public apply(key: string, castedValue: any): boolean {
 		if (this[key] !== undefined) {
 			if (typeof this[key] === typeof castedValue) {
-				this[key] = castedValue;
-				return true;
+				if (this[key] !== castedValue) {
+					this[key] = castedValue;
+					return true;
+				}
 			} else {
 				Smallog.error('CSettings Error: invalid type on: \'' + key +
 				'\'. Is: \'' + typeof this[key] + '\', applied: \'' + typeof castedValue + '\'');

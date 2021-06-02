@@ -68,7 +68,7 @@
             
             <nav>
                 
-                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="BlendShader.html">BlendShader</a></li><li><a href="BlurShader.html">BlurShader</a></li><li><a href="CComponent.html">CComponent</a></li><li><a href="ChromaticShader.html">ChromaticShader</a></li><li><a href="CopyShader.html">CopyShader</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="EffectComposer.html">EffectComposer</a></li><li><a href="FPSettings.html">FPSettings</a></li><li><a href="FPStats.html">FPStats</a></li><li><a href="FractalMirrorShader.html">FractalMirrorShader</a></li><li><a href="FullScreenHelper.html">FullScreenHelper</a></li><li><a href="FXAAShader.html">FXAAShader</a></li><li><a href="LuminosityHighPassShader.html">LuminosityHighPassShader</a></li><li><a href="LUTShader.html">LUTShader</a></li><li><a href="LUTShaderNearest.html">LUTShaderNearest</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="RenderPass.html">RenderPass</a></li><li><a href="ShaderPass.html">ShaderPass</a></li><li><a href="UnrealBloomPass.html">UnrealBloomPass</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li><li><a href="XRHelper.html">XRHelper</a></li><li><a href="XRSettings.html">XRSettings</a></li></ul><h3>Interfaces</h3><ul><li><a href="BasePass.html">BasePass</a></li><li><a href="BaseShader.html">BaseShader</a></li><li><a href="WEAudio.html">WEAudio</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#PropIDs">PropIDs</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#SettIDs">SettIDs</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
                 
             </nav>
         </div>
@@ -92,13 +92,6 @@
 * Copyright (c) 2021 hexxone All rights reserved.
 * Licensed under the GNU GENERAL PUBLIC LICENSE.
 * See LICENSE file in the project root for full license information.
-*
-* @description
-* Displays a seizure warning image centered on html for a given Time.
-*
-* @todo
-* - add trigger warn languages to project json
-* - add trigger warn as html
 */
 
 import {CComponent} from './CComponent';
@@ -106,29 +99,31 @@ import {CSettings} from './CSettings';
 import {waitReady} from './Util';
 
 const ELM_ID = 'triggerwarn';
+const IMG_SRC = './img/triggerwarning.png';
 
 /**
-* @TODO test getting text
+* Seizure display warnings
+* @public
 * @extends {CSettings}
 */
 class WarnSettings extends CSettings {
 	seizure_warning: boolean = true;
-	seizure_text: string = '/* &lt;!-- ## ERROR ## --> */';
-	animate_seconds: number = 1;
-	wait_seconds: number = 10;
+	animate_seconds: number = 2;
+	wait_seconds: number = 6;
 }
 
 /**
-* Seizure warning display
+* Displays a seizure warning image centered on html for a given Time.
+* @public
 * @extends {CComponent}
 */
 export class WarnHelper extends CComponent {
+	/*
+	* @public
+	*/
 	public settings: WarnSettings = new WarnSettings();
 
 	private element: HTMLDivElement;
-
-	// promise behind showing the warning
-	private showResolve: any;
 
 	/**
 	* Create and prepare once document ready
@@ -150,11 +145,11 @@ export class WarnHelper extends CComponent {
 		const st = document.createElement('style');
 		st.innerHTML = `
 		#${ELM_ID} {
-			object-fit: contain;
-			text-align: center;
-			max-height: 30vmax;
-			top: 25vmin;
 			opacity: 0;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
 			transition: opacity ${this.settings.animate_seconds}s ease;
 		}
 		#${ELM_ID}.show {
@@ -169,21 +164,15 @@ export class WarnHelper extends CComponent {
 	* @ignore
 	*/
 	private injectHTML() {
-		this.element = document.createElement('div');
+		this.element = document.createElement('img');
 		this.element.id = ELM_ID;
+		this.element.setAttribute('src', IMG_SRC);
 		document.body.append(this.element);
 	}
 
 	/**
-	* Set html text value
-	* @ignore
-	*/
-	private setText() {
-		this.element.innerHTML = this.settings.seizure_text.replace('\r\n', '&lt;br />');
-	}
-
-	/**
 	* Show the warning
+	* @public
 	* @return {Promise} hidden again
 	*/
 	public show(): Promise&lt;void> {
@@ -193,19 +182,20 @@ export class WarnHelper extends CComponent {
 				resolve();
 				return;
 			}
-			// wait for resolve by "Hide()"
-			this.showResolve = resolve;
-			// make text
-			this.setText();
 			// show it
 			this.element.classList.add('show');
 			// wait some time
-			setTimeout(this.hide, this.settings.wait_seconds * 1000);
+			setTimeout(() => {
+				this.hide().then(() => {
+					resolve();
+				});
+			}, this.settings.wait_seconds * 1000);
 		});
 	}
 
 	/**
 	* Hide warning
+	* @public
 	* @return {Promise} hidden
 	*/
 	public hide(): Promise&lt;void> {
@@ -213,8 +203,6 @@ export class WarnHelper extends CComponent {
 			// hide it &amp; wait
 			this.element.classList.remove('show');
 			setTimeout(() => {
-				if (this.showResolve) this.showResolve();
-				this.showResolve = null;
 				resolve();
 			}, this.settings.animate_seconds * 1000);
 		});
@@ -222,17 +210,16 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Settings have been changed
+	* @public
 	* @return {Promise} finished
 	*/
 	public updateSettings(): Promise&lt;void> {
-		// update text
-		this.setText();
 		// fix for instantly removing the warning while it shows
 		if (!this.settings.seizure_warning &amp;&amp; this.element.classList.contains('show')) {
 			return this.hide();
 		}
 		// whatever
-		return;
+		return Promise.resolve();
 	}
 };
 </code></pre>

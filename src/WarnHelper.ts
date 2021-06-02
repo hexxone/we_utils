@@ -5,13 +5,6 @@
 * Copyright (c) 2021 hexxone All rights reserved.
 * Licensed under the GNU GENERAL PUBLIC LICENSE.
 * See LICENSE file in the project root for full license information.
-*
-* @description
-* Displays a seizure warning image centered on html for a given Time.
-*
-* @todo
-* - add trigger warn languages to project json
-* - add trigger warn as html
 */
 
 import {CComponent} from './CComponent';
@@ -19,29 +12,31 @@ import {CSettings} from './CSettings';
 import {waitReady} from './Util';
 
 const ELM_ID = 'triggerwarn';
+const IMG_SRC = './img/triggerwarning.png';
 
 /**
-* @TODO test getting text
+* Seizure display warnings
+* @public
 * @extends {CSettings}
 */
 class WarnSettings extends CSettings {
 	seizure_warning: boolean = true;
-	seizure_text: string = '/* <!-- ## ERROR ## --> */';
-	animate_seconds: number = 1;
-	wait_seconds: number = 10;
+	animate_seconds: number = 2;
+	wait_seconds: number = 6;
 }
 
 /**
-* Seizure warning display
+* Displays a seizure warning image centered on html for a given Time.
+* @public
 * @extends {CComponent}
 */
 export class WarnHelper extends CComponent {
+	/*
+	* @public
+	*/
 	public settings: WarnSettings = new WarnSettings();
 
 	private element: HTMLDivElement;
-
-	// promise behind showing the warning
-	private showResolve: any;
 
 	/**
 	* Create and prepare once document ready
@@ -63,11 +58,11 @@ export class WarnHelper extends CComponent {
 		const st = document.createElement('style');
 		st.innerHTML = `
 		#${ELM_ID} {
-			object-fit: contain;
-			text-align: center;
-			max-height: 30vmax;
-			top: 25vmin;
 			opacity: 0;
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
 			transition: opacity ${this.settings.animate_seconds}s ease;
 		}
 		#${ELM_ID}.show {
@@ -82,21 +77,15 @@ export class WarnHelper extends CComponent {
 	* @ignore
 	*/
 	private injectHTML() {
-		this.element = document.createElement('div');
+		this.element = document.createElement('img');
 		this.element.id = ELM_ID;
+		this.element.setAttribute('src', IMG_SRC);
 		document.body.append(this.element);
 	}
 
 	/**
-	* Set html text value
-	* @ignore
-	*/
-	private setText() {
-		this.element.innerHTML = this.settings.seizure_text.replace('\r\n', '<br />');
-	}
-
-	/**
 	* Show the warning
+	* @public
 	* @return {Promise} hidden again
 	*/
 	public show(): Promise<void> {
@@ -106,19 +95,20 @@ export class WarnHelper extends CComponent {
 				resolve();
 				return;
 			}
-			// wait for resolve by "Hide()"
-			this.showResolve = resolve;
-			// make text
-			this.setText();
 			// show it
 			this.element.classList.add('show');
 			// wait some time
-			setTimeout(this.hide, this.settings.wait_seconds * 1000);
+			setTimeout(() => {
+				this.hide().then(() => {
+					resolve();
+				});
+			}, this.settings.wait_seconds * 1000);
 		});
 	}
 
 	/**
 	* Hide warning
+	* @public
 	* @return {Promise} hidden
 	*/
 	public hide(): Promise<void> {
@@ -126,8 +116,6 @@ export class WarnHelper extends CComponent {
 			// hide it & wait
 			this.element.classList.remove('show');
 			setTimeout(() => {
-				if (this.showResolve) this.showResolve();
-				this.showResolve = null;
 				resolve();
 			}, this.settings.animate_seconds * 1000);
 		});
@@ -135,16 +123,15 @@ export class WarnHelper extends CComponent {
 
 	/**
 	* Settings have been changed
+	* @public
 	* @return {Promise} finished
 	*/
 	public updateSettings(): Promise<void> {
-		// update text
-		this.setText();
 		// fix for instantly removing the warning while it shows
 		if (!this.settings.seizure_warning && this.element.classList.contains('show')) {
 			return this.hide();
 		}
 		// whatever
-		return;
+		return Promise.resolve();
 	}
 };

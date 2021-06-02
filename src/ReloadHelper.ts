@@ -16,21 +16,24 @@ import {CSettings} from './CSettings';
 import {waitReady} from './Util';
 
 /**
- * Reload-bar settings
- */
+* Reload-bar settings
+*/
 class ReloadSettings extends CSettings {
 	reload_seconds: number = 3;
 }
 
 /**
- * Visual Reload-Bar
- */
+* Visual Reload-Bar
+*/
 export class ReloadHelper extends CComponent {
+	/**
+	* @public
+	*/
 	public settings: ReloadSettings = new ReloadSettings();
 
 	/**
-	 * Create and prepare when document is ready
-	 */
+	* Create and prepare when document is ready
+	*/
 	constructor() {
 		super();
 		waitReady().then(() => {
@@ -40,9 +43,9 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * Make custom style
-	 * @ignore
-	 */
+	* Make custom style
+	* @ignore
+	*/
 	private injectCSS() {
 		const st = document.createElement('style');
 		st.innerHTML = `
@@ -89,9 +92,9 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * Make custom html elements
-	 * @ignore
-	 */
+	* Make custom html elements
+	* @ignore
+	*/
 	private injectHTML() {
 		const outer = document.createElement('div');
 		outer.id = 'reloadhelper';
@@ -105,9 +108,10 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * @Todo test: bar always reset to 0 on show ??
-	 * @param {boolean} visible
-	 */
+	* @Todo test: bar always reset to 0 on show ??
+	* @public
+	* @param {boolean} visible
+	*/
 	public show(visible: boolean) {
 		const e1 = document.getElementById('reload-bar');
 		const e2 = document.getElementById('reload-text');
@@ -121,9 +125,10 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * dont print IMPL error
-	 * @return {Promise}
-	 */
+	* dont print IMPL error
+	* @public
+	* @return {Promise}
+	*/
 	public updateSettings(): Promise<void> {
 		return Promise.resolve();
 	}

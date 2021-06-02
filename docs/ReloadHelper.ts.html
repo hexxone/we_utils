@@ -68,7 +68,7 @@
             
             <nav>
                 
-                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="CComponent.html">CComponent</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="BlendShader.html">BlendShader</a></li><li><a href="BlurShader.html">BlurShader</a></li><li><a href="CComponent.html">CComponent</a></li><li><a href="ChromaticShader.html">ChromaticShader</a></li><li><a href="CopyShader.html">CopyShader</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="EffectComposer.html">EffectComposer</a></li><li><a href="FPSettings.html">FPSettings</a></li><li><a href="FPStats.html">FPStats</a></li><li><a href="FractalMirrorShader.html">FractalMirrorShader</a></li><li><a href="FullScreenHelper.html">FullScreenHelper</a></li><li><a href="FXAAShader.html">FXAAShader</a></li><li><a href="LuminosityHighPassShader.html">LuminosityHighPassShader</a></li><li><a href="LUTShader.html">LUTShader</a></li><li><a href="LUTShaderNearest.html">LUTShaderNearest</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="RenderPass.html">RenderPass</a></li><li><a href="ShaderPass.html">ShaderPass</a></li><li><a href="UnrealBloomPass.html">UnrealBloomPass</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li><li><a href="XRHelper.html">XRHelper</a></li><li><a href="XRSettings.html">XRSettings</a></li></ul><h3>Interfaces</h3><ul><li><a href="BasePass.html">BasePass</a></li><li><a href="BaseShader.html">BaseShader</a></li><li><a href="WEAudio.html">WEAudio</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#PropIDs">PropIDs</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#SettIDs">SettIDs</a></li><li><a href="global.html#Smallog">Smallog</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
                 
             </nav>
         </div>
@@ -103,21 +103,24 @@ import {CSettings} from './CSettings';
 import {waitReady} from './Util';
 
 /**
- * Reload-bar settings
- */
+* Reload-bar settings
+*/
 class ReloadSettings extends CSettings {
 	reload_seconds: number = 3;
 }
 
 /**
- * Visual Reload-Bar
- */
+* Visual Reload-Bar
+*/
 export class ReloadHelper extends CComponent {
+	/**
+	* @public
+	*/
 	public settings: ReloadSettings = new ReloadSettings();
 
 	/**
-	 * Create and prepare when document is ready
-	 */
+	* Create and prepare when document is ready
+	*/
 	constructor() {
 		super();
 		waitReady().then(() => {
@@ -127,9 +130,9 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * Make custom style
-	 * @ignore
-	 */
+	* Make custom style
+	* @ignore
+	*/
 	private injectCSS() {
 		const st = document.createElement('style');
 		st.innerHTML = `
@@ -176,9 +179,9 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * Make custom html elements
-	 * @ignore
-	 */
+	* Make custom html elements
+	* @ignore
+	*/
 	private injectHTML() {
 		const outer = document.createElement('div');
 		outer.id = 'reloadhelper';
@@ -192,9 +195,10 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * @Todo test: bar always reset to 0 on show ??
-	 * @param {boolean} visible
-	 */
+	* @Todo test: bar always reset to 0 on show ??
+	* @public
+	* @param {boolean} visible
+	*/
 	public show(visible: boolean) {
 		const e1 = document.getElementById('reload-bar');
 		const e2 = document.getElementById('reload-text');
@@ -208,9 +212,10 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	 * dont print IMPL error
-	 * @return {Promise}
-	 */
+	* dont print IMPL error
+	* @public
+	* @return {Promise}
+	*/
 	public updateSettings(): Promise&lt;void> {
 		return Promise.resolve();
 	}
