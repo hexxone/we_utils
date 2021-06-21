@@ -56,7 +56,7 @@ export enum LogLevel {
 * @public
 */
 export module Smallog {
-	const logLevel: LogLevel = 2;
+	const logLevel: LogLevel = LogLevel.Info;
 	let preFix: string = '[Smallog] ';
 	let printTime: boolean = false;
 

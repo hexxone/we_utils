@@ -129,7 +129,7 @@ export class WarnHelper extends CComponent {
 	public updateSettings(): Promise<void> {
 		// fix for instantly removing the warning while it shows
 		if (!this.settings.seizure_warning && this.element.classList.contains('show')) {
-			return this.hide();
+			this.hide();
 		}
 		// whatever
 		return Promise.resolve();

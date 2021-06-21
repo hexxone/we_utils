@@ -1,3 +1,5 @@
+import {WebGLRenderer} from 'three';
+
 /**
 * @author alteredq / http://alteredqualia.com/
 * @author hexxone / https://hexx.one
@@ -18,6 +20,8 @@ export interface BasePass {
 
 	// if set to true, the pass clears its buffer before rendering
 	clear: boolean; // = false;
+
+	prepare(renderer: WebGLRenderer);
 
 	dispose();
 

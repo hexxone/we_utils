@@ -30,6 +30,14 @@ export class FullScreenHelper {
 	}
 
 	/**
+	* precompile shader
+	* @param {WebGLRenderer} renderer
+	*/
+	public prepare(renderer: WebGLRenderer) {
+		renderer.compile(this.mesh, this.camera);
+	}
+
+	/**
 	* Change mesh material
 	* @param {Material} mat
 	*/
