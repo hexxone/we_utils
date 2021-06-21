@@ -4,7 +4,7 @@
 * @author hexxone / https://hexx.one
 */
 
-import {Camera, Color, Material, Scene} from 'three';
+import {Camera, Color, Material, Scene, WebGLRenderer} from 'three';
 import {BasePass} from './BasePass';
 
 /**
@@ -42,6 +42,14 @@ export class RenderPass implements BasePass {
 
 		this.clearColor = clearColor;
 		this.clearAlpha = (clearAlpha !== undefined) ? clearAlpha : 0;
+	}
+
+	/**
+	 * precompile shader
+	 * @param {WebGLRenderer} renderer
+	 */
+	public prepare(renderer: WebGLRenderer) {
+		renderer.compile(this.scene, this.camera);
 	}
 
 	/**

@@ -9,9 +9,10 @@
 
 import {CComponent} from './CComponent';
 import {CSettings} from './CSettings';
-import {waitReady} from './Util';
+import {rgbToObj, waitReady} from './Util';
 import {Smallog} from './Smallog';
 import {WEAS} from './WEAS';
+import {ICUE} from './ICUE';
 
 const IMG_SRC = './img/icue.png';
 
@@ -51,7 +52,8 @@ export class CUESettings extends CSettings {
 * @extends {CComponent}
 */
 export class WEICUE extends CComponent {
-	private weas: WEAS = null;
+	private cue: ICUE;
+	private weas: WEAS;
 
 	private holder: HTMLDivElement = null;
 	private texter: HTMLDivElement = null;
@@ -84,13 +86,15 @@ export class WEICUE extends CComponent {
 			onPluginLoaded: (name: string, version: string) => {
 				const lower = name.toLocaleLowerCase();
 				if (lower === 'cue' || lower === 'led') {
+					this.cue = window['cue'];
 					this.isAvailable = true;
 					Smallog.debug(`Plugin loaded: ${name}, v${version}`, ClassName);
 				}
 			},
 		};
+
+		// inject helpers
 		waitReady().then(() => {
-			// inject helpers
 			this.injectCSS();
 			this.injectHTML();
 			this.init();
@@ -320,7 +324,7 @@ export class WEICUE extends CComponent {
 	* @param {number} count Retries (will stop at 100)
 	* @ignore
 	*/
-	private initCUE(count) {
+	private initCUE(count: number) {
 		// wait for plugins
 		if (!this.isAvailable) {
 			if (count < 100) setTimeout(() => this.initCUE(++count), 150);
@@ -330,13 +334,13 @@ export class WEICUE extends CComponent {
 		// setup devices
 		this.icueDevices = [];
 
-		window['cue'].getDeviceCount((deviceCount) => {
+		this.cue.getDeviceCount((deviceCount) => {
 			this.icueMessage('LED: Found ' + deviceCount + ' devices.');
 			for (let xi = 0; xi < deviceCount; xi++) {
 				const xl = xi;
-				window['cue'].getDeviceInfo(xl, (info) => {
+				this.cue.getDeviceInfo(xl, (info) => {
 					info.id = xl;
-					window['cue'].getLedPositionsByDeviceIndex(xl, (leds) => {
+					this.cue.getLedPositionsByDeviceIndex(xl, (leds) => {
 						info.leds = leds;
 						this.icueDevices[xl] = info;
 					});
@@ -346,7 +350,7 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	*  do the thing...
+	* do the thing...
 	* @ignore
 	*/
 	private updateFrame() {
@@ -358,31 +362,22 @@ export class WEICUE extends CComponent {
 			const encDat = this.getEncodedCanvasImageData(this.helperContext.getImageData(0, 0, canvasX, canvasY));
 			// update all icueDevices with data
 			for (let xi = 0; xi < this.icueDevices.length; xi++) {
-				window['cue'].setLedColorsByImageData(xi, encDat, canvasX, canvasY);
+				this.cue.setLedColorsByImageData(xi, encDat, canvasX, canvasY);
 			}
 		}
 		// color mode
 		if (sett.icue_mode == 2) {
-			// get lol objects
-			const col = sett.icue_main_color.split(' ') as unknown[];
-			let ledColor = {
-				r: col[0] as number * 255,
-				g: col[1] as number * 255,
-				b: col[2] as number * 255,
-			}; ;
 			// try audio multiplier processing
+			let mlt = 255;
 			if (this.weas.hasAudio()) {
 				const aud = this.weas.lastAudio;
-				const mlt = 255 * aud.average / aud.range / aud.intensity * 10;
-				ledColor = {
-					r: Math.min(255, Math.max(0, col[0] as number * mlt)),
-					g: Math.min(255, Math.max(0, col[1] as number * mlt)),
-					b: Math.min(255, Math.max(0, col[2] as number * mlt)),
-				};
+				mlt *= aud.average / aud.range / aud.intensity * 10;
 			}
+			// get lol objects
+			const ledCol = rgbToObj(sett.icue_main_color, mlt);
 			// update all icueDevices with data
 			for (let xi = 0; xi < this.icueDevices.length; xi++) {
-				window['cue'].setAllLedsColorsAsync(xi, ledColor);
+				this.cue.setAllLedsColorsAsync(xi, ledCol as any);
 			}
 		}
 	}
@@ -401,10 +396,8 @@ export class WEICUE extends CComponent {
 			const area: any = this.getArea(false);
 			const hctx = this.helperContext;
 			// get real rgb values
-			const spl = sett.main_color.split(' ') as unknown[];
-			for (let i = 0; i < spl.length; i++) spl[i] = (spl[i] as number * 255);
-			// overlay "decay" style
-			hctx.fillStyle = 'rgba(' + spl.join(', ') + ', ' + sett.icue_area_decay / 100 + ')';
+			const cO = rgbToObj(sett.main_color);
+			hctx.fillStyle = `rgba(${cO.r}, ${cO.g}, ${cO.b}, ${sett.icue_area_decay / 100})`;
 			hctx.fillRect(0, 0, canvasX, canvasY);
 			// scale down and copy the image to the helper canvas
 			hctx.drawImage(mainCanvas, area.left, area.top, area.width, area.height, 0, 0, canvasX, canvasY);

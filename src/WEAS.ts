@@ -206,31 +206,35 @@ export class WEAS extends CComponent {
 			run(({module, instance, exports, params}) => {
 				const ex = instance.exports as any;
 				const {data} = params[0];
+				const arrData = new Float64Array(data);
 
 				// set audio data directly in module memory
-				exports.__getFloat64ArrayView(ex.inputData).set(data);
+				exports.__getFloat64ArrayView(ex.inputData).set(arrData);
 				// trigger processing processing
 				ex.update();
 				// get copy of updated Data & Properties
 				const r = { // => result
-					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)),
-					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)),
+					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)).buffer,
+					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)).buffer,
 				};
 				return r;
 			}, // params passed to worker
 			{
-				data: self.inBuff,
+				data: self.inBuff.buffer,
 			})
 			// worker result, back in main context
 				.then((result) => {
 					const {data, props} = result;
-					const realProps = self.getProps(props);
+					const arrData = new Float64Array(data);
+					const arrProps = new Float64Array(props);
+
+					const realProps = self.getProps(arrProps);
 					const teim = performance.now() - start;
 					// apply actual last Data from worker
 					self.lastAudio = {
 						time: start,
 						ellapsed: teim,
-						data,
+						data: arrData,
 						...realProps,
 					} as any;
 				// print info
@@ -345,11 +349,12 @@ export class WEAS extends CComponent {
 			run(({module, instance, exports, params}) => {
 				const ex = instance.exports as any;
 				const {data} = params[0];
-				exports.__getFloat64ArrayView(ex.audioSettings).set(data);
+				const arrDat = new Float64Array(data);
+				exports.__getFloat64ArrayView(ex.audioSettings).set(arrDat);
 			},
 			// Data passed to worker
 			{
-				data: sett,
+				data: sett.buffer,
 			})
 			// Back to main context
 				.then(() => {

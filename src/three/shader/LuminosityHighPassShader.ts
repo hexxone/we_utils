@@ -27,7 +27,7 @@ export class LuminosityHighPassShader implements BaseShader {
 		tDiffuse: {value: null},
 		luminosityThreshold: {value: 1.0},
 		smoothWidth: {value: 1.0},
-		defaultColor: {value: new Color(0x000000)},
+		defaultColor: {value: new Color(0x000000)}, // @TODO might need to set to BG color?
 		defaultOpacity: {value: 0.0},
 	};
 

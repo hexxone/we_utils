@@ -21,18 +21,17 @@ const defaultParams = {
 * @public
 */
 export class EffectComposer {
+	// given on construct
 	private scene: Scene;
 	private camera: PerspectiveCamera;
 	private renderer: WebGLRenderer;
-
-	private varCam = new PerspectiveCamera();
-
-	private viewSize: Vector2;
-
 	private globalPrecision: string;
 
-	private _previousFrameTime = Date.now();
+	// runtime
+	private viewSize: Vector2;
+	private previousFrame = Date.now();
 
+	// target & origin buffers
 	private defaultTarget: WebGLRenderTarget;
 
 	private renderWrite: WebGLRenderTarget;
@@ -41,11 +40,12 @@ export class EffectComposer {
 	private renderRead: WebGLRenderTarget;
 	private readBuffer: WebGLRenderTarget;
 
+	// render passes
 	private normPass: RenderPass;
 	private xrPass: RenderPass;
+	private xrCam = new PerspectiveCamera();
 
-	// render by default
-	public enabled: boolean = true;
+	// public
 	public passes: BasePass[] = [];
 
 
@@ -55,15 +55,16 @@ export class EffectComposer {
 	* @param {PerspectiveCamera} camera
 	* @param {WebGLRenderer} renderer
 	* @param {string} globalPrec
+	* @param {Color} clearCol
 	* @param {WebGLRenderTarget} renderTarget
 	*/
-	constructor(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, globalPrec: string = 'mediump', renderTarget?: WebGLRenderTarget) {
+	constructor(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, globalPrec: string = 'mediump', clearCol?: any, renderTarget?: WebGLRenderTarget) {
 		this.scene = scene;
 		this.camera = camera;
 		this.renderer = renderer;
 		this.viewSize = renderer.getSize(new Vector2());
 
-		this.varCam = new PerspectiveCamera(camera.fov, camera.aspect, camera.near, camera.far);
+		this.xrCam = new PerspectiveCamera(camera.fov, camera.aspect, camera.near, camera.far);
 
 		// use a new default render target if none is given
 		this.defaultTarget = new WebGLRenderTarget(this.viewSize.width, this.viewSize.height, defaultParams);
@@ -71,7 +72,7 @@ export class EffectComposer {
 
 		if (renderTarget === undefined) {
 			renderTarget = this.defaultTarget.clone();
-			renderTarget.texture.name = 'EffectComposer.wt';
+			renderTarget.texture.name = 'EffectComposer.rt';
 		}
 
 		// set write buffer for shader pass rendering
@@ -80,15 +81,23 @@ export class EffectComposer {
 
 		// set input buffer for shader pass rendering
 		this.renderRead = renderTarget.clone();
-		this.renderRead.texture.name = 'EffectComposer.rt';
+		this.renderRead.texture.name = 'EffectComposer.rr';
 		this.readBuffer = this.renderRead;
 
 		this.passes = [];
-		this._previousFrameTime = Date.now();
+		this.previousFrame = Date.now();
 		this.globalPrecision = globalPrec;
 
-		this.normPass = new RenderPass(scene, camera, null, 0x000000, 1);
-		this.xrPass = new RenderPass(scene, this.varCam, null, 0x000000, 1);
+		this.normPass = new RenderPass(scene, camera, null, clearCol, 1);
+		this.xrPass = new RenderPass(scene, this.xrCam, null, clearCol, 1);
+	}
+
+	/**
+	 * Precompile all shaders...
+	 */
+	public precompile(): void {
+		this.renderer.compile(this.scene, this.camera);
+		this.passes.forEach((pass) => pass.prepare(this.renderer));
 	}
 
 	/**
@@ -136,9 +145,9 @@ export class EffectComposer {
 		// deltaTime value is in seconds
 		const dn = performance.now();
 		if (deltaTime === undefined) {
-			deltaTime = (dn - this._previousFrameTime) * 0.001;
+			deltaTime = (dn - this.previousFrame) * 0.001;
 		}
-		this._previousFrameTime = dn;
+		this.previousFrame = dn;
 		const size = new Vector2();
 		this.renderer.getSize( size );
 		const currentRenderTarget = this.renderer.getRenderTarget();
@@ -171,17 +180,19 @@ export class EffectComposer {
 
 				// position
 				const varPos = view.transform.position;
-				this.varCam.position.set(camPos.x + varPos.x,
+				this.xrCam.position.set(camPos.x + varPos.x,
 					camPos.y + (varPos.y - 1.6),
 					camPos.z + varPos.z);
 
 				// orientation
 				const vo = view.transform.orientation;
-				this.varCam.setRotationFromQuaternion(new Quaternion(vo.x, vo.y, vo.z, vo.w));
+				this.xrCam.setRotationFromQuaternion(new Quaternion(vo.x, vo.y, vo.z, vo.w));
 
 				// matrix
-				this.varCam.projectionMatrix.fromArray(view.projectionMatrix);
-				this.varCam.near = this.camera.near;
+				this.xrCam.projectionMatrix.fromArray(view.projectionMatrix);
+				this.xrCam.near = this.camera.near;
+				this.xrCam.far = this.camera.far;
+				this.xrCam.updateProjectionMatrix();
 
 				// render
 				const offX = viewSize * i;

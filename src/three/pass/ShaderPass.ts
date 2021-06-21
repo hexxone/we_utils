@@ -53,6 +53,14 @@ export class ShaderPass implements BasePass {
 	}
 
 	/**
+	* precompile shader
+	* @param {WebGLRenderer} renderer
+	*/
+	public prepare(renderer: WebGLRenderer) {
+		this.fsQuad.prepare(renderer);
+	}
+
+	/**
 	* Destroy Pass
 	* @public
 	*/
