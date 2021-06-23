@@ -12,12 +12,13 @@ export * from './src/CSettings';
 
 export * from './src/FPSta';
 export * from './src/ReloadHelper';
-export * from './src/Smallog';
 export * from './src/Util';
 export * from './src/WarnHelper';
 export * from './src/WEAS';
 export * from './src/WEICUE';
 export * from './src/WEWA';
+
+export * from './src/Smallog';
 
 export * from './src/offline/OfflineHelper';
 

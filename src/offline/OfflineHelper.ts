@@ -49,7 +49,7 @@ function DontRemove() {
 * @param {string} oFile
 * @return {Promise<boolean>}
 */
-export function register(name: string, worker = 'Offline.worker.js', oFile = 'offlinefiles.json') {
+function register(name: string, worker: string = 'Offline.worker.js', oFile: string = 'offlinefiles.json'): Promise<boolean> {
 	return new Promise(async (resolve) => {
 		if ('serviceWorker' in navigator) {
 			const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
@@ -70,7 +70,7 @@ export function register(name: string, worker = 'Offline.worker.js', oFile = 'of
 * @return {Promise<boolean>} finished
 * @public
 */
-export async function reset() {
+async function reset(): Promise<boolean> {
 	return new Promise((resolve) => {
 		if ('serviceWorker' in navigator) {
 			navigator.serviceWorker.getRegistrations().then(async (registrations) => {
@@ -85,3 +85,5 @@ export async function reset() {
 		}
 	});
 }
+
+export const OfflineHelper = {register, reset};

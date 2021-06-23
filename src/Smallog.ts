@@ -11,29 +11,7 @@
 /* eslint-disable no-unused-vars */
 
 /**
-* trace exception calls
-* @param {string} def error message
-* @param {number} depth which call to pick
-* @return {string}
-* @ignore
-*/
-function traceCall(def: string, depth: number = 3) {
-	try {
-		throw new Error('TraceCall()');
-	} catch (e) {
-		// Examine e.stack here
-		if (e.stack) {
-			const splt = e.stack.split(/\n/);
-			let trim = splt[depth].trim();
-			if (trim.indexOf('at ') == 0) trim = trim.substring(3);
-			if (splt.length > depth) return '[' + trim + '] ';
-		}
-	}
-	return def;
-}
-
-/**
-* @see {Smallog}
+* @see {Smalog}
 * @public
 */
 export enum LogLevel {
@@ -55,33 +33,55 @@ export enum LogLevel {
 * Small logging util, with name/time prefix & log levels
 * @public
 */
-export module Smallog {
-	const logLevel: LogLevel = LogLevel.Info;
-	let preFix: string = '[Smallog] ';
-	let printTime: boolean = false;
+class Smalog {
+	logLevel: LogLevel = LogLevel.Info;
+	preFix: string = '[Smallog] ';
+	printTime: boolean = false;
+
+	/**
+	* trace exception calls
+	* @param {string} def error message
+	* @param {number} depth which call to pick
+	* @return {string}
+	* @ignore
+	*/
+	traceCall(def: string, depth: number = 3) {
+		try {
+			throw new Error('TraceCall()');
+		} catch (e) {
+			// Examine e.stack here
+			if (e.stack) {
+				const splt = e.stack.split(/\n/);
+				let trim = splt[depth].trim();
+				if (trim.indexOf('at ') == 0) trim = trim.substring(3);
+				if (splt.length > depth) return '[' + trim + '] ';
+			}
+		}
+		return def;
+	}
 
 	/**
 	* get logging output level
 	* @return {LogLevel} current
 	*/
-	export function getLevel() {
-		return logLevel;
+	getLevel() {
+		return this.logLevel;
 	}
 
 	/**
 	* set logging prefix
 	* @param {string} pre
 	*/
-	export function setPrefix(pre: string) {
-		preFix = pre;
+	setPrefix(pre: string) {
+		this.preFix = pre;
 	}
 
 	/**
 	* set time prefix
 	* @param {boolean} print
 	*/
-	export function setPrintTime(print: boolean) {
-		printTime = print;
+	setPrintTime(print: boolean) {
+		this.printTime = print;
 	}
 
 	/**
@@ -89,8 +89,8 @@ export module Smallog {
 	* @param {string} msg log
 	* @param {string} hdr overwrite header
 	*/
-	export function error(msg: string, hdr: string = preFix) {
-		if (printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
+	error(msg: string, hdr: string = this.preFix) {
+		if (this.printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
 		console.error(hdr + msg);
 	}
 
@@ -99,10 +99,10 @@ export module Smallog {
 	* @param {string} msg log
 	* @param {string} hdr overwrite header
 	*/
-	export function info(msg: string, hdr: string = preFix) {
-		if (logLevel >= 1) {
-			if (printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
-			if (logLevel >= 2) hdr = traceCall(hdr);
+	info(msg: string, hdr: string = this.preFix) {
+		if (this.logLevel >= 1) {
+			if (this.printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
+			if (this.logLevel >= 2) hdr = this.traceCall(hdr);
 			console.info(hdr + msg);
 		}
 	}
@@ -112,10 +112,12 @@ export module Smallog {
 	* @param {string} msg log
 	* @param {string} hdr overwrite header
 	*/
-	export function debug(msg: string, hdr: string = preFix) {
-		if (logLevel >= 2) {
-			if (printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
+	debug(msg: string, hdr: string = this.preFix) {
+		if (this.logLevel >= 2) {
+			if (this.printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
 			console.debug(hdr + msg);
 		}
 	}
 }
+
+export const Smallog = new Smalog();

@@ -80,6 +80,7 @@ export class WarnHelper extends CComponent {
 		this.element = document.createElement('img');
 		this.element.id = ELM_ID;
 		this.element.setAttribute('src', IMG_SRC);
+		this.element.setAttribute('alt', 'Seizure Warning');
 		document.body.append(this.element);
 	}
 

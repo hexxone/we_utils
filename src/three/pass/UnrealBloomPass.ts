@@ -16,38 +16,40 @@ import {LuminosityHighPassShader} from '../shader/LuminosityHighPassShader';
 * @public
 */
 export class UnrealBloomPass implements BasePass {
-	name = 'UnrealBloom';
-	strength = null;
-	radius = null;
-	resolution = null;
-	threshold = null;
-	renderTargetBright = null;
-	highPassUniforms = null;
+	public name = 'UnrealBloom';
+	public enabled = true;
+	public needsSwap = false;
+	public clear = true;
+
+	public oldClearColor = new Color();
+	public oldClearAlpha = 1;
+	public clearColor = new Color(0, 0, 0);
+
+	private resolution = null;
+	private strength = null;
+	private radius = null;
+	private threshold = null;
+	private renderTargetBright = null;
+	private highPassUniforms = null;
 
 	// create color only once here, reuse it later inside the render function
-	clear = true;
-	clearColor = new Color(0, 0, 0);
-	renderTargetsHorizontal: WebGLRenderTarget[] = [];
-	renderTargetsVertical: WebGLRenderTarget[] = [];
-	nMips = 5;
 
-	separableBlurMaterials: ShaderMaterial[] = [];
-	materialHighPassFilter: ShaderMaterial = null;
-	compositeMaterial: ShaderMaterial = null;
-	materialCopy: ShaderMaterial = null;
-	bloomTintColors = null;
-	copyUniforms = null;
-	enabled = true;
-	needsSwap = false;
+	private renderTargetsHorizontal: WebGLRenderTarget[] = [];
+	private renderTargetsVertical: WebGLRenderTarget[] = [];
+	private nMips = 5;
 
-	oldClearColor = new Color();
-	oldClearAlpha = 1;
+	private separableBlurMaterials: ShaderMaterial[] = [];
+	private materialHighPassFilter: ShaderMaterial = null;
+	private compositeMaterial: ShaderMaterial = null;
+	private materialCopy: ShaderMaterial = null;
+	private bloomTintColors = null;
+	private copyUniforms = null;
 
-	basic = new MeshBasicMaterial();
-	fsQuad = new FullScreenHelper(null);
+	private basic = new MeshBasicMaterial();
+	private fsQuad = new FullScreenHelper(null);
 
-	BlurDirectionX = new Vector2(1.0, 0.0);
-	BlurDirectionY = new Vector2(0.0, 1.0);
+	private blurDirX = new Vector2(1.0, 0.0);
+	private blurDirY = new Vector2(0.0, 1.0);
 
 	/**
 	* Construct bloom shader
@@ -237,13 +239,13 @@ export class UnrealBloomPass implements BasePass {
 			this.fsQuad.setMaterial(this.separableBlurMaterials[i]);
 
 			this.separableBlurMaterials[i].uniforms['colorTexture'].value = inputRenderTarget.texture;
-			this.separableBlurMaterials[i].uniforms['direction'].value = this.BlurDirectionX;
+			this.separableBlurMaterials[i].uniforms['direction'].value = this.blurDirX;
 			renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
 			renderer.clear();
 			this.fsQuad.render(renderer);
 
 			this.separableBlurMaterials[i].uniforms['colorTexture'].value = this.renderTargetsHorizontal[i].texture;
-			this.separableBlurMaterials[i].uniforms['direction'].value = this.BlurDirectionY;
+			this.separableBlurMaterials[i].uniforms['direction'].value = this.blurDirY;
 			renderer.setRenderTarget(this.renderTargetsVertical[i]);
 			renderer.clear();
 			this.fsQuad.render(renderer);
