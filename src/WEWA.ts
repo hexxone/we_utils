@@ -9,9 +9,8 @@
 
 import {waitReady} from './Util';
 import {Smallog} from './Smallog';
-import {register, reset} from './offline/OfflineHelper';
-import {CC} from 'cookieconsent';
-import {myFetch} from './wasc-worker/WascUtil';
+import {OfflineHelper} from './offline/OfflineHelper';
+import {WascUtil} from './wasc-worker/WascUtil';
 
 const LogHead = '[WEWWA] ';
 const DefLang = 'de-de';
@@ -58,8 +57,6 @@ const DefLang = 'de-de';
 * - react to changes made in the ui and update them in the wallpaper
 * <br/>
 * - save changes made in the ui to localStorage
-* <br/>
-* - Annoying Cookie Popup (Thanks DSGVO)
 *
 *
 * @todo
@@ -113,20 +110,8 @@ export class WEWWA {
 
 		// intialize when ready
 		waitReady().then(() => {
-			if (CC) {/* This tells the compiler to include CookieConsent at this point. */}
-
-			// Thanks DSGVO...
-			window['cookieconsent'].initialise({
-				palette: {
-					popup: {background: '#000'},
-					button: {background: '#f1d600'},
-				},
-				position: 'bottom-left',
-				theme: 'edgeless',
-			});
-
 			// make the website available offline using service worker
-			register(document.title.replace(' ', '')).then(() => {
+			OfflineHelper.register(document.title.replace(' ', '')).then(() => {
 				// continue initializing
 				finished();
 				this.init();
@@ -143,7 +128,7 @@ export class WEWWA {
 	* @ignore
 	*/
 	private init() {
-		myFetch('project.json', 'json').then((proj) => {
+		WascUtil.myFetch('project.json', 'json').then((proj) => {
 			if (proj.type != 'web') {
 				Smallog.error('Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...', LogHead);
 				return;
@@ -489,7 +474,7 @@ export class WEWWA {
 			if (!window.confirm('This action will clear ALL local data!\r\n\r\nAre you sure?')) {
 				return;
 			}
-			reset().then(() => {
+			OfflineHelper.reset().then(() => {
 				localStorage.clear();
 				location = location;
 			});
@@ -881,7 +866,7 @@ export class WEWWA {
 	* @ignore
 	*/
 	private loadXHRSaveLocal(url, resCall) {
-		myFetch(url, 'blob').then((resp) => {
+		WascUtil.myFetch(url, 'blob').then((resp) => {
 			// Read out file contents as a Data URL
 			const fReader = new FileReader();
 			// onload needed since Google Chrome doesn't support addEventListener for FileReader

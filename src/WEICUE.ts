@@ -164,6 +164,7 @@ export class WEICUE extends CComponent {
 		const imgg = document.createElement('img');
 		imgg.id = 'icuelogo';
 		imgg.setAttribute('src', IMG_SRC);
+		imgg.setAttribute('alt', 'ICUE Icon');
 		// make text holder
 		this.texter = document.createElement('div');
 		this.texter.id = 'icuetext';

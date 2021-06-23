@@ -7,6 +7,7 @@
 import {Navigator, XRSession} from 'three';
 import {CComponent} from '../CComponent';
 import {CSettings} from '../CSettings';
+import {waitReady} from '../Util';
 
 /**
  * XR Settings
@@ -34,8 +35,10 @@ export class XRHelper extends CComponent {
 	*/
 	constructor() {
 		super();
-		this.nav = navigator as Navigator;
-		this.createBtn();
+		waitReady().then(() => {
+			this.nav = navigator as Navigator;
+			this.createBtn();
+		});
 	}
 
 	/**
