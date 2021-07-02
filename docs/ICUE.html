@@ -5,7 +5,7 @@
   
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title> FractalMirrorShader</title>
+  <title> ICUE</title>
 
   <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -73,8 +73,8 @@
         <div class="core" id="main-content-wrapper">
             <div class="content">
                 <header class="page-title">
-                    <p>Class</p>
-                    <h1>FractalMirrorShader</h1>
+                    <p>Interface</p>
+                    <h1>ICUE</h1>
                 </header>
                 
 
@@ -85,9 +85,7 @@
 
 <header>
     
-        <h2><span class="attribs"><span class="type-signature"></span></span>FractalMirrorShader<span class="signature">()</span><span class="type-signature"></span></h2>
-        
-            <div class="class-description">Customized Kaleidoscope shaderInspired by ackleyrc: https://www.shadertoy.com/view/llXcRl</div>
+        <h2>ICUE</h2>
         
     
 </header>
@@ -96,40 +94,10 @@
     <div class="container-overview">
     
         
-            <div class='vertical-section'>
-                <div class="members">
-                    <div class="member">
-                        <div class=name>
-                            <span class="tag">Constructor</span>
-                        </div>
-                        
-
-
-    
-    <h4 class="name" id="FractalMirrorShader">
-        <a class="href-link" href="#FractalMirrorShader">#</a>
+            <div class="description">Main Interface</div>
         
-        <span class="code-name">
-            
-                new FractalMirrorShader<span class="signature">()</span><span class="type-signature"></span>
-            
-        </span>
-    </h4>
-    
 
-    
-    
-
-
-
-
-
-
-
-
-
-
-
+        
 
 
 <dl class="details">
@@ -144,13 +112,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li><a href="BaseShader.html">BaseShader</a></li>
-        
-    </ul></dd>
     
 
     
@@ -172,38 +133,15 @@
 
     
         <p class="tag-source">
-            <a href="three_shader_FractalMirrorShader.ts.html" class="button">View Source</a>
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
             <span>
-                <a href="three_shader_FractalMirrorShader.ts.html">three/shader/FractalMirrorShader.ts</a>, <a href="three_shader_FractalMirrorShader.ts.html#line20">line 20</a>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line75">line 75</a>
             </span>
         </p>
     
 </dl>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    </div>
-                </div>
-            </div>
         
     
     </div>
@@ -212,13 +150,6 @@
 
     
 
-    
-        <h3 class="subsection-title">Classes</h3>
-
-        <dl>
-            <dt><a href="FractalMirrorShader.html">FractalMirrorShader</a></dt>
-            <dd></dd>
-        </dl>
     
 
     
@@ -237,16 +168,16 @@
     <span class="method-parameter is-pulled-right">
         <label>Type:</label>
         
-<span class="param-type">any</span>
+<span class="param-type">void</span>
 
 
     </span>
 
-<h4 class="name" id="defines">
-    <a class="href-link" href="#defines">#</a>
+<h4 class="name" id="getDeviceCount">
+    <a class="href-link" href="#getDeviceCount">#</a>
     
     <span class="code-name">
-        defines
+        getDeviceCount
     </span>
     
 </h4>
@@ -255,7 +186,7 @@
 
 
 <div class="description">
-    glsl defines
+    Returns the number of recognized iCUE compatible devices on the system.
 </div>
 
 
@@ -274,13 +205,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li><a href="BaseShader.html#defines">BaseShader#defines</a></li>
-        
-    </ul></dd>
     
 
     
@@ -302,9 +226,9 @@
 
     
         <p class="tag-source">
-            <a href="three_shader_BaseShader.ts.html" class="button">View Source</a>
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
             <span>
-                <a href="three_shader_BaseShader.ts.html">three/shader/BaseShader.ts</a>, <a href="three_shader_BaseShader.ts.html#line37">line 37</a>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line84">line 84</a>
             </span>
         </p>
     
@@ -321,16 +245,16 @@
     <span class="method-parameter is-pulled-right">
         <label>Type:</label>
         
-<span class="param-type">string</span>
+<span class="param-type">void</span>
 
 
     </span>
 
-<h4 class="name" id="fragmentShader">
-    <a class="href-link" href="#fragmentShader">#</a>
+<h4 class="name" id="getDeviceInfo">
+    <a class="href-link" href="#getDeviceInfo">#</a>
     
     <span class="code-name">
-        fragmentShader
+        getDeviceInfo
     </span>
     
 </h4>
@@ -339,7 +263,7 @@
 
 
 <div class="description">
-    glsl fragment shader coder
+    Returns all information specific to a single device.
 </div>
 
 
@@ -358,13 +282,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li><a href="BaseShader.html#fragmentShader">BaseShader#fragmentShader</a></li>
-        
-    </ul></dd>
     
 
     
@@ -386,9 +303,9 @@
 
     
         <p class="tag-source">
-            <a href="three_shader_BaseShader.ts.html" class="button">View Source</a>
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
             <span>
-                <a href="three_shader_BaseShader.ts.html">three/shader/BaseShader.ts</a>, <a href="three_shader_BaseShader.ts.html#line25">line 25</a>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line90">line 90</a>
             </span>
         </p>
     
@@ -405,16 +322,16 @@
     <span class="method-parameter is-pulled-right">
         <label>Type:</label>
         
-<span class="param-type">string</span>
+<span class="param-type">void</span>
 
 
     </span>
 
-<h4 class="name" id="shaderID">
-    <a class="href-link" href="#shaderID">#</a>
+<h4 class="name" id="getLedPositionsByDeviceIndex">
+    <a class="href-link" href="#getLedPositionsByDeviceIndex">#</a>
     
     <span class="code-name">
-        shaderID
+        getLedPositionsByDeviceIndex
     </span>
     
 </h4>
@@ -423,7 +340,7 @@
 
 
 <div class="description">
-    short name description for the shader
+    Provides list of keyboard, mousemat, headset stand and DIY-devices LEDs with their physical (keyboard, mousemat and headset stand) or logical (DIY-devices) positions.
 </div>
 
 
@@ -442,13 +359,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li><a href="BaseShader.html#shaderID">BaseShader#shaderID</a></li>
-        
-    </ul></dd>
     
 
     
@@ -470,9 +380,9 @@
 
     
         <p class="tag-source">
-            <a href="three_shader_BaseShader.ts.html" class="button">View Source</a>
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
             <span>
-                <a href="three_shader_BaseShader.ts.html">three/shader/BaseShader.ts</a>, <a href="three_shader_BaseShader.ts.html#line13">line 13</a>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line97">line 97</a>
             </span>
         </p>
     
@@ -489,16 +399,16 @@
     <span class="method-parameter is-pulled-right">
         <label>Type:</label>
         
-<span class="param-type">any</span>
+<span class="param-type">void</span>
 
 
     </span>
 
-<h4 class="name" id="uniforms">
-    <a class="href-link" href="#uniforms">#</a>
+<h4 class="name" id="getProtocolDetails">
+    <a class="href-link" href="#getProtocolDetails">#</a>
     
     <span class="code-name">
-        uniforms
+        getProtocolDetails
     </span>
     
 </h4>
@@ -507,7 +417,7 @@
 
 
 <div class="description">
-    glsl shared uniforms
+    Returns current status and version of iCUE SDK.
 </div>
 
 
@@ -526,13 +436,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li><a href="BaseShader.html#uniforms">BaseShader#uniforms</a></li>
-        
-    </ul></dd>
     
 
     
@@ -554,9 +457,9 @@
 
     
         <p class="tag-source">
-            <a href="three_shader_BaseShader.ts.html" class="button">View Source</a>
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
             <span>
-                <a href="three_shader_BaseShader.ts.html">three/shader/BaseShader.ts</a>, <a href="three_shader_BaseShader.ts.html#line31">line 31</a>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line78">line 78</a>
             </span>
         </p>
     
@@ -573,16 +476,16 @@
     <span class="method-parameter is-pulled-right">
         <label>Type:</label>
         
-<span class="param-type">string</span>
+<span class="param-type">void</span>
 
 
     </span>
 
-<h4 class="name" id="vertexShader">
-    <a class="href-link" href="#vertexShader">#</a>
+<h4 class="name" id="setAllLedsColorsAsync">
+    <a class="href-link" href="#setAllLedsColorsAsync">#</a>
     
     <span class="code-name">
-        vertexShader
+        setAllLedsColorsAsync
     </span>
     
 </h4>
@@ -591,7 +494,7 @@
 
 
 <div class="description">
-    glsl vertex shader coder
+    Updates all LEDs for given devices to one specific color.
 </div>
 
 
@@ -610,13 +513,6 @@
 
     
 
-    
-    <dt class="implements">Implements:</dt>
-    <dd class="implements"><ul>
-        
-            <li><a href="BaseShader.html#vertexShader">BaseShader#vertexShader</a></li>
-        
-    </ul></dd>
     
 
     
@@ -638,9 +534,163 @@
 
     
         <p class="tag-source">
-            <a href="three_shader_BaseShader.ts.html" class="button">View Source</a>
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
             <span>
-                <a href="three_shader_BaseShader.ts.html">three/shader/BaseShader.ts</a>, <a href="three_shader_BaseShader.ts.html#line19">line 19</a>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line112">line 112</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<span class="param-type">void</span>
+
+
+    </span>
+
+<h4 class="name" id="setLedColorsByImageData">
+    <a class="href-link" href="#setLedColorsByImageData">#</a>
+    
+    <span class="code-name">
+        setLedColorsByImageData
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    Updates all LEDs for given devices to one specific color.
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
+            <span>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line119">line 119</a>
+            </span>
+        </p>
+    
+</dl>
+
+
+
+
+
+</div>
+            
+                <div class="member">
+
+    <span class="method-parameter is-pulled-right">
+        <label>Type:</label>
+        
+<span class="param-type">void</span>
+
+
+    </span>
+
+<h4 class="name" id="setLedsColorsAsync">
+    <a class="href-link" href="#setLedsColorsAsync">#</a>
+    
+    <span class="code-name">
+        setLedsColorsAsync
+    </span>
+    
+</h4>
+
+
+
+
+<div class="description">
+    Set specified leds to some colors.The color is retained until changed by successive calls.This function does not take logical layout into account, and returns control to the caller immediately.
+</div>
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+
+    
+
+    
+
+    
+        <p class="tag-source">
+            <a href="ICUE.d.ts.html" class="button">View Source</a>
+            <span>
+                <a href="ICUE.d.ts.html">ICUE.d.ts</a>, <a href="ICUE.d.ts.html#line104">line 104</a>
             </span>
         </p>
     
