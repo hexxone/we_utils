@@ -56,6 +56,7 @@ export class ReloadHelper extends CComponent {
 			height: 10px;
 			width: 0%;
 			background-color: #989a;
+			transition: all 0s;
 		}
 		#reload-bar.show {
 			opacity: 1;
@@ -115,12 +116,13 @@ export class ReloadHelper extends CComponent {
 	public show(visible: boolean) {
 		const e1 = document.getElementById('reload-bar');
 		const e2 = document.getElementById('reload-text');
+		e1.classList.remove('show');
+		e2.classList.remove('show');
 		if (visible) {
-			e1.classList.add('show');
-			e2.classList.add('show');
-		} else {
-			e1.classList.remove('show');
-			e2.classList.remove('show');
+			setTimeout(() => {
+				e1.classList.add('show');
+				e2.classList.add('show');
+			}, 100);
 		}
 	}
 
