@@ -36,7 +36,7 @@ export class CSettings {
 				if (this[key] !== castedValue) {
 					this[key] = castedValue;
 					return true;
-				}
+				} else Smallog.debug('CSettings value not changed: ' + key + ' = ' + castedValue);
 			} else {
 				Smallog.error('CSettings Error: invalid type on: \'' + key +
 				'\'. Is: \'' + typeof this[key] + '\', applied: \'' + typeof castedValue + '\'');

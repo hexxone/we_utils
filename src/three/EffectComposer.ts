@@ -7,7 +7,6 @@
 import {LinearFilter, PerspectiveCamera, Quaternion, RGBAFormat, Scene, Vector2, WebGLRenderer, WebGLRenderTarget, XRFrame} from 'three';
 import {BasePass} from './pass/BasePass';
 import {RenderPass} from './pass/RenderPass';
-import {ShaderPass} from './pass/ShaderPass';
 
 const defaultParams = {
 	minFilter: LinearFilter,
@@ -88,8 +87,8 @@ export class EffectComposer {
 		this.previousFrame = Date.now();
 		this.globalPrecision = globalPrec;
 
-		this.normPass = new RenderPass(scene, camera, null, clearCol, 1);
-		this.xrPass = new RenderPass(scene, this.xrCam, null, clearCol, 1);
+		this.normPass = new RenderPass(scene, camera, null, clearCol);
+		this.xrPass = new RenderPass(scene, this.xrCam, null, clearCol); // @TODO == 1
 	}
 
 	/**
@@ -103,10 +102,9 @@ export class EffectComposer {
 	/**
 	* Append a shader to the chain
 	* @public
-	* @param {BasePass} pass Shader to add
+	* @param {BasePass} p Shader to add
 	*/
-	public addPass(pass: BasePass) {
-		const p = this.wrapPrecision(pass);
+	public addPass(p: BasePass) {
 		p.setSize(this.viewSize.width, this.viewSize.height);
 		this.passes.push(p);
 	}
@@ -114,13 +112,21 @@ export class EffectComposer {
 	/**
 	* Insert a shader in the chain
 	* @public
-	* @param {BasePass} pass Shader to add
+	* @param {BasePass} p Shader to add
 	* @param {number} index position
 	*/
-	public insertPass(pass: BasePass, index: number) {
-		const p = this.wrapPrecision(pass);
+	public insertPass(p: BasePass, index: number) {
 		p.setSize(this.viewSize.width, this.viewSize.height);
 		this.passes.splice(index, 0, p);
+	}
+
+	/**
+	 * Update clear color
+	 * @param {any} clearCol  Color
+	 */
+	public setClearColor(clearCol: any) {
+		this.normPass.clearColor = clearCol;
+		this.xrPass.clearColor = clearCol;
 	}
 
 	/**
@@ -270,35 +276,6 @@ export class EffectComposer {
 	}
 
 	/* UTILS */
-
-	/**
-	* Prefixes custom WebGL-precision to shaders
-	*
-	* @param {BasePass} pass Shader to Wrap
-	* @return {BasePass}
-	* @ignore
-	*/
-	private wrapPrecision(pass: BasePass): BasePass {
-		if (pass instanceof ShaderPass) {
-			const copy = pass as ShaderPass;
-			// get prefix
-			let pre = 'precision ' + this.globalPrecision + ' float;\r\n    ' +
-			'precision ' + this.globalPrecision + ' int;\r\n    ';
-			// "medium" sampler precision should always be available for "high" float precision.
-			if (this.globalPrecision == 'highp') {
-				pre += 'precision mediump sampler2D;\r\n    ' +
-				'precision mediump samplerCube;\r\n    ';
-			}
-			// apply it
-			if (copy.material.vertexShader) {
-				copy.material.vertexShader = pre + copy.material.vertexShader;
-			}
-			if (copy.material.fragmentShader) {
-				copy.material.fragmentShader = pre + copy.material.fragmentShader;
-			}
-		}
-		return pass;
-	}
 
 	/**
 	* Some shaders write to Input rather than Output...

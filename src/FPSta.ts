@@ -9,9 +9,8 @@
 
 import {CComponent} from './CComponent';
 import {CSettings} from './CSettings';
-import {Smallog} from './Smallog';
 import {waitReady} from './Util';
-import {WEAS} from './WEAS';
+import {WEAS} from './weas';
 
 const ELM_ID = 'fpstats';
 
@@ -53,6 +52,7 @@ export class FPStats extends CComponent {
 	private auProvider: WEAS = null;
 	private audHolder: HTMLElement;
 	private audioMS: number = 0;
+	private bpmHolder: HTMLDivElement;
 
 
 	/**
@@ -107,22 +107,26 @@ export class FPStats extends CComponent {
 		// fps
 		this.fpsHolder = document.createElement('div');
 		this.fpsHolder.innerText = 'FPS: 0';
-		// usage
-		this.useHolder = document.createElement('div');
-		this.useHolder.innerText = 'Usage: 0 %';
 		// cpu
 		this.cpuHolder = document.createElement('div');
-		this.cpuHolder.innerText = 'CPU: 0 ms';
+		this.cpuHolder.innerText = 'CPU: 0.00 ms';
 		// gpu
 		this.gpuHolder = document.createElement('div');
-		this.gpuHolder.innerText = 'GPU: 0 ms';
+		this.gpuHolder.innerText = 'GPU: 0.00 ms';
+		// usage
+		this.useHolder = document.createElement('div');
+		this.useHolder.innerText = 'All: 0.00%';
 		// append
-		this.container.append(this.fpsHolder, this.useHolder, this.cpuHolder, this.gpuHolder);
+		this.container.append(this.fpsHolder, this.cpuHolder, this.gpuHolder, this.useHolder);
 		// audio
 		if (this.auProvider) {
+			this.bpmHolder = document.createElement('div');
+			this.bpmHolder.innerText = 'BPM: 0 ~ ';
+
 			this.audHolder = document.createElement('div');
 			this.audHolder.innerText = 'Audio: 0 ms';
-			this.container.append(this.audHolder);
+
+			this.container.append(this.bpmHolder, this.audHolder);
 		}
 	}
 
@@ -183,18 +187,24 @@ export class FPStats extends CComponent {
 		// calculate
 		const elapsd = (now - this.lastUpdate) / 1000;
 		const efpies = this.frameCount / elapsd;
-		const yusage = (this.cpuMS + this.gpuMS) / 900;
+		const yusage = (this.cpuMS + this.gpuMS) / 500;
 		const cepeyu = this.cpuMS / this.frameCount;
 		const gepeyu = this.gpuMS / this.frameCount;
 
 		// apply
-		const da = this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)}`;
-		const db = this.useHolder.innerText = `Usage: ${yusage.toFixed(2)} %`;
-		const dc = this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} ms`;
-		const dd = this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} ms`;
-		Smallog.debug(`${da} ${db} ${dc} ${dd}`, '[FPStats]');
+		this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)}`;
+		this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} ms`;
+		this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} ms`;
+		this.useHolder.innerText = `All: ${yusage.toFixed(2)} %`;
 
 		if (this.audHolder) this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
+		if (this.bpmHolder && this.auProvider.lastAudio && this.auProvider.lastAudio.bpm instanceof Array) {
+			let bts = 0;
+			const bp = this.auProvider.lastAudio.bpm;
+			bp.forEach((b) => bts += b.value);
+			bts /= bp.length;
+			this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
+		}
 
 		this.lastUpdate = now;
 		this.reset();

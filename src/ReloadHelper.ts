@@ -109,7 +109,7 @@ export class ReloadHelper extends CComponent {
 	}
 
 	/**
-	* @Todo test: bar always reset to 0 on show ??
+	* always reset bar to 0
 	* @public
 	* @param {boolean} visible
 	*/

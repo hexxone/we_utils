@@ -34,7 +34,7 @@ export class RenderPass implements BasePass {
 	* @param {Color} clearColor
 	* @param {number} clearAlpha
 	*/
-	constructor(scene: Scene, camera: Camera, overMat: Material, clearColor, clearAlpha: number) {
+	constructor(scene: Scene, camera: Camera, overMat: Material, clearColor?, clearAlpha?: number) {
 		this.scene = scene;
 		this.camera = camera;
 

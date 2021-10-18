@@ -14,7 +14,7 @@ export * from './src/FPSta';
 export * from './src/ReloadHelper';
 export * from './src/Util';
 export * from './src/WarnHelper';
-export * from './src/WEAS';
+export * from './src/weas';
 export * from './src/WEICUE';
 export * from './src/WEWA';
 

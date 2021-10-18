@@ -11,7 +11,7 @@ import {CComponent} from './CComponent';
 import {CSettings} from './CSettings';
 import {rgbToObj, waitReady} from './Util';
 import {Smallog} from './Smallog';
-import {WEAS} from './WEAS';
+import {WEAS} from './weas';
 import {ICUE} from './ICUE';
 
 const IMG_SRC = './img/icue.png';
