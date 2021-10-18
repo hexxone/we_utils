@@ -12,7 +12,7 @@ import {CSettings} from './CSettings';
 import {waitReady} from './Util';
 
 const ELM_ID = 'triggerwarn';
-const IMG_SRC = './img/triggerwarning.png';
+const IMG_SRC = './img/triggerwarn.png';
 
 /**
 * Seizure display warnings
