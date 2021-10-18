@@ -7,14 +7,16 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {CComponent} from './CComponent';
-import {CSettings} from './CSettings';
-import {waitReady} from './Util';
-import {Smallog} from './Smallog';
+import {CComponent} from '../CComponent';
+import {CSettings} from '../CSettings';
+import {waitReady} from '../Util';
+import {Smallog} from '../Smallog';
 
-import {wascWorker, WascInterface} from './wasc-worker';
+import {wascWorker, WascInterface} from '../wasc-worker';
+import {Bea_ts} from './Bea';
 
 const DAT_LEN = 128;
+const LISTENAME = 'wallpaperRegisterAudioListener';
 
 /**
 * Audio processing settings
@@ -25,7 +27,7 @@ export class WEASettings extends CSettings {
 	debugging: boolean = false;
 	/** do audio processing? */
 	audioprocessing: boolean = true;
-	// do pink-noise processing?
+	// do dynamic processing?
 	equalize: boolean = true;
 	// convert to mono?
 	mono_audio: boolean = true;
@@ -39,9 +41,9 @@ export class WEASettings extends CSettings {
 	audio_increase: number = 75;
 	audio_decrease: number = 25;
 	// multipliers
-	treble_multiplier: number = 0.5;
-	mids_multiplier: number = 0.75;
-	bass_multiplier: number = 1.8;
+	treble_multiplier: number = 0.666;
+	mids_multiplier: number = 0.8;
+	bass_multiplier: number = 1.2;
 	// ignore value leveling for "silent" data
 	minimum_volume: number = 0.005;
 	// use low latency audio?
@@ -68,6 +70,10 @@ export interface WEAudio {
 	range: number;
 	silent: number;
 	intensity: number;
+	bpm?: [{
+		value: number,
+		weight: number
+	}]
 }
 
 /**
@@ -132,6 +138,9 @@ export class WEAS extends CComponent {
 	// web assembly functions
 	private weasModule: WascInterface = null;
 
+	// bpm detektor
+	private bpModule: Bea_ts;
+
 	// debug render elements
 	private mainElm: HTMLDivElement;
 	private canvas1: HTMLCanvasElement;
@@ -142,10 +151,27 @@ export class WEAS extends CComponent {
 
 	/**
 	* delay audio initialization until page ready
+	* @param {boolean} detectBpm (optional)
 	*/
-	constructor() {
+	constructor(detectBpm = false) {
 		super();
+		if (detectBpm) this.bpModule = new Bea_ts();
 		waitReady().then(() => this.realInit());
+	}
+
+
+	/**
+	 * convert float based audio to int
+	 * @param {Array<number>} data
+	 * @return {Array<number>}
+	 */
+	private convertAudio(data) {
+		const stereo = [];
+		const dl = data.length;
+		for (let i = 0; i < dl; i++) {
+			stereo[i] = Math.max(0, Math.floor(data[i] * 255));
+		}
+		return stereo;
 	}
 
 	/**
@@ -155,47 +181,50 @@ export class WEAS extends CComponent {
 	*/
 	private async realInit() {
 		// only listen if wallpaper engine context given
-		if (!window['wallpaperRegisterAudioListener']) {
-			Smallog.info('\'window.wallpaperRegisterAudioListener\' not given!');
+		if (!window[LISTENAME]) {
+			Smallog.error('\'window.wallpaperRegisterAudioListener\' not given!');
 			return;
 		}
 
 		this.injectCSS();
 		this.injectHTML();
 
-		this.weasModule = await wascWorker('WEAS.wasm', 4096, {}, !this.settings.low_latency);
+		wascWorker('WEAS.wasm', 4096, {}, !this.settings.low_latency).then((mod) => {
+			this.weasModule = mod;
 
-		// assert
-		if (this.weasModule) Smallog.debug('Got Audio provider!');
-		else {
-			Smallog.error('Could not create WebAssembly Audio provider! [Null-Object]');
-			return;
-		}
+			if (mod.memoryBuffer) {
+				setInterval(() => {
+					console.log('Yeah Boiii, we got shared memory access to WebAssembly worker!');
+					console.log(mod.memoryBuffer);
+				}, 10000);
+			}
 
-		// pass settings to module
-		await this.updateSettings();
+			this.updateSettings().then(() => {
+				this.registerListener();
+				Smallog.debug('WebAssembly Audio provider is ready!');
+			});
+		}).catch((err) => {
+			const m = `Could not create WebAssembly Audio provider! ErrMsg: ${err}`;
+			Smallog.error(m);
+			alert(m);
+		});
+	}
 
+	/**
+	 * Registers the wallpaper engine audio listener
+	 * @ignore
+	 */
+	private registerListener() {
 		const {run} = this.weasModule;
 		const self = this;
 
 		// register audio callback on module
-		window['wallpaperRegisterAudioListener']((audioArray) => {
+		window[LISTENAME]((audioArray) => {
 			// Smallog.debug('Get Audio Data!');
 			// check basic
 			if (!self.settings.audioprocessing || audioArray == null || audioArray.length != DAT_LEN) {
-				Smallog.error('audioListener: received invalid audio data array: ' + JSON.stringify([audioArray.length || null, audioArray]));
+				Smallog.error('received invalid audio data: ' + JSON.stringify([audioArray.length || null, audioArray]));
 				return;
-			}
-			// check nulls
-			let consecutiveNull = 0;
-			for (let i = 1; i < 18; i++) {
-				const aA = audioArray[i * 2];
-				if (aA == 0.0) consecutiveNull++;
-				else consecutiveNull = 0;
-				if (consecutiveNull > 16) {
-					Smallog.debug('Skipping received Null data!: ' + JSON.stringify(audioArray));
-					return;
-				}
 			}
 
 			// prepare data
@@ -210,35 +239,45 @@ export class WEAS extends CComponent {
 
 				// set audio data directly in module memory
 				exports.__getFloat64ArrayView(ex.inputData).set(arrData);
-				// trigger processing processing
+				// trigger processing
 				ex.update();
-				// get copy of updated Data & Properties
-				const r = { // => result
+				// get copy of webassembly data
+				const r = {
+					// ptr: {data: ex.outputData, props: ex.audioProps},
 					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)).buffer,
 					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)).buffer,
 				};
 				return r;
-			}, // params passed to worker
+			},
 			{
 				data: self.inBuff.buffer,
 			})
-			// worker result, back in main context
 				.then((result) => {
+					// worker result, back in main context
 					const {data, props} = result;
 					const arrData = new Float64Array(data);
 					const arrProps = new Float64Array(props);
 
 					const realProps = self.getProps(arrProps);
 					const teim = performance.now() - start;
+
+					if (self.lastAudio && !self.lastAudio.silent && realProps.silent) {
+						console.log(audioArray, arrData, arrProps);
+					}
+
+					let bpmObj = {};
+					if (this.bpModule && !realProps.silent) {
+						bpmObj = this.bpModule.process(start / 1000.0, this.convertAudio(audioArray));
+					}
+
 					// apply actual last Data from worker
 					self.lastAudio = {
 						time: start,
 						ellapsed: teim,
 						data: arrData,
 						...realProps,
+						bpm: bpmObj,
 					} as any;
-				// print info
-				// Smallog.debug('Got Data from Worker! Time= ' + teim + ', Data= ' + JSON.stringify(realProps));
 				});
 		});
 	}
@@ -254,14 +293,18 @@ export class WEAS extends CComponent {
 			opacity: 0;
 			position: absolute;
 			z-index: 2;
-			background: #000000aa;
 		}
 		#weas-preview canvas {
-			background: none;
+			background: #06060666;
 			border: white 2px dotted;
 		}
 		#weas-preview.show {
 			opacity: 1;
+		}
+		#WEASDisplay {
+			position: fixed;
+			left: 0px;
+			width: 100vw;
 		}
 		`;
 		document.head.append(st);
@@ -303,7 +346,7 @@ export class WEAS extends CComponent {
 	/**
 	* converts calculated output property number-array to string-associative-array
 	* @param {ArrayLike<number>} dProps processed properties
-	* @return {Object}
+	* @return {any}
 	* @ignore
 	*/
 	private getProps(dProps: ArrayLike<number>) {
@@ -313,7 +356,7 @@ export class WEAS extends CComponent {
 			const key = keys[index];
 			res[key] = dProps[PropIDs[key]];
 		}
-		return res;
+		return res as any;
 	}
 
 	/**
@@ -416,9 +459,30 @@ export class WEAS extends CComponent {
 		if (this.lastAudio && this.lastAudio.data) {
 			this.context2.fillStyle = 'rgb(0,255,0)';
 			for (let index = 0; index < this.lastAudio.data.length; index++) {
-				const height = this.canvas1.height * this.lastAudio.data[index] / 2;
-				this.context2.fillRect(barWidth * index, this.canvas1.height - height, barWidth, height);
+				const height = this.canvas2.height * this.lastAudio.data[index] / 2;
+				this.context2.fillRect(barWidth * index, this.canvas2.height - height, barWidth, height);
 			}
+			/*
+			// draw average, min & max lines
+			this.drawHorizontLine('rgb(255,255,0)', this.lastAudio.average);
+			this.drawHorizontLine('rgb(255,0,255)', this.lastAudio.max);
+			this.drawHorizontLine('rgb(127,127,127)', this.lastAudio.min);
+			*/
 		}
+	}
+
+	/**
+	 * Draww Context2 line
+	 * @param {string} style
+	 * @param {number} y
+	 */
+	private drawHorizontLine(style, y) {
+		const ctx = this.context2;
+		const cvs = this.canvas2;
+		ctx.fillStyle = style;
+		ctx.moveTo(0, cvs.height * y);
+		ctx.lineTo(cvs.width, cvs.height * y);
+		ctx.closePath();
+		ctx.stroke();
 	}
 }
