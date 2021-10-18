@@ -18,5 +18,5 @@ import {LUTShader} from './LUTShader';
 export class LUTShaderNearest extends LUTShader {
 	shaderID = 'LUTShaderNearest';
 
-	fragmentShader = new LUTShader().fragmentShader.replace('#define FILTER_LUT', '//');
+	fragmentShader = new LUTShader().fragmentShader.replace('#define FILTER_LUT true', '');
 }

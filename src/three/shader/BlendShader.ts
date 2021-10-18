@@ -9,6 +9,9 @@
 
 import {BaseShader} from './BaseShader';
 
+import vertex from './vertex/Basic.glsl';
+import fragment from './fragment/Blend.glsl';
+
 /**
 * Blend another texture in and out
 * @public
@@ -25,26 +28,7 @@ export class BlendShader implements BaseShader {
 		mixValue: {value: 1},
 	};
 
-	vertexShader = `
-	varying vec2 vUv;
-	
-	void main() {
-		vUv = uv;
-		gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-	}
-	`;
+	vertexShader = vertex;
 
-	fragmentShader = `
-	uniform sampler2D tDiffuse;
-	uniform sampler2D overlayBuffer;
-	
-	varying vec2 vUv;
-	
-	void main() {
-		vec4 texel1 = texture2D(tDiffuse, vUv);
-		vec4 texel2 = texture2D(overlayBuffer, vUv);
-		vec4 diff = abs(texel1 - texel2);
-		gl_FragColor = vec4(diff, 1.0);
-	}
-	`;
+	fragmentShader = fragment;
 }

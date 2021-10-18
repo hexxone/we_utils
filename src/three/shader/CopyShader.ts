@@ -10,6 +10,9 @@
 
 import {BaseShader} from './BaseShader';
 
+import vertex from './vertex/Basic.glsl';
+import fragment from './fragment/Copy.glsl';
+
 /**
 * Siimple I/O shader
 * @public
@@ -25,25 +28,7 @@ export class CopyShader implements BaseShader {
 		opacity: {value: 1.0},
 	}
 
-	vertexShader = `
-	varying vec2 vUv;
-	
-	void main() {
-		
-		vUv = uv;
-		gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-	}
-	`;
+	vertexShader = vertex;
 
-	fragmentShader = `
-	uniform float opacity;
-	uniform sampler2D tDiffuse;
-	varying vec2 vUv;
-	
-	void main() {
-		
-		vec4 texel = texture2D( tDiffuse, vUv );
-		gl_FragColor = opacity * texel;
-	}
-	`;
+	fragmentShader = fragment;
 }
