@@ -52,7 +52,7 @@ class RenamerPlugin {
 	* @return {string}
 	*/
 	getRandomName(src) {
-		const gen = 'hx' + Math.random().toString(36).substr(2, 3) + Math.floor(10 + Math.random() * 89);
+		const gen = '$x' + Math.random().toString(20).substr(2, 2 + Math.random() * 4);
 		let exist = (src || '').indexOf(gen) >= 0;
 		this.nameMap.forEach((mping) => {
 			if (mping.key === gen) exist = true;

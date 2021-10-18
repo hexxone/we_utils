@@ -13,6 +13,8 @@ import {Smallog} from '../Smallog';
 // this should pack the serviceworker like a webwoker.
 import OfflineWorker from 'worker-loader!./Offline';
 
+const oh = '[OfflineHelper] ';
+
 /**
 * @ignore
 * Helper class for loading and registering the ServiceWorker
@@ -54,12 +56,12 @@ function register(name: string, worker: string = 'Offline.worker.js', oFile: str
 		if ('serviceWorker' in navigator) {
 			const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
 			await navigator.serviceWorker.register(workerPath, {scope: '/'})
-				.then(() => Smallog.info('service-worker registration complete.', '[OfflineHelper] '),
-					() => Smallog.error('service-worker registration failure.', '[OfflineHelper] '))
+				.then(() => Smallog.info('service-worker registration complete.', oh),
+					() => Smallog.error('service-worker registration failure.', oh))
 				.then(() => resolve(true));
 			return true;
 		} else {
-			Smallog.error('not supported!', '[OfflineHelper] ');
+			Smallog.error('not supported!', oh);
 			resolve(false);
 		}
 	});
@@ -80,7 +82,7 @@ async function reset(): Promise<boolean> {
 				resolve(true);
 			});
 		} else {
-			Smallog.error('not supported!', '[OfflineHelper] ');
+			Smallog.error('not supported!', oh);
 			resolve(false);
 		}
 	});
