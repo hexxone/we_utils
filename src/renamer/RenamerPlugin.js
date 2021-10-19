@@ -80,12 +80,223 @@ class RenamerPlugin {
 	}
 
 	/**
-	* replace all regex matches with random variable names
-	* @param {string} source
-	* @return {string}
-	*/
+	 * Illegal JS accessor shortening
+	 * @param {string} pd src
+	 * @return {string} res
+	 */
+	shortenAccessors(pd) {
+		const candids = '色 彩 就 是 空 虚 纸 张 图 片'.split(' ');
+		let globalPre = candids[0];
+		let candI = 1;
+
+		// @todo from settings
+		const blackList = ['.arguments',
+			'.__getFloat64ArrayView', '.__getInt32Array', '.__getFloat32ArrayView'];
+
+		// count all accessor usages, which could gain an advantage by shortening
+		const processed = {};
+		pd.match(/\.+[a-zA-Z0-9_]{5,}/g).forEach((element) => {
+			const match = element;
+			if (match.indexOf('.') != 0) return; // only dot at start allowed
+			if (match.indexOf('..') == 0) return; // skip spread operator
+			if (blackList.includes(match)) return;
+
+			if (processed[match]) processed[match]++;
+			else processed[match] = 1;
+		});
+
+		// convert & calculate the actual 'char' savings
+		const converted = Object.keys(processed).map((key) => {
+			const val = processed[key];
+			const saving = val * (key.length) - (key.length + 3);
+			return {k: key, v: val, w: saving};
+		});
+		converted.sort((b, a) => (a.w > b.w) ? 1 : ((b.w > a.w) ? -1 : 0));
+
+		// filter positive savings only
+		const globalMap = {};
+		globalMap[globalPre] = [];
+
+		const filtered = [];
+		let realI = 0;
+		let canCount = 0;
+		const minSum = (globalPre.length + 8); // 'var =[];'
+		let sum = - minSum;
+		for (let i = 0; i < converted.length; i++) {
+			const element = converted[i];
+
+			if (canCount > 99) {
+				globalPre = candids[candI++ % candids.length];
+				if (!globalMap[globalPre]) globalMap[globalPre] = [];
+				realI = globalMap[globalPre].length;
+				canCount = 0;
+				sum -= minSum;
+			}
+
+			const replacement = '[' + globalPre + '[' + realI + ']]';
+			const newLen = element.v * replacement.length;
+			const newWeight = element.w - newLen;
+			// if the advantage exceeds the own weight, process it
+			if (newWeight > element.k.length) {
+				globalMap[globalPre][realI++] = element.k.substring(1);
+				canCount++;
+				filtered.push({k: element.k, v: element.v, w: newWeight, r: replacement});
+				sum += newWeight;
+			}
+		}
+
+		// !! important to replace the longest words first, so we dont have partial replacements !!
+		filtered.sort((b, a) => (a.k.length > b.k.length) ? 1 : ((b.k.length > a.k.length) ? -1 : 0));
+
+		// console.log(JSON.stringify(filtered, null, '\t'));
+		console.log('Potentially saving: ' + sum + ' chars.');
+
+		const oldPd = pd;
+		const oldStrict ='"use strict";';
+
+
+		// replace all occurences
+		for (let index = 0; index < filtered.length; index++) {
+			const element = filtered[index];
+			console.log('Replacing ' + element.k + ' => ' + element.r + '  (' + element.v + ' usages)');
+
+			let skipped = 0;
+			let newPd = pd;
+
+			// check & queue every potential replacement one-by-one
+			const operations = [];
+			const rgx = new RegExp('\\' + element.k, 'g');
+			let rm;
+			while (( rm = rgx.exec(newPd)) != null) {
+				const rIdx = rm.index;
+
+				// match is invalid if it is followed by a alphanumeric char or _
+				const followChar = newPd[rgx.lastIndex];
+				let isInvalid = (followChar.match(/[a-zA-Z0-9_]/) != null);
+
+				// check if replacement is in "" string
+				// check if replacement is in '' string
+				// check if replacement is in `` string
+				const patt = /'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)"|`((?:\\.|[^`])*)`/igm;
+				let match;
+				while ((match = patt.exec(newPd)) != null && !isInvalid) {
+					// console.log(match.index + ' ' + patt.lastIndex);
+					if (rIdx >= match.index && rIdx <= patt.lastIndex) {
+						isInvalid = true;
+						// console.log(`'${element.k}' Is in String between [${pIdx}:${pIdx + pLen}] at [${rIdx}:${rIdx + rLen}] ==> ${newPd.substring(rIdx - rLen -5, rIdx + 5)}`);
+					}
+					// else console.log(`${element.k} not in ${match[0]}`);
+				}
+
+				if (!isInvalid) {
+					operations.push({start: rIdx, end: rgx.lastIndex, repl: element.r});
+				} else {
+					skipped++;
+				}
+			}
+
+			// execute pending operations
+			for (let index = 0; index < operations.length; index++) {
+				const operation = operations[index];
+				const from = operation.start;
+				const to = operation.end;
+				const re = operation.repl;
+
+				// console.log(`Replace '${newPd.substring(from, to)}' at ${from} with '${re}'  ==>  ${newPd.substring(from -5, to + 5)}`);
+				newPd = newPd.substring(0, from) + re + newPd.substring(to);
+
+				// calculate new offset for following pending operations
+				const off = (to - from) - re.length;
+				for (let idx = index +1; idx < operations.length; idx++) {
+					const op = operations[idx];
+					if (op.start > to - off) op.start -= off;
+					if (op.end > to - off) op.end -= off;
+				}
+			}
+
+			// sanity check
+			// @todo bruh
+			if (newPd.match(/\]\][a-zA-Z0-9_]{1,}/)) {
+				console.log('Error double bracket, missing delimiter? ');
+				console.log(element);
+			} else {
+				if (skipped > 0) console.log(`Skipped ${skipped} invalid replacements.`);
+				pd = newPd;
+			}
+		}
+
+
+		// prepend all global Maps
+
+		// @todo use string join / split if count > X ?
+		Object.keys(globalMap).forEach((k) => {
+			let val = globalMap[k];
+			if (val.length > 4) {
+				val = `"${val.join('.')}".split('.')`;
+			} else {
+				val = JSON.stringify(val);
+			}
+			const newStrict = 'var ' + k + '=' + val + ';';
+			pd = pd.replace(oldStrict, oldStrict + newStrict);
+		});
+
+		const lengDiff = oldPd.length - pd.length;
+		const expDiff = lengDiff - sum;
+
+		console.log('Replacement complete!');
+		let m = 'Actually saved: ' + lengDiff + ' chars. ';
+		if (expDiff > 0) m+= ' (' + expDiff + ' more than expected)';
+		if (expDiff < 0) m+= ' (' + Math.abs(expDiff) + ' less than expected)';
+		console.log(m);
+		if (lengDiff < 0) {
+			console.log('Did not save any chars! rolling back...');
+			pd = oldPd;
+		}
+
+		return pd;
+	}
+
+	/**
+	 * process via regex
+	 * @param {string} source
+	 * @return {string}
+	 */
 	processString(source) {
-		return source.replace(this.options.regex, (match) => this.replaceMatch(source, match)); // .replaceAll('const ', 'var ');
+		const pd = source.replace(this.options.regex, (match) => this.replaceMatch(source, match)); // .replaceAll('const ', 'var ');
+
+		const sa = this.shortenAccessors(pd);
+
+		return sa;
+	}
+
+
+	/** Function that count occurrences of a substring in a string;
+	 * @param {String} string               The string
+	 * @param {String} subString            The sub string to search for
+	 * @param {Boolean} [allowOverlapping]  Optional. (Default:false)
+	 * @return {number}
+	 *
+	 * @author Vitim.us https://gist.github.com/victornpb/7736865
+	 * @see Unit Test https://jsfiddle.net/Victornpb/5axuh96u/
+	 * @see http://stackoverflow.com/questions/4009756/how-to-count-string-occurrence-in-string/7924240#7924240
+	 */
+	occurrences(string, subString, allowOverlapping) {
+		string += '';
+		subString += '';
+		if (subString.length <= 0) return (string.length + 1);
+
+		let n = 0;
+		let pos = 0;
+		const step = allowOverlapping ? 1 : subString.length;
+
+		while (true) {
+			pos = string.indexOf(subString, pos);
+			if (pos >= 0) {
+				++n;
+				pos += step;
+			} else break;
+		}
+		return n;
 	}
 
 	/**
