@@ -14,6 +14,8 @@ import {WascUtil} from './wasc-worker/WascUtil';
 
 const LogHead = '[WEWWA] ';
 const DefLang = 'de-de';
+const wral = 'wallpaperRegisterAudioListener';
+const proj = 'project.json';
 
 /**
 * WEWWA
@@ -77,7 +79,7 @@ export class WEWWA {
 	private htmlIcon: Element = null;
 
 	private audio: HTMLAudioElement = null;
-	private ctx: any = null;
+	private ctx: AudioContext = null;
 	private source: any = null;
 	private analyser: any = null;
 
@@ -93,7 +95,7 @@ export class WEWWA {
 	* @param {Function} finished Callback for initializing the wallpaper
 	*/
 	constructor(finished) {
-		if (window['wallpaperRegisterAudioListener']) {
+		if (window[wral]) {
 			Smallog.info('detected wallpaper engine => Standby.', LogHead);
 			finished();
 			return;
@@ -102,7 +104,7 @@ export class WEWWA {
 		Smallog.info('wallpaper engine not detected => Init!', LogHead);
 
 		// define audio listener first, so we dont miss when it gets registered.
-		window['wallpaperRegisterAudioListener'] = (callback) => {
+		window[wral] = (callback) => {
 			// set callback to be called later with analysed audio data
 			this.audioCallback = callback;
 			Smallog.info('Registered wallpaper AudioListener.', LogHead);
@@ -128,11 +130,14 @@ export class WEWWA {
 	* @ignore
 	*/
 	private init() {
-		WascUtil.myFetch('project.json', 'json').then((proj) => {
+		WascUtil.myFetch(proj, 'json').then((proj) => {
 			if (proj.type != 'web') {
-				Smallog.error('Error! Loaded project.json is not a web Wallpaper. How did this happen? Aborting...', LogHead);
+				Smallog.error(`Error! Loaded ${proj} is not a web Wallpaper. How did this happen? Aborting...`, LogHead);
 				return;
 			}
+
+			// new NDBG();
+
 			this.project = proj;
 			this.loadStorage();
 			this.addStyle();
@@ -570,32 +575,40 @@ export class WEWWA {
 		aBtn1.classList.add('audio');
 		aBtn1.innerHTML = 'Microphone';
 		aBtn1.addEventListener('click', (e) => {
-			this.requestMicrophone();
+			this.initMicrophone();
+		});
+
+		// Desktop Audio input
+		const aBtn2 = ce('a');
+		aBtn2.classList.add('audio');
+		aBtn2.innerHTML = 'Desktop Audio (Chrome)';
+		aBtn2.addEventListener('click', (e) => {
+			this.initDesktop();
 		});
 
 		// File Url input
-		const aBtn2 = ce('a');
-		aBtn2.classList.add('audio');
-		aBtn2.innerHTML = 'Select URL';
-		aBtn2.addEventListener('click', (e) => {
+		const aBtn3 = ce('a');
+		aBtn3.classList.add('audio');
+		aBtn3.innerHTML = 'Select URL';
+		aBtn3.addEventListener('click', (e) => {
 			const uri = prompt('Please enter some audio file URL\r\n\r\nYouTube, Soundcloud etc. ARE NOT YET SUPPORTED!', 'https://example.com/test.mp3');
-			this.initiateAudio(uri);
+			this.initFile(uri);
 		});
 
 		// System file input
-		const aBtn3 = ce('input');
-		aBtn3.id = 'wewwaAudioInput';
-		aBtn3.innerHTML = 'Select File';
-		aBtn3.setAttribute('type', 'file');
-		aBtn3.addEventListener('change', (e) => {
+		const aBtn4 = ce('input');
+		aBtn4.id = 'wewwaAudioInput';
+		aBtn4.innerHTML = 'Select File';
+		aBtn4.setAttribute('type', 'file');
+		aBtn4.addEventListener('change', (e) => {
 			const file = (e.target as any).files[0];
 			if (!file) {
 				return;
 			}
-			this.initiateAudio(file);
+			this.initFile(file);
 		});
 
-		td1.append(aBtn1, aBtn2, aBtn3);
+		td1.append(aBtn1, aBtn2, aBtn3, aBtn4);
 		row.append(td1);
 
 
@@ -617,7 +630,7 @@ export class WEWWA {
 			e.stopPropagation();
 			e.preventDefault();
 			const droppedFiles = e.dataTransfer.files;
-			this.initiateAudio(droppedFiles[0]);
+			this.initFile(droppedFiles[0]);
 		}, false);
 		dropCol1.append(dropArea);
 		dropRow.append(dropCol1, dropCol2);
@@ -650,6 +663,7 @@ export class WEWWA {
 	private addMenuHeader(ce: (e: any) => any, proj: any, menu = this.htmlMenu) {
 		const preview = ce('img');
 		preview.setAttribute('src', proj.preview);
+		preview.setAttribute('alt', 'Steam Workshop Preview Image');
 		// create menu app title
 		const header = ce('div');
 		header.innerHTML = '<h2>' + proj.title + '</h2>';
@@ -881,7 +895,10 @@ export class WEWWA {
 	* @public
 	*/
 	public evaluateSettings() {
+		// dynamic prefix for evaluation
+		const pre = 'wewwaProps';
 		const wewwaProps = this.project.general.properties;
+
 		localStorage.setItem('wewwaLastProps', JSON.stringify(wewwaProps));
 		for (const p in wewwaProps) {
 			if (!p) continue;
@@ -896,7 +913,7 @@ export class WEWWA {
 				const partials = cprop.split(/&&|\|\|/);
 				// loop all partial values of the check
 				for (const part of partials) {
-					let prefix = 'wewwaProps.';
+					let prefix = pre + '.';
 					const onlyVal = part.match(/[!a-zA-Z0-9_\.]*/)[0];
 					if (!onlyVal.startsWith(prefix) && !onlyVal.startsWith('!' + prefix)) {
 						// fix for inverted values
@@ -910,7 +927,7 @@ export class WEWWA {
 					}
 				}
 				try {
-					visible = eval(cprop) == true;
+					visible = new Function(pre, 'return ('+cprop+')')(wewwaProps) === true;
 				} catch (e) {
 					Smallog.error('Error: (' + cprop + ') for: ' + p + ' => ' + e, LogHead);
 				}
@@ -1003,46 +1020,43 @@ export class WEWWA {
 	* Request microphone from browser
 	* @ignore
 	*/
-	private requestMicrophone() {
-		navigator.mediaDevices.getUserMedia({
+	private initMicrophone() {
+		const md = navigator.mediaDevices as any;
+		if (!md['getUserMedia']) return;
+		md.getUserMedia({
 			audio: true,
 		}).then((stream) => {
+			Smallog.debug('Got Microphone MediaStream!');
+			// stop previous analyzer
 			this.stopAudioInterval();
-			// hack for firefox to keep stream running
-			window['persistAudioStream'] = stream;
-			this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
-			this.source = this.ctx.createMediaStreamSource(stream);
-			this.analyser = this.ctx.createAnalyser();
-			this.analyser.smoothingTimeConstant = 0.15;
-			this.analyser.fftSize = 256;
-
-			this.source.connect(this.analyser);
-			this.startAudioInterval();
+			this.makeAnalyzer(stream);
 		}).catch((err) => {
 			Smallog.error(err, LogHead);
 			if (location.protocol != 'https:') {
-				const r = confirm('Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS for this feature to work! Press \'ok\'/\'yes\' to get redirected to HTTPS and try again.');
+				const r = confirm('Activating the Microphone failed! Your Browser might require the site to be loaded using HTTPS! Press \'ok\'/\'yes\' to get redirected from HTTP => HTTPS.');
 				if (r) window.location.href = window.location.href.replace('http', 'https');
 			}
 		});
 	}
 
-	// eslint-disable-next-line valid-jsdoc
 	/**
-	* html5 audio analyser gives us mono data from 0(bass) to 128(treble)
-	* however, wallpaper engine expects stereo data in following format:
-	* 0(L: low) to 63(L: treble) and 64(R: low) to 128(R: treble)
-	* so we do some array transformation... and divide by 255 (8bit-uint becomes float)
-	* @ignore
+	* Initiate Desktop auddio streaming
 	*/
-	private convertAudio(data) {
-		const stereo = [];
-		let sIdx = 0;
-		for (let i = 0; i < 64; i++) {
-			stereo[i] = data[sIdx++] / 255;
-			stereo[64 + i] = data[sIdx++] / 255;
-		}
-		return stereo;
+	private async initDesktop() {
+		const md = navigator.mediaDevices as any;
+		if (!md['getDisplayMedia']) return;
+		md.getDisplayMedia({
+			video: true,
+			audio: true,
+		}).then((stream) => {
+			Smallog.debug('Got Desktop MediaStream!');
+			// stop previous analyzer
+			this.stopAudioInterval();
+			this.makeAnalyzer(stream);
+		}).catch((e) => {
+			Smallog.error('Cant Open Desktop Audio Stream!', '[WEWA] ');
+			console.error(e);
+		});
 	}
 
 	// eslint-disable-next-line valid-jsdoc
@@ -1050,28 +1064,50 @@ export class WEWWA {
 	* Start the audio processing & analyzer
 	* @ignore
 	*/
-	private initiateAudio(data) {
-		// clear up
+	private initFile(file) {
+		// stop previous analyzer
 		this.stopAudioInterval();
+		if (!file) return;
+
 		// create player
 		this.audio = document.createElement('audio');
-		this.audio.src = data.name ? URL.createObjectURL(data) : data;
+		this.audio.src = file.name ? URL.createObjectURL(file) : file;
 		this.audio.autoplay = true;
 		this.audio.setAttribute('controls', 'true');
 		this.audio.play();
-
 		// insert before marker
 		const markr = document.getElementById('audioMarker');
 		markr.prepend(this.audio);
 
-		this.ctx = new (window.AudioContext || window['webkitAudioContext'])();
-		this.source = this.ctx.createMediaElementSource(this.audio);
-		this.analyser = this.ctx.createAnalyser();
-		this.analyser.smoothingTimeConstant = 0.1;
-		this.analyser.fftSize = 512;
+		this.makeAnalyzer(this.audio);
+	}
 
-		this.source.connect(this.ctx.destination);
+	/**
+	 *
+	 * @param {MediaStream} src
+	 */
+	private makeAnalyzer(src: MediaStream | HTMLAudioElement) {
+		// new context
+		this.ctx = new (window.AudioContext || window['webkitAudioContext'])({sampleRate: 48000});
+		// microphone or desktop stream sauce
+		if (src instanceof MediaStream) {
+			this.source = this.ctx.createMediaStreamSource(src);
+			// hack for firefox to keep stream running
+			window['persistAudioStream'] = src;
+		}
+		// audio html element sauce
+		if (src instanceof HTMLAudioElement) {
+			this.source = this.ctx.createMediaElementSource(src);
+			// we want to hear this on our pc => connect source OUT to media IN
+			this.source.connect(this.ctx.destination);
+		}
+		// new analyzer
+		this.analyser = this.ctx.createAnalyser();
+		this.analyser.smoothingTimeConstant = 0.05;
+		this.analyser.fftSize = 256;
+		// connect source OUT to analyzer IN
 		this.source.connect(this.analyser);
+		// start analyzing
 		this.startAudioInterval();
 	}
 
@@ -1094,6 +1130,24 @@ export class WEWWA {
 		}, 33);
 		// tell Wallpaper we are sending audio
 		this.applyProp({audioprocessing: {value: true}});
+	}
+
+	// eslint-disable-next-line valid-jsdoc
+	/**
+	* html5 audio analyser gives us mono data from 0(bass) to 128(treble)
+	* however, wallpaper engine expects stereo data in following format:
+	* 0(L: low) to 63(L: treble) and 64(R: low) to 128(R: treble)
+	* so we do some array transformation... and divide by 255 (8bit-uint becomes float)
+	* @ignore
+	*/
+	private convertAudio(data) {
+		const stereo = [];
+		let sIdx = 0;
+		for (let i = 0; i < 64; i++) {
+			stereo[i] = data[sIdx++] / 255;
+			stereo[64 + i] = data[sIdx++] / 255;
+		}
+		return stereo;
 	}
 
 	/**

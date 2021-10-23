@@ -34,7 +34,7 @@ export enum LogLevel {
 * @public
 */
 class Smalog {
-	logLevel: LogLevel = LogLevel.Info;
+	logLevel: LogLevel = LogLevel.Debug;
 	preFix: string = '[Smallog] ';
 	printTime: boolean = false;
 

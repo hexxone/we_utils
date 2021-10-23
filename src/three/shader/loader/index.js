@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const glslMin = require('@yushijinhun/three-minifier-common/glsl-minifier');
+
 /**
  *
  * @param loader
@@ -68,11 +70,11 @@ function processImports(loader, source, context, imports, cb) {
 }
 
 /**
- * @todo find fix for #define and #if etc
- * Remove comments, newlines, tabstops & unnecessary spaces
- * @param src
+ * @param {string} src
+ * @return {string}
  */
 function optimize(src) {
+	/*
 	// src = src.replaceAll(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
 	const customs = ['+', '-', '/', '*', '=', `==`, '!=', '>=', '<=', '===', '>', '<', ',', '+=', '-=', '*=', '/=', '(', ')', '{', '}'];
 	let spc = src.replaceAll('  ', ' ');
@@ -89,11 +91,12 @@ function optimize(src) {
 		spc = spc.replaceAll(/[\r\n]/, '');
 	}
 	return spc.replaceAll(/[\t]/, '');
+	*/
+	return glslMin.minifyGLSL(src);
 }
 
 /**
- *
- * @param source
+ * @param {string} source file
  */
 exports.default = function(source) {
 	this.cacheable();

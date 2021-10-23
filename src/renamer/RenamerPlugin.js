@@ -8,6 +8,8 @@
 * @ignore
 */
 
+const lib = require('./jsfuck.js');
+
 const {RawSource} = require('webpack-sources');
 
 const validate = require('schema-utils');
@@ -79,18 +81,40 @@ class RenamerPlugin {
 		return fnd;
 	}
 
+
+	/**
+	 * randomize array
+	 * @param {Array} array
+	 * @return {Array}
+	 */
+	shuffle(array) {
+		let currentIndex = array.length; let randomIndex;
+		// While there remain elements to shuffle...
+		while (currentIndex != 0) {
+			// Pick a remaining element...
+			randomIndex = Math.floor(Math.random() * currentIndex);
+			currentIndex--;
+			// And swap it with the current element.
+			[array[currentIndex], array[randomIndex]] = [
+				array[randomIndex], array[currentIndex]];
+		}
+		return array;
+	}
+
 	/**
 	 * Illegal JS accessor shortening
 	 * @param {string} pd src
 	 * @return {string} res
 	 */
 	shortenAccessors(pd) {
-		const candids = '色 彩 就 是 空 虚 纸 张 图 片'.split(' ');
+		// 杀 屠 大 门 安 天
+		const candids = this.shuffle('職 識 辦 辯 色 特 持 谁 准 彩 就 是 空 虚 纸 张 图 片 末 未 已 己 土 士 干 千 人 入'.split(' '));
 		let globalPre = candids[0];
 		let candI = 1;
 
 		// @todo from settings
-		const blackList = ['.arguments',
+		const blackList = ['.arguments', '.update', '.outputData', '.audioProps', '.inputData', '.levelSettings',
+			'.exports', '.build', '.forEach', '.buffer',
 			'.__getFloat64ArrayView', '.__getInt32Array', '.__getFloat32ArrayView'];
 
 		// count all accessor usages, which could gain an advantage by shortening
@@ -125,7 +149,7 @@ class RenamerPlugin {
 		for (let i = 0; i < converted.length; i++) {
 			const element = converted[i];
 
-			if (canCount > 99) {
+			if (canCount > 9) {
 				globalPre = candids[candI++ % candids.length];
 				if (!globalMap[globalPre]) globalMap[globalPre] = [];
 				realI = globalMap[globalPre].length;
@@ -227,18 +251,53 @@ class RenamerPlugin {
 
 
 		// prepend all global Maps
+		const delim = '.';
+		const splFunc = '大';
+		const rndOff = Math.round(2 + Math.random() * 14);
 
-		// @todo use string join / split if count > X ?
-		Object.keys(globalMap).forEach((k) => {
+		// eslint-disable-next-line require-jsdoc
+		function caesarCipher(s) {
+			let r = '';
+			for (let i = 0; i < s.length; i++) {
+				r += String.fromCharCode((s[i].charCodeAt()) + rndOff);
+			}
+			return r;
+		}
+
+
+		let newStrict = oldStrict;
+		const keys = Object.keys(globalMap);
+		if (keys.length > 4) {
+			const fk1 = lib.JSFuck.encode(rndOff.toString());
+			const fk2 = lib.JSFuck.encode('split');
+			const fk3 = lib.JSFuck.encode(delim);
+			const func = `(s)=>{var r='';for(var i=0;i<s.length;r+=String.fromCharCode((s[i++].charCodeAt())-(${fk1}))){}return r[${fk2}](${fk3})}`;
+			newStrict +=`var ${splFunc}=${func},`;
+		}
+
+		keys.forEach((k) => {
 			let val = globalMap[k];
 			if (val.length > 4) {
-				val = `"${val.join('.')}".split('.')`;
+				if (keys.length > 4) {
+					val = `${splFunc}(${JSON.stringify(caesarCipher(val.join(delim)))})`;
+				} else {
+					val = `"${val.join(delim)}".split('${delim}')`;
+				}
 			} else {
 				val = JSON.stringify(val);
 			}
-			const newStrict = 'var ' + k + '=' + val + ';';
-			pd = pd.replace(oldStrict, oldStrict + newStrict);
+			if (newStrict.endsWith(')' || newStrict.endsWith('}'))) {
+				newStrict += ',';
+			}
+			if (newStrict.endsWith(';')) {
+				newStrict +='var ';
+			}
+			newStrict += `${k}=${val}`;
 		});
+
+		console.log(newStrict);
+
+		pd = pd.replace(oldStrict, newStrict + ';');
 
 		const lengDiff = oldPd.length - pd.length;
 		const expDiff = lengDiff - sum;
@@ -267,36 +326,6 @@ class RenamerPlugin {
 		const sa = this.shortenAccessors(pd);
 
 		return sa;
-	}
-
-
-	/** Function that count occurrences of a substring in a string;
-	 * @param {String} string               The string
-	 * @param {String} subString            The sub string to search for
-	 * @param {Boolean} [allowOverlapping]  Optional. (Default:false)
-	 * @return {number}
-	 *
-	 * @author Vitim.us https://gist.github.com/victornpb/7736865
-	 * @see Unit Test https://jsfiddle.net/Victornpb/5axuh96u/
-	 * @see http://stackoverflow.com/questions/4009756/how-to-count-string-occurrence-in-string/7924240#7924240
-	 */
-	occurrences(string, subString, allowOverlapping) {
-		string += '';
-		subString += '';
-		if (subString.length <= 0) return (string.length + 1);
-
-		let n = 0;
-		let pos = 0;
-		const step = allowOverlapping ? 1 : subString.length;
-
-		while (true) {
-			pos = string.indexOf(subString, pos);
-			if (pos >= 0) {
-				++n;
-				pos += step;
-			} else break;
-		}
-		return n;
 	}
 
 	/**

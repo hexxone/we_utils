@@ -193,10 +193,8 @@ export class WEAS extends CComponent {
 			this.weasModule = mod;
 
 			if (mod.memoryBuffer) {
-				setInterval(() => {
-					console.log('Yeah Boiii, we got shared memory access to WebAssembly worker!');
-					console.log(mod.memoryBuffer);
-				}, 10000);
+				// @todo
+				// console.log('Yeah Boiii, we got shared memory access to WebAssembly worker!');
 			}
 
 			this.updateSettings().then(() => {
