@@ -1,6 +1,6 @@
 {
 	"opts": {
-		"template": "./src/wasc-worker/better-docs",
+		"template": "./src/wasc-worker/node_modules/better-docs",
 		"encoding": "utf8",
 		"destination": "./docs/",
 		"recurse": true,
@@ -8,7 +8,7 @@
 		"access": "all"
 	},
 	"plugins": [
-		"./src/wasc-worker/better-docs/typescript"
+		"./src/wasc-worker/node_modules/better-docs/typescript"
 	],
 	"recurseDepth": 10,
 	"source": {
