@@ -7,10 +7,8 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {CComponent} from './CComponent';
-import {CSettings} from './CSettings';
-import {waitReady} from './Util';
-import {WEAS} from './weas';
+import {CComponent, CSettings, waitReady, WEAS} from '.';
+
 
 const ELM_ID = 'fpstats';
 
@@ -20,7 +18,7 @@ const ELM_ID = 'fpstats';
 * @extends {CSettings}
 */
 export class FPSettings extends CSettings {
-	debugging : boolean = false;
+	debugging: boolean = false;
 }
 
 /**

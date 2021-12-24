@@ -4,7 +4,7 @@
 * @author hexxone / https://hexx.one
 */
 
-import {BufferGeometry, Camera, Material, Mesh, OrthographicCamera, PlaneBufferGeometry, WebGLRenderer} from 'three';
+import {Camera, BufferGeometry, Mesh, Material, OrthographicCamera, PlaneBufferGeometry, WebGLRenderer} from '../../';
 
 /**
 * Helper for passes that need to fill the viewport with a single quad.
@@ -34,7 +34,7 @@ export class FullScreenHelper {
 	* @param {WebGLRenderer} renderer
 	*/
 	public prepare(renderer: WebGLRenderer) {
-		renderer.compile(this.mesh, this.camera);
+		renderer.compile(this.mesh as any, this.camera);
 	}
 
 	/**

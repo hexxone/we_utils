@@ -4,8 +4,7 @@
 * @author hexxone  / https://hexx.one
 */
 
-import {Vector2} from 'three';
-import {BaseShader} from './BaseShader';
+import {Vector2, BaseShader} from '../../';
 
 import vertex from './vertex/Basic.glsl';
 import fragment from './fragment/FXAA.glsl';
@@ -25,9 +24,9 @@ export class FXAAShader implements BaseShader {
 	shaderID = 'fxaaShader';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		resolution: {value: new Vector2(1 / 1024, 1 / 512)},
-	}
+		"tDiffuse": {value: null},
+		"resolution": {value: new Vector2(1 / 1024, 1 / 512)},
+	};
 
 	vertexShader = vertex;
 

@@ -7,8 +7,7 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {CSettings} from './CSettings';
-import {Smallog} from './Smallog';
+import {CSettings, Smallog} from './';
 
 /**
 * Base-Component for a TypeScript Web Wallpaper
@@ -19,7 +18,7 @@ export class CComponent {
 	/**
 	* Important: Append your child objects, for settings to be applied correctly!
 	*/
-	_internal_children: CComponent[] = [];
+	children: CComponent[] = [];
 
 	/**
 	*  main Settings, need to be overwritten with Specific settings
@@ -43,7 +42,7 @@ export class CComponent {
 			this.needsUpdate = true;
 			Smallog.debug(`ApplySetting: ${key}:${value}`);
 		}
-		this._internal_children.forEach((ch) => found = ch.applySetting(key, value) || found);
+		this.children.forEach((ch) => found = ch.applySetting(key, value) || found);
 		return found;
 	}
 
@@ -55,7 +54,7 @@ export class CComponent {
 	* @public
 	*/
 	public updateAll(): void {
-		this._internal_children.forEach((c) => c.updateAll());
+		this.children.forEach((c) => c.updateAll());
 		if (this.needsUpdate) this.updateSettings();
 		this.needsUpdate = false;
 	}

@@ -23,9 +23,9 @@ export class BlendShader implements BaseShader {
 	shaderID = 'blendShader';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		overlayBuffer: {value: null},
-		mixValue: {value: 1},
+		"tDiffuse": {value: null},
+		"overlayBuffer": {value: null},
+		"mixValue": {value: 1},
 	};
 
 	vertexShader = vertex;

@@ -6,7 +6,6 @@
 */
 
 export * from './EffectComposer';
-export * from './XRHelper';
 
 export * from './pass/BasePass';
 export * from './pass/FullScreenHelper';

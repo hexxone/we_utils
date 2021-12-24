@@ -25,9 +25,9 @@ export class LUTShader implements BaseShader {
 	shaderID = 'LUTShader';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		lutMap: {value: null},
-		lutMapSize: {value: 1},
+		"tDiffuse": {value: null},
+		"lutMap": {value: null},
+		"lutMapSize": {value: 1},
 	};
 
 	vertexShader = vertex;

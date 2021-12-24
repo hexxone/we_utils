@@ -9,8 +9,7 @@
 * @description
 */
 
-import {Vector2} from 'three';
-import {BaseShader} from './BaseShader';
+import {Vector2, BaseShader} from '../../';
 
 import vertex from './vertex/Basic.glsl';
 import fragment from './fragment/FractalMirror.glsl';
@@ -28,10 +27,10 @@ export class FractalMirrorShader implements BaseShader {
 	shaderID = 'fractalMirror';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		iResolution: {value: new Vector2(16, 9)},
-		numSides: {value: 2.0}, // minimum value
-		invert: {value: false},
+		"tDiffuse": {value: null},
+		"iResolution": {value: new Vector2(16, 9)},
+		"numSides": {value: 2.0}, // minimum value
+		"invert": {value: false},
 	};
 
 	vertexShader = vertex;

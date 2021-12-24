@@ -31,23 +31,22 @@ export enum LogLevel {
 
 /**
 * Small logging util, with name/time prefix & log levels
-* @public
 */
 class Smalog {
-	logLevel: LogLevel = LogLevel.Debug;
-	preFix: string = '[Smallog] ';
-	printTime: boolean = false;
+	logLevel: LogLevel = LogLevel.Debug; // @todo change default logging level
+	preFix = '[Smallog] ';
+	printTime = false;
 
 	/**
 	* trace exception calls
 	* @param {string} def error message
 	* @param {number} depth which call to pick
-	* @return {string}
+	* @return {string} error message
 	* @ignore
 	*/
-	traceCall(def: string, depth: number = 3) {
+	traceCall(def: string, depth = 3): string {
 		try {
-			throw new Error('TraceCall()');
+			throw new Error('trace()');
 		} catch (e) {
 			// Examine e.stack here
 			if (e.stack) {
@@ -70,7 +69,8 @@ class Smalog {
 
 	/**
 	* set logging prefix
-	* @param {string} pre
+	* @param {string} pre new prefix
+	* @return {void} nothing
 	*/
 	setPrefix(pre: string) {
 		this.preFix = pre;
@@ -78,7 +78,8 @@ class Smalog {
 
 	/**
 	* set time prefix
-	* @param {boolean} print
+	* @param {boolean} print true to print time
+	* @return {void} nothing
 	*/
 	setPrintTime(print: boolean) {
 		this.printTime = print;
@@ -88,6 +89,7 @@ class Smalog {
 	* print error message
 	* @param {string} msg log
 	* @param {string} hdr overwrite header
+	* @return {void} nothing
 	*/
 	error(msg: string, hdr: string = this.preFix) {
 		if (this.printTime) msg = ('[' + new Date().toLocaleString() + '] ') + msg;
@@ -98,6 +100,7 @@ class Smalog {
 	* print info message
 	* @param {string} msg log
 	* @param {string} hdr overwrite header
+	* @return {void} nothing
 	*/
 	info(msg: string, hdr: string = this.preFix) {
 		if (this.logLevel >= 1) {
@@ -111,6 +114,7 @@ class Smalog {
 	* print debug message
 	* @param {string} msg log
 	* @param {string} hdr overwrite header
+	* @return {void} nothing
 	*/
 	debug(msg: string, hdr: string = this.preFix) {
 		if (this.logLevel >= 2) {

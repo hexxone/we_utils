@@ -1,13 +1,12 @@
-import {WebGLRenderer} from 'three';
+import {WebGLRenderer, WebGLRenderTarget} from '../../';
 
 /**
 * @author alteredq / http://alteredqualia.com/
 * @author hexxone / https://hexx.one
 *
 * Basic shader pass interface
-* @public
 */
-export interface BasePass {
+export type BasePass ={
 	// child name
 	name: string;
 
@@ -27,5 +26,5 @@ export interface BasePass {
 
 	setSize(width: number, height: number);
 
-	render(renderer: THREE.WebGLRenderer, writeBuffer: THREE.WebGLRenderTarget, readBuffer: THREE.WebGLRenderTarget, maskActive: boolean, renderToScreen: boolean);
+	render(renderer: WebGLRenderer, writeBuffer: WebGLRenderTarget, readBuffer: WebGLRenderTarget, maskActive: boolean, renderToScreen: boolean);
 }
