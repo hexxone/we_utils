@@ -4,17 +4,16 @@
 * @author Mugen87 / https://github.com/Mugen87
 */
 
-import {Navigator, XRSession} from 'three';
-import {CComponent} from '../CComponent';
-import {CSettings} from '../CSettings';
-import {waitReady} from '../Util';
+import {CSettings, CComponent, waitReady} from './';
+import {XRSessionInit} from './XRWebGL';
+
 
 /**
  * XR Settings
  * @extends {CSettings}
  */
 export class XRSettings extends CSettings {
-	xr_mode: boolean = false;
+	private xr_mode: boolean = false;
 }
 
 /**
@@ -49,7 +48,7 @@ export class XRHelper extends CComponent {
 		btn.disabled = true;
 		btn.style.display = 'none';
 		btn.style.position = 'absolute';
-		btn.style.bottom = '10px';
+		btn.style.bottom = '50px';
 		btn.style.padding = '12px 6px';
 		btn.style.border = '1px solid #fff';
 		btn.style.borderRadius = '4px';
@@ -60,6 +59,9 @@ export class XRHelper extends CComponent {
 		btn.style.opacity = '0.5';
 		btn.style.outline = 'none';
 		btn.style.zIndex = '99999';
+		// auto center horizontally
+		btn.style.left = '50%';
+		btn.style.transform = 'translate(-50%, 0)';
 
 		btn.onmouseenter = () => {
 			btn.style.opacity = '1.0';
@@ -122,7 +124,9 @@ export class XRHelper extends CComponent {
 				// requestReferenceSpace call will fail if it turns out to be unavailable.
 				// ('local' is always available for immersive sessions and doesn't need to
 				// be requested separately.)
-				const sessionInit = {optionalFeatures: ['local-floor']}; /* , 'bounded-floor'*/
+				const sessionInit: XRSessionInit = {
+					optionalFeatures: ['local-floor'],
+				};
 				this.nav.xr.requestSession('immersive-vr', sessionInit).then((sess) => {
 					this.currentSession = sess;
 

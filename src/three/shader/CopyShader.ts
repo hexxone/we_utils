@@ -24,9 +24,9 @@ export class CopyShader implements BaseShader {
 	shaderID = 'copyShader';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		opacity: {value: 1.0},
-	}
+		"tDiffuse": {value: null},
+		"opacity": {value: 1.0},
+	};
 
 	vertexShader = vertex;
 

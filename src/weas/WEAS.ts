@@ -7,12 +7,8 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {CComponent} from '../CComponent';
-import {CSettings} from '../CSettings';
-import {waitReady} from '../Util';
-import {Smallog} from '../Smallog';
+import {CComponent, CSettings, Smallog, waitReady, WascInterface, wascWorker, WascLoader, ASUtil} from '../';
 
-import {wascWorker, WascInterface} from '../wasc-worker';
 import {Bea_ts} from './Bea';
 
 const DAT_LEN = 128;
@@ -24,39 +20,39 @@ const LISTENAME = 'wallpaperRegisterAudioListener';
 * @extends {CSettings}
 */
 export class WEASettings extends CSettings {
-	debugging: boolean = false;
+	debugging = false;
 	/** do audio processing? */
-	audioprocessing: boolean = true;
+	audioprocessing = true;
 	// do dynamic processing?
-	equalize: boolean = true;
+	equalize = true;
 	// convert to mono?
-	mono_audio: boolean = true;
+	mono_audio = true;
 	// invert low & high freqs?
-	audio_direction: number = 0;
+	audio_direction = 0;
 	// peak filtering
-	peak_filter: number = 1;
+	peak_filter = 1;
 	// neighbour-smoothing value
-	value_smoothing: number = 2;
+	value_smoothing = 2;
 	// time-value smoothing ratio
-	audio_increase: number = 75;
-	audio_decrease: number = 25;
+	audio_increase = 75;
+	audio_decrease = 25;
 	// multipliers
-	treble_multiplier: number = 0.666;
-	mids_multiplier: number = 0.8;
-	bass_multiplier: number = 1.2;
+	treble_multiplier = 0.666;
+	mids_multiplier = 0.8;
+	bass_multiplier = 1.2;
 	// ignore value leveling for "silent" data
-	minimum_volume: number = 0.005;
+	minimum_volume = 0.005;
 	// use low latency audio?
-	low_latency: boolean = false;
+	low_latency = false;
 	// show debug rendering?
-	show_canvas: boolean = true;
+	show_canvas = true;
 }
 
 /**
 * Processed audio data representation
 * @public
 */
-export interface WEAudio {
+export type WEAudio = {
 	time: number;
 	ellapsed: number;
 	data: Float64Array;
@@ -136,27 +132,32 @@ export class WEAS extends CComponent {
 	public inBuff = new Float64Array(DAT_LEN);
 
 	// web assembly functions
-	private weasModule: WascInterface = null;
+	weasModule: WascInterface = null;
 
 	// bpm detektor
-	private bpModule: Bea_ts;
+	bpModule: Bea_ts;
 
 	// debug render elements
-	private mainElm: HTMLDivElement;
-	private canvas1: HTMLCanvasElement;
-	private context1: CanvasRenderingContext2D;
-	private canvas2: HTMLCanvasElement;
-	private context2: CanvasRenderingContext2D;
-	private display: HTMLElement;
+	mainElm: HTMLDivElement;
+	canvas1: HTMLCanvasElement;
+	context1: CanvasRenderingContext2D;
+	canvas2: HTMLCanvasElement;
+	context2: CanvasRenderingContext2D;
+	display: HTMLElement;
+
+	sharedASUtils: ASUtil;
+
+	public init?: () => Promise<void>;
 
 	/**
 	* delay audio initialization until page ready
 	* @param {boolean} detectBpm (optional)
 	*/
-	constructor(detectBpm = false) {
+	constructor(autoInit = false, detectBpm = false) {
 		super();
 		if (detectBpm) this.bpModule = new Bea_ts();
-		waitReady().then(() => this.realInit());
+		if (autoInit) waitReady().then(() => this.realInit());
+		else this.init = this.realInit;
 	}
 
 
@@ -185,16 +186,18 @@ export class WEAS extends CComponent {
 			Smallog.error('\'window.wallpaperRegisterAudioListener\' not given!');
 			return;
 		}
+		this.init = null;
 
 		this.injectCSS();
 		this.injectHTML();
 
-		wascWorker('WEAS.wasm', 4096, {}, !this.settings.low_latency).then((mod) => {
-			this.weasModule = mod;
+		const iso = window['crossOriginIsolated'] === true;
+		wascWorker('WEAS.wasm', 4096, iso, {}, !this.settings.low_latency).then((myModule) => {
+			this.weasModule = myModule;
 
-			if (mod.memoryBuffer) {
-				// @todo
-				// console.log('Yeah Boiii, we got shared memory access to WebAssembly worker!');
+			if (myModule.sharedMemory) {
+				this.sharedASUtils = new WascLoader().postInstantiate({}, {exports: {memory: myModule.sharedMemory}} as any);
+				Smallog.debug('Got shared memory access to WebAssembly audio!');
 			}
 
 			this.updateSettings().then(() => {
@@ -397,7 +400,7 @@ export class WEAS extends CComponent {
 			{
 				data: sett.buffer,
 			})
-			// Back to main context
+				// Back to main context
 				.then(() => {
 					Smallog.debug('Sent Settings to WEAS: ' + JSON.stringify(sett));
 					resolve();
@@ -421,8 +424,8 @@ export class WEAS extends CComponent {
 		if (this.settings.show_canvas) this.updateCanvas();
 
 		return this.settings.audioprocessing &&
-		this.lastAudio && this.lastAudio.silent == 0 &&
-		(performance.now() - this.lastAudio.time < 3000);
+			this.lastAudio && this.lastAudio.silent == 0 &&
+			(performance.now() - this.lastAudio.time < 3000);
 	}
 
 	/**

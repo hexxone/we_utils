@@ -7,7 +7,7 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {Vector2} from 'three';
+import {Vector2} from '../../';
 import {BaseShader} from './BaseShader';
 
 import vertex from './vertex/Basic.glsl';
@@ -24,9 +24,9 @@ export class ChromaticShader implements BaseShader {
 	shaderID = 'chromaticShader';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		iResolution: {value: new Vector2(1, 1)},
-		strength: {value: 10.0},
+		"tDiffuse": {value: null},
+		"iResolution": {value: new Vector2(1, 1)},
+		"strength": {value: 10.0},
 	};
 
 	vertexShader = vertex;

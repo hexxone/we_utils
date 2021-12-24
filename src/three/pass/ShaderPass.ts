@@ -1,19 +1,23 @@
 /**
-* @author alteredq / http://alteredqualia.com/
-*
-* @author hexxone / https://hexx.one
-*/
+ * @author alteredq / http://alteredqualia.com/
+ *
+ * @author hexxone / https://hexx.one
+ */
 
-import {ShaderMaterial, UniformsUtils, Vector2, WebGLRenderer, WebGLRenderTarget} from 'three';
-import {BaseShader} from '../shader/BaseShader';
-
-import {FullScreenHelper} from './FullScreenHelper';
-import {BasePass} from './BasePass';
+import {
+	BasePass,
+	BaseShader,
+	FullScreenHelper,
+	ShaderMaterial,
+	UniformsUtils,
+	Vector2,
+	WebGLRenderer,
+	WebGLRenderTarget,
+} from "../../";
 
 /**
-* ThreeJS Pass for easy full screen shaders
-* @public
-*/
+ * ThreeJS Pass for easy full screen shaders
+ */
 export class ShaderPass implements BasePass {
 	name: string;
 	enabled = true;
@@ -26,68 +30,75 @@ export class ShaderPass implements BasePass {
 	iRes: Vector2;
 
 	/**
-	* Make Pass
-	* default Material will enable transparency!
-	* @param {BaseShader|ShaderMaterial} shader Create From
-	* @param {string} textureID Input Uniform Texture name
-	*/
-	constructor(shader: BaseShader | ShaderMaterial, textureID: string = 'tDiffuse') {
+     * Make Pass
+     * default Material will enable transparency!
+     * @param {BaseShader|ShaderMaterial} shader Create From
+     * @param {string} textureID Input Uniform Texture name
+     */
+	constructor(shader: BaseShader | ShaderMaterial, textureID = "tDiffuse") {
 		this.textureID = textureID;
 
 		if (shader instanceof ShaderMaterial) {
-			this.name = 'ShaderMaterial';
+			this.name = "ShaderMaterial";
 			this.uniforms = shader.uniforms;
 			this.material = shader;
 		} else if (shader) {
 			this.name = shader.shaderID;
 			this.uniforms = UniformsUtils.clone(shader.uniforms);
-			this.material = new ShaderMaterial({
-				defines: Object.assign({}, shader.defines),
-				uniforms: this.uniforms,
-				vertexShader: shader.vertexShader,
-				fragmentShader: shader.fragmentShader,
-			});
+			this.material = new ShaderMaterial();
+			this.material.defines = Object.assign({}, shader.defines);
+			this.material.uniforms = this.uniforms;
+			this.material.vertexShader = shader.vertexShader;
+			this.material.fragmentShader = shader.fragmentShader;
 		}
 		this.material.transparent = true;
 		this.fsQuad = new FullScreenHelper(this.material);
 	}
 
 	/**
-	* precompile shader
-	* @param {WebGLRenderer} renderer
-	*/
-	public prepare(renderer: WebGLRenderer) {
+     * precompile shader
+     * @param {WebGLRenderer} renderer renderer
+     * @returns {void}
+     */
+	prepare(renderer: WebGLRenderer): void {
 		this.fsQuad.prepare(renderer);
 	}
 
 	/**
-	* Destroy Pass
-	* @public
-	*/
-	public dispose() {
+     * Destroy Pass
+     * @public
+     * @returns {void}
+     */
+	dispose() {
 		this.fsQuad.dispose();
 	}
 
 	/**
-	* Canvas size update
-	* @param {number} width X
-	* @param {number} height Y
-	* @public
-	*/
-	public setSize(width: number, height: number) {
+     * Canvas size update
+     * @param {number} width X
+     * @param {number} height Y
+     * @returns {void}
+     */
+	setSize(width: number, height: number) {
 		this.iRes = new Vector2(width, height);
 	}
 
 	/**
-	* Render frame with chaining-support
-	* @param {WebGLRenderer} renderer
-	* @param {WebGLRenderTarget} writeBuffer wB
-	* @param {WebGLRenderTarget} readBuffer rB
-	* @param {boolean} maskActive mA
-	* @param {boolean} renderToScreen render to canvas OR buffer
-	* @public
-	*/
-	public render(renderer: WebGLRenderer, writeBuffer: WebGLRenderTarget, readBuffer: WebGLRenderTarget, maskActive: boolean, renderToScreen: boolean) {
+     * Render frame with chaining-support
+     * @param {WebGLRenderer} renderer renderer
+     * @param {WebGLRenderTarget} writeBuffer wB
+     * @param {WebGLRenderTarget} readBuffer rB
+     * @param {boolean} maskActive mA
+     * @param {boolean} renderToScreen render to canvas OR buffer
+     * @returns {void}
+     */
+	render(
+		renderer: WebGLRenderer,
+		writeBuffer: WebGLRenderTarget,
+		readBuffer: WebGLRenderTarget,
+		maskActive: boolean,
+		renderToScreen: boolean
+	) {
 		if (this.uniforms[this.textureID]) {
 			this.uniforms[this.textureID].value = readBuffer.texture;
 		}
@@ -103,7 +114,12 @@ export class ShaderPass implements BasePass {
 		} else {
 			renderer.setRenderTarget(writeBuffer);
 			// TODO: Avoid using autoClear properties, see https://github.com/mrdoob/js/pull/15571#issuecomment-465669600
-			if (this.clear) renderer.clear(renderer.autoClearColor, renderer.autoClearDepth, renderer.autoClearStencil);
+			if (this.clear)
+				renderer.clear(
+					renderer.autoClearColor,
+					renderer.autoClearDepth,
+					renderer.autoClearStencil
+				);
 		}
 		this.fsQuad.render(renderer);
 	}

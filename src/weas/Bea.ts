@@ -34,18 +34,18 @@
 * @public
 */
 export class Bea_ts {
-	bd_low: BeatsDetektor = new BeatsDetektor(55, 109);
-	bd_med: BeatsDetektor = new BeatsDetektor(85, 169);
-	bd_high: BeatsDetektor = new BeatsDetektor(100, 199);
-	bd_ext: BeatsDetektor = new BeatsDetektor(150, 299);
+	private bd_low: BeatsDetektor = new BeatsDetektor(55, 109);
+	private bd_med: BeatsDetektor = new BeatsDetektor(85, 169);
+	private bd_high: BeatsDetektor = new BeatsDetektor(100, 199);
+	private bd_ext: BeatsDetektor = new BeatsDetektor(150, 299);
 
-	winRewards: number[] = [];
+	private winRewards: number[] = [];
 
-	bds: BeatsDetektor[] = [];
-	bdi = 0;
+	private bds: BeatsDetektor[] = [];
+	private bdi = 0;
 
-	prev_bpm: number = -1;
-	prev_win: number = -1;
+	private prev_bpm: number = -1;
+	private prev_win: number = -1;
 
 	/**
 	* Construct BeatDetektor array

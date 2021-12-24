@@ -4,9 +4,8 @@
 * @author hexxone / https://hexx.one
 */
 
-import {LinearFilter, PerspectiveCamera, Quaternion, RGBAFormat, Scene, Vector2, WebGLRenderer, WebGLRenderTarget, XRFrame} from 'three';
-import {BasePass} from './pass/BasePass';
-import {RenderPass} from './pass/RenderPass';
+import {RenderPass, BasePass, LinearFilter, RGBAFormat, Scene, PerspectiveCamera, WebGLRenderer, Vector2, WebGLRenderTarget, Quaternion} from '../';
+
 
 const defaultParams = {
 	minFilter: LinearFilter,
@@ -50,14 +49,14 @@ export class EffectComposer {
 
 	/**
 	* Instantiate
-	* @param {Scene} scene
-	* @param {PerspectiveCamera} camera
-	* @param {WebGLRenderer} renderer
-	* @param {string} globalPrec
-	* @param {Color} clearCol
-	* @param {WebGLRenderTarget} renderTarget
+	* @param {Scene} scene Scene
+	* @param {PerspectiveCamera} camera camera
+	* @param {WebGLRenderer} renderer renderer
+	* @param {string} globalPrec global precision
+	* @param {Color} clearCol Color
+	* @param {WebGLRenderTarget} renderTarget target to Reset (optional)
 	*/
-	constructor(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, globalPrec: string = 'mediump', clearCol?: any, renderTarget?: WebGLRenderTarget) {
+	constructor(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, globalPrec = 'mediump', clearCol?: any, renderTarget?: WebGLRenderTarget) {
 		this.scene = scene;
 		this.camera = camera;
 		this.renderer = renderer;
@@ -92,8 +91,9 @@ export class EffectComposer {
 	}
 
 	/**
-	 * Precompile all shaders...
-	 */
+	* Precompile all shaders...
+	* @returns {void}
+	*/
 	public precompile(): void {
 		this.renderer.compile(this.scene, this.camera);
 		this.passes.forEach((pass) => pass.prepare(this.renderer));
@@ -103,6 +103,7 @@ export class EffectComposer {
 	* Append a shader to the chain
 	* @public
 	* @param {BasePass} p Shader to add
+	* @returns {void}
 	*/
 	public addPass(p: BasePass) {
 		p.setSize(this.viewSize.width, this.viewSize.height);
@@ -114,6 +115,7 @@ export class EffectComposer {
 	* @public
 	* @param {BasePass} p Shader to add
 	* @param {number} index position
+	* @returns {void}
 	*/
 	public insertPass(p: BasePass, index: number) {
 		p.setSize(this.viewSize.width, this.viewSize.height);
@@ -122,7 +124,8 @@ export class EffectComposer {
 
 	/**
 	 * Update clear color
-	 * @param {any} clearCol  Color
+	 * @param {any} clearCol Color
+	* @returns {void}
 	 */
 	public setClearColor(clearCol: any) {
 		this.normPass.clearColor = clearCol;
@@ -133,6 +136,7 @@ export class EffectComposer {
 	* Checks if the given shader should be rendererd to screen
 	* @param {number} passIndex position
 	* @return {boolean}
+	* @returns {void}
 	*/
 	private isLastEnabledPass(passIndex: number) {
 		for (let i = passIndex + 1; i < this.passes.length; i++) {
@@ -146,6 +150,7 @@ export class EffectComposer {
 	* @public
 	* @param {number} deltaTime if not given, will calculate its own
 	* @param {XRFrame} frame Currently rendering XR frame?
+	* @returns {void}
 	*/
 	public render(deltaTime?: number, frame?: XRFrame) {
 		// deltaTime value is in seconds
@@ -154,19 +159,21 @@ export class EffectComposer {
 			deltaTime = (dn - this.previousFrame) * 0.001;
 		}
 		this.previousFrame = dn;
+
 		const size = new Vector2();
-		this.renderer.getSize( size );
+		this.renderer.getSize(size);
 		const currentRenderTarget = this.renderer.getRenderTarget();
+
 		// has enabled passes?
 		const hasTargets = this.passes.filter((p) => p.enabled).length > 0;
 
 		// clear surface ?
-		if ( this.renderer.autoClear ) this.renderer.clear();
+		if (this.renderer.autoClear) this.renderer.clear();
 
 		// do spilt rendering
 		if (this.renderer.xr.isPresenting && frame !== null) {
 			this.scene.updateMatrixWorld();
-			if ( this.camera.parent === null ) this.camera.updateMatrixWorld();
+			if (this.camera.parent === null) this.camera.updateMatrixWorld();
 
 			// update cameras
 			const pose = frame.getViewerPose(this.renderer.xr.getReferenceSpace());
@@ -178,7 +185,7 @@ export class EffectComposer {
 
 			// dont use native XR features now
 			this.renderer.xr.enabled = false;
-			this.renderer.setScissorTest( true );
+			this.renderer.setScissorTest(true);
 
 			// render
 			for (let i = 0; i < views.length; i++) {
@@ -202,8 +209,8 @@ export class EffectComposer {
 
 				// render
 				const offX = viewSize * i;
-				this.renderer.setScissor( offX, 0, viewSize, size.height );
-				this.renderer.setViewport( offX, 0, viewSize, size.height );
+				this.renderer.setScissor(offX, 0, viewSize, size.height);
+				this.renderer.setViewport(offX, 0, viewSize, size.height);
 
 				// pass buffers flipped to avoid swap
 				this.xrPass.render(this.renderer, this.readBuffer, this.writeBuffer, false, !hasTargets);
@@ -216,13 +223,13 @@ export class EffectComposer {
 			}
 
 			// reset features
-			this.renderer.setScissorTest( false );
+			this.renderer.setScissorTest(false);
 			this.renderer.xr.enabled = true;
 		} else {
 			// render default
 			this.camera.rotation.set(0, 0, 0);
-			this.renderer.setScissor( 0, 0, size.width, size.height );
-			this.renderer.setViewport( 0, 0, size.width, size.height );
+			this.renderer.setScissor(0, 0, size.width, size.height);
+			this.renderer.setViewport(0, 0, size.width, size.height);
 			// pass buffers flipped to avoid swap
 			this.normPass.render(this.renderer, this.readBuffer, this.writeBuffer, false, !hasTargets);
 			this.passes.forEach((pass, i) => {
@@ -240,6 +247,7 @@ export class EffectComposer {
 	* Destroy the current shader-chain
 	* @public
 	* @param {WebGLRenderTarget} renderTarget target to Reset (optional)
+	* @returns {void}
 	*/
 	public reset(renderTarget?: WebGLRenderTarget) {
 		if (renderTarget === undefined) {
@@ -267,6 +275,7 @@ export class EffectComposer {
 	* @public
 	* @param {number} width X
 	* @param {number} height Y
+	* @returns {void}
 	*/
 	public setSize(width: number, height: number) {
 		this.renderWrite.setSize(width, height);
@@ -282,6 +291,7 @@ export class EffectComposer {
 	*
 	* This is a workaround to pass their data further down the render-chain
 	* @ignore
+	* @returns {void}
 	*/
 	private swapBuffers() {
 		const tmp = this.readBuffer;

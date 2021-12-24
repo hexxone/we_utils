@@ -85,3 +85,9 @@ export function rgbToHSL(r_g_b: string): {h: number, s:number, l:number} {
 	hsl.h /= 6;
 	return hsl;
 }
+
+
+/**
+ * Shorthand for Typed array stuff
+ */
+export const AnyTypedArray: Uint32Array | Float32Array | Float64Array | Uint8Array | Int8Array | Uint16Array | Int16Array | Int32Array | BigUint64Array | BigInt64Array = null;

@@ -8,8 +8,7 @@
 * See LICENSE file in the project root for full license information.
 */
 
-import {Color} from 'three';
-import {BaseShader} from './BaseShader';
+import {Color, BaseShader} from '../../';
 
 import vertex from './vertex/Basic.glsl';
 import fragment from './fragment/Luminosity.glsl';
@@ -27,11 +26,11 @@ export class LuminosityHighPassShader implements BaseShader {
 	shaderID = 'luminosityHighPass';
 
 	uniforms = {
-		tDiffuse: {value: null},
-		luminosityThreshold: {value: 1.0},
-		smoothWidth: {value: 1.0},
-		defaultColor: {value: new Color(0x000000)}, // @TODO might need to set to BG color?
-		defaultOpacity: {value: 0.0},
+		"tDiffuse": {value: null},
+		"luminosityThreshold": {value: 1.0},
+		"smoothWidth": {value: 1.0},
+		"defaultColor": {value: new Color(0x000000)}, // @TODO might need to set to BG color?
+		"defaultOpacity": {value: 0.0},
 	};
 
 	vertexShader = vertex;

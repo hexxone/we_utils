@@ -5,6 +5,10 @@
 * Copyright (c) 2021 hexxone All rights reserved.
 * Licensed under the GNU GENERAL PUBLIC LICENSE.
 * See LICENSE file in the project root for full license information.
+*
+* @todo
+* - export normal strings?
+*
 * @ignore
 */
 
@@ -36,12 +40,10 @@ class RenamerPlugin {
 
 	// mapped name list: {key,value}
 	nameMap = [];
-	// saved character count
-	savedChars = 0;
 
 	/**
 	* Intializes the plugin in the webpack build process
-	* @param {offliineSchema} options
+	* @param {offlineSchema} options - plugin options
 	*/
 	constructor(options = {}) {
 		validate.validate(offlineSchema, options);
@@ -50,8 +52,8 @@ class RenamerPlugin {
 
 	/**
 	* Get a random variable name, which does not exist in src and mappings
-	* @param {string} src
-	* @return {string}
+	* @param {string} src - source code
+	* @return {string} random variable name
 	*/
 	getRandomName(src) {
 		const gen = '$x' + Math.random().toString(20).substr(2, 2 + Math.random() * 4);
@@ -64,9 +66,9 @@ class RenamerPlugin {
 
 	/**
 	* Regex replace "match" function
-	* @param {string} source
-	* @param {string} match
-	* @return {string}
+	* @param {string} source - source code
+	* @param {string} match - regex match
+	* @return {string} replaced string
 	*/
 	replaceMatch(source, match) {
 		let fnd = null;
@@ -84,8 +86,8 @@ class RenamerPlugin {
 
 	/**
 	 * randomize array
-	 * @param {Array} array
-	 * @return {Array}
+	 * @param {Array} array - array to randomize
+	 * @return {Array} randomized array
 	 */
 	shuffle(array) {
 		let currentIndex = array.length; let randomIndex;
@@ -119,7 +121,7 @@ class RenamerPlugin {
 
 		// count all accessor usages, which could gain an advantage by shortening
 		const processed = {};
-		pd.match(/\.+[a-zA-Z0-9_]{5,}/g).forEach((element) => {
+		pd.match(/\.+[a-zA-Z0-9_]{6,}/g).forEach((element) => {
 			const match = element;
 			if (match.indexOf('.') != 0) return; // only dot at start allowed
 			if (match.indexOf('..') == 0) return; // skip spread operator
@@ -176,8 +178,6 @@ class RenamerPlugin {
 		console.log('Potentially saving: ' + sum + ' chars.');
 
 		const oldPd = pd;
-		const oldStrict ='"use strict";';
-
 
 		// replace all occurences
 		for (let index = 0; index < filtered.length; index++) {
@@ -191,7 +191,7 @@ class RenamerPlugin {
 			const operations = [];
 			const rgx = new RegExp('\\' + element.k, 'g');
 			let rm;
-			while (( rm = rgx.exec(newPd)) != null) {
+			while ((rm = rgx.exec(newPd)) != null) {
 				const rIdx = rm.index;
 
 				// match is invalid if it is followed by a alphanumeric char or _
@@ -231,7 +231,7 @@ class RenamerPlugin {
 
 				// calculate new offset for following pending operations
 				const off = (to - from) - re.length;
-				for (let idx = index +1; idx < operations.length; idx++) {
+				for (let idx = index + 1; idx < operations.length; idx++) {
 					const op = operations[idx];
 					if (op.start > to - off) op.start -= off;
 					if (op.end > to - off) op.end -= off;
@@ -264,22 +264,34 @@ class RenamerPlugin {
 			return r;
 		}
 
+		function mayEncode(str) {
+			if(Math.random() > 0.5) {
+				return lib.JSFuck.encode(str);
+			}
+			return `'${str}'`;
+		}
 
-		let newStrict = oldStrict;
+		let newStrict = "";
 		const keys = Object.keys(globalMap);
 		if (keys.length > 4) {
 			const fk1 = lib.JSFuck.encode(rndOff.toString());
-			const fk2 = lib.JSFuck.encode('split');
+			const fk2 = mayEncode('split');
 			const fk3 = lib.JSFuck.encode(delim);
-			const func = `(s)=>{var r='';for(var i=0;i<s.length;r+=String.fromCharCode((s[i++].charCodeAt())-(${fk1}))){}return r[${fk2}](${fk3})}`;
-			newStrict +=`var ${splFunc}=${func},`;
+			const fk4 = mayEncode('length');
+			const fk5 = mayEncode('harCode');
+			const fk6 = mayEncode('atob');
+			const fk7 = mayEncode('String');
+			const tmp1 = '`fromC${ë}`';
+			const tmp2 = '`c${ë}At`';
+			const func = `é=>{var è='',ë=${fk5},ė=window;for(var ê=0,é=ė[${fk6}](é);ê<é[${fk4}];è+=ė[${fk7}][${tmp1}]((é[ê++][${tmp2}]())-(${fk1}))){}return è[${fk2}](${fk3})}`;
+			newStrict += `var ${splFunc}=${func},`;
 		}
 
 		keys.forEach((k) => {
 			let val = globalMap[k];
 			if (val.length > 4) {
 				if (keys.length > 4) {
-					val = `${splFunc}(${JSON.stringify(caesarCipher(val.join(delim)))})`;
+					val = `${splFunc}('${btoa(caesarCipher(val.join(delim)))}')`;
 				} else {
 					val = `"${val.join(delim)}".split('${delim}')`;
 				}
@@ -290,22 +302,22 @@ class RenamerPlugin {
 				newStrict += ',';
 			}
 			if (newStrict.endsWith(';')) {
-				newStrict +='var ';
+				newStrict += 'var ';
 			}
 			newStrict += `${k}=${val}`;
 		});
 
 		console.log(newStrict);
 
-		pd = pd.replace(oldStrict, newStrict + ';');
+		pd = newStrict + ';' + pd;
 
 		const lengDiff = oldPd.length - pd.length;
 		const expDiff = lengDiff - sum;
 
 		console.log('Replacement complete!');
 		let m = 'Actually saved: ' + lengDiff + ' chars. ';
-		if (expDiff > 0) m+= ' (' + expDiff + ' more than expected)';
-		if (expDiff < 0) m+= ' (' + Math.abs(expDiff) + ' less than expected)';
+		if (expDiff > 0) m += ' (' + expDiff + ' more than expected)';
+		if (expDiff < 0) m += ' (' + Math.abs(expDiff) + ' less than expected)';
 		console.log(m);
 		if (lengDiff < 0) {
 			console.log('Did not save any chars! rolling back...');
@@ -317,10 +329,15 @@ class RenamerPlugin {
 
 	/**
 	 * process via regex
-	 * @param {string} source
-	 * @return {string}
+	 * @param {string} source - source code
+	 * @return {string} processed source
 	 */
 	processString(source) {
+		if (typeof source !== 'string') {
+			console.error('Source no string: ', source);
+			return source;
+		}
+
 		const pd = source.replace(this.options.regex, (match) => this.replaceMatch(source, match)); // .replaceAll('const ', 'var ');
 
 		const sa = this.shortenAccessors(pd);
@@ -329,9 +346,34 @@ class RenamerPlugin {
 	}
 
 	/**
+	 * Process given source file object
+	 * @param {Webpack.Compilation} compilation - webpack compilation
+	 * @param {string} name - source file name
+	 * @param {any} child - source file object
+	 * @return {void}
+	 */
+	processSource(compilation, name, child) {
+		if (child._valueIsBuffer) {
+			console.log('Value is Buffer!');
+			return;
+		}
+		const source = child.source._value;
+		const processed = this.processString(source);
+
+		// if anything changed, update the processed asset
+		if (typeof processed === 'string' && source != processed) {
+			compilation.updateAsset(name, new RawSource(processed));
+			// calculate saved memory
+			const savedChars = (source.length - processed.length);
+			console.info('[' + pluginName + '] Saved: ' + savedChars + ' chars');
+		}
+	}
+
+	/**
 	* Hook into the compilation process,
 	* Replace regex matches with random strings
 	* @param {Webpack.compiler} compiler object from webpack
+	* @return {void}
 	*/
 	apply(compiler) {
 		compiler.hooks.emit.tap(pluginName, (compilation) => {
@@ -345,20 +387,18 @@ class RenamerPlugin {
 
 					// get the processed asset object / source
 					const asset = compilation.getAsset(assetFile);
-					const source = asset.source._value;
-					const processed = this.processString(source);
 
-					// if anything changed, update the processed asset
-					if (source != processed) {
-						compilation.updateAsset(assetFile, new RawSource(processed));
-						// calculate saved memory
-						this.savedChars += (source.length - processed.length);
+					if (asset.source._children) {
+						asset.source._children.forEach((child, i) => {
+							this.processSource(compilation, assetFile, child);
+						});
+					} else {
+						this.processSource(compilation, assetFile, asset);
 					}
 				}
 
 				// finish up
 				console.info('[' + pluginName + '] Replaced: ', this.nameMap);
-				console.info('[' + pluginName + '] Saved: ' + this.savedChars + ' chars');
 			} catch (error) {
 				console.info('[' + pluginName + '] Replace error: ', error);
 			}
