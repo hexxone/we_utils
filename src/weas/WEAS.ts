@@ -1,24 +1,34 @@
 /**
-* @author hexxone / https://hexx.one
-*
-* @license
-* Copyright (c) 2021 hexxone All rights reserved.
-* Licensed under the GNU GENERAL PUBLIC LICENSE.
-* See LICENSE file in the project root for full license information.
-*/
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2021 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ */
 
-import {CComponent, CSettings, Smallog, waitReady, WascInterface, wascWorker, WascLoader, ASUtil} from '../';
+import {
+	CComponent,
+	CSettings,
+	Smallog,
+	waitReady,
+	WascInterface,
+	wascWorker,
+	WascLoader,
+	ASUtil,
+	sharedWorker,
+} from "../";
 
-import {Bea_ts} from './Bea';
+import { Bea_ts } from "./Bea";
 
 const DAT_LEN = 128;
-const LISTENAME = 'wallpaperRegisterAudioListener';
+const LISTENAME = "wallpaperRegisterAudioListener";
 
 /**
-* Audio processing settings
-* @public
-* @extends {CSettings}
-*/
+ * Audio processing settings
+ * @public
+ * @extends {CSettings}
+ */
 export class WEASettings extends CSettings {
 	debugging = false;
 	/** do audio processing? */
@@ -49,9 +59,9 @@ export class WEASettings extends CSettings {
 }
 
 /**
-* Processed audio data representation
-* @public
-*/
+ * Processed audio data representation
+ * @public
+ */
 export type WEAudio = {
 	time: number;
 	ellapsed: number;
@@ -66,15 +76,17 @@ export type WEAudio = {
 	range: number;
 	silent: number;
 	intensity: number;
-	bpm?: [{
-		value: number,
-		weight: number
-	}]
-}
+	bpm?: [
+		{
+			value: number;
+			weight: number;
+		}
+	];
+};
 
 /**
-* @public
-*/
+ * @public
+ */
 const SettIDs = {
 	equalize: 0,
 	mono_audio: 1,
@@ -90,8 +102,8 @@ const SettIDs = {
 };
 
 /**
-* @public
-*/
+ * @public
+ */
 const PropIDs = {
 	bass: 0,
 	mids: 1,
@@ -106,21 +118,21 @@ const PropIDs = {
 };
 
 /**
-* WEAS
-* <br/>
-* Wallpaper Engine Audio Supplier makes working with audio easier.
-* <br/>
-* It will automatically start to receive and process the audio data
-* which can then be accessed on the global object.
-* <br/>
-* DEPENDS ON:
-* <br/>
-* - Wallpaper Engine Web Wallpaper environment
-* <br/>
-* - audio-processing supported web wallpaper
-* @public
-* @extends {CComponent}
-*/
+ * WEAS
+ * <br/>
+ * Wallpaper Engine Audio Supplier makes working with audio easier.
+ * <br/>
+ * It will automatically start to receive and process the audio data
+ * which can then be accessed on the global object.
+ * <br/>
+ * DEPENDS ON:
+ * <br/>
+ * - Wallpaper Engine Web Wallpaper environment
+ * <br/>
+ * - audio-processing supported web wallpaper
+ * @public
+ * @extends {CComponent}
+ */
 export class WEAS extends CComponent {
 	/** @public last processed audio object */
 	public lastAudio: WEAudio = null;
@@ -145,21 +157,18 @@ export class WEAS extends CComponent {
 	context2: CanvasRenderingContext2D;
 	display: HTMLElement;
 
-	sharedASUtils: ASUtil;
-
 	public init?: () => Promise<void>;
 
 	/**
-	* delay audio initialization until page ready
-	* @param {boolean} detectBpm (optional)
-	*/
+	 * delay audio initialization until page ready
+	 * @param {boolean} detectBpm (optional)
+	 */
 	constructor(autoInit = false, detectBpm = false) {
 		super();
 		if (detectBpm) this.bpModule = new Bea_ts();
 		if (autoInit) waitReady().then(() => this.realInit());
 		else this.init = this.realInit;
 	}
-
 
 	/**
 	 * convert float based audio to int
@@ -176,14 +185,14 @@ export class WEAS extends CComponent {
 	}
 
 	/**
-	* initializes audio processing pipeline
-	* and starts listening on audio data
-	* @ignore
-	*/
+	 * initializes audio processing pipeline
+	 * and starts listening on audio data
+	 * @ignore
+	 */
 	private async realInit() {
 		// only listen if wallpaper engine context given
 		if (!window[LISTENAME]) {
-			Smallog.error('\'window.wallpaperRegisterAudioListener\' not given!');
+			Smallog.error("'window.wallpaperRegisterAudioListener' not given!");
 			return;
 		}
 		this.init = null;
@@ -191,24 +200,24 @@ export class WEAS extends CComponent {
 		this.injectCSS();
 		this.injectHTML();
 
-		const iso = window['crossOriginIsolated'] === true;
-		wascWorker('WEAS.wasm', 4096, iso, {}, !this.settings.low_latency).then((myModule) => {
-			this.weasModule = myModule;
+		sharedWorker("WEAS.wasm", 4096, {}, !this.settings.low_latency)
+			.then((myModule) => {
+				this.weasModule = myModule;
 
-			if (myModule.sharedMemory) {
-				this.sharedASUtils = new WascLoader().postInstantiate({}, {exports: {memory: myModule.sharedMemory}} as any);
-				Smallog.debug('Got shared memory access to WebAssembly audio!');
-			}
+				if (myModule.shared) {
+					Smallog.debug("Got shared WebAssembly audio!");
+				}
 
-			this.updateSettings().then(() => {
-				this.registerListener();
-				Smallog.debug('WebAssembly Audio provider is ready!');
+				this.updateSettings().then(() => {
+					this.registerListener();
+					Smallog.debug("WebAssembly Audio provider is ready!");
+				});
+			})
+			.catch((err) => {
+				const m = `Could not create WebAssembly Audio provider! ErrMsg: ${err}`;
+				Smallog.error(m);
+				alert(m);
 			});
-		}).catch((err) => {
-			const m = `Could not create WebAssembly Audio provider! ErrMsg: ${err}`;
-			Smallog.error(m);
-			alert(m);
-		});
 	}
 
 	/**
@@ -216,63 +225,77 @@ export class WEAS extends CComponent {
 	 * @ignore
 	 */
 	private registerListener() {
-		const {run} = this.weasModule;
-		const self = this;
-
 		// register audio callback on module
 		window[LISTENAME]((audioArray) => {
 			// Smallog.debug('Get Audio Data!');
 			// check basic
-			if (!self.settings.audioprocessing || audioArray == null || audioArray.length != DAT_LEN) {
-				Smallog.error('received invalid audio data: ' + JSON.stringify([audioArray.length || null, audioArray]));
+			if (
+				!this.settings.audioprocessing ||
+				audioArray == null ||
+				audioArray.length != DAT_LEN
+			) {
+				Smallog.error(
+					"received invalid audio data: " +
+						JSON.stringify([audioArray.length || null, audioArray])
+				);
 				return;
 			}
 
 			// prepare data
 			const start = performance.now();
-			self.inBuff.set(audioArray);
+			this.inBuff.set(audioArray);
 
 			// WRAP IN isolated Function ran inside worker
-			run(({module, instance, exports, params}) => {
-				const ex = instance.exports as any;
-				const {data} = params[0];
-				const arrData = new Float64Array(data);
+			this.weasModule
+				.run(
+					({ module, instance, exports, params }) => {
+						const ex = instance.exports as any;
+						const { data } = params[0];
+						const arrData = new Float64Array(data);
 
-				// set audio data directly in module memory
-				exports.__getFloat64ArrayView(ex.inputData).set(arrData);
-				// trigger processing
-				ex.update();
-				// get copy of webassembly data
-				const r = {
-					// ptr: {data: ex.outputData, props: ex.audioProps},
-					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)).buffer,
-					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)).buffer,
-				};
-				return r;
-			},
-			{
-				data: self.inBuff.buffer,
-			})
+						// set audio data directly in module memory
+						exports.__getFloat64ArrayView(ex.inputData).set(arrData);
+						// trigger processing
+						ex.update();
+						// get copy of webassembly data
+						const r = {
+							// ptr: {data: ex.outputData, props: ex.audioProps},
+							data: new Float64Array(
+								exports.__getFloat64ArrayView(ex.outputData)
+							).buffer,
+							props: new Float64Array(
+								exports.__getFloat64ArrayView(ex.audioProps)
+							).buffer,
+						};
+						return r;
+					},
+					{
+						data: this.inBuff.buffer,
+					}
+				)
 				.then((result) => {
 					// worker result, back in main context
-					const {data, props} = result;
+					const { data, props } = result;
 					const arrData = new Float64Array(data);
 					const arrProps = new Float64Array(props);
 
-					const realProps = self.getProps(arrProps);
+					const realProps = this.getProps(arrProps);
 					const teim = performance.now() - start;
 
-					if (self.lastAudio && !self.lastAudio.silent && realProps.silent) {
+					if (this.lastAudio && !this.lastAudio.silent && realProps.silent) {
 						console.log(audioArray, arrData, arrProps);
 					}
 
 					let bpmObj = {};
 					if (this.bpModule && !realProps.silent) {
-						bpmObj = this.bpModule.process(start / 1000.0, this.convertAudio(audioArray));
+						bpmObj = this.bpModule.process(
+							start / 1000.0,
+							this.convertAudio(audioArray)
+						);
 					}
 
 					// apply actual last Data from worker
-					self.lastAudio = {
+					this.lastAudio = {
 						time: start,
 						ellapsed: teim,
 						data: arrData,
@@ -284,11 +307,11 @@ export class WEAS extends CComponent {
 	}
 
 	/**
-	* Inject preview CSS
-	* @ignore
-	*/
+	 * Inject preview CSS
+	 * @ignore
+	 */
 	private injectCSS() {
-		const st = document.createElement('style');
+		const st = document.createElement("style");
 		st.innerHTML = `
 		#weas-preview {
 			opacity: 0;
@@ -312,12 +335,12 @@ export class WEAS extends CComponent {
 	}
 
 	/**
-	* Inject preview canvas
-	* @ignore
-	*/
+	 * Inject preview canvas
+	 * @ignore
+	 */
 	private injectHTML() {
-		this.mainElm = document.createElement('div');
-		this.mainElm.id = 'weas-preview';
+		this.mainElm = document.createElement("div");
+		this.mainElm.id = "weas-preview";
 		this.mainElm.innerHTML = `
 		<div style="font-size: 300%">
 		<span>Raw Data:</span>
@@ -333,23 +356,23 @@ export class WEAS extends CComponent {
 		`;
 		document.body.append(this.mainElm);
 
-		this.canvas1 = (document.getElementById('WEASCanvas1') as HTMLCanvasElement);
+		this.canvas1 = document.getElementById("WEASCanvas1") as HTMLCanvasElement;
 		this.canvas1.width = window.innerWidth;
-		this.context1 = this.canvas1.getContext('2d');
+		this.context1 = this.canvas1.getContext("2d");
 
-		this.canvas2 = (document.getElementById('WEASCanvas2') as HTMLCanvasElement);
+		this.canvas2 = document.getElementById("WEASCanvas2") as HTMLCanvasElement;
 		this.canvas2.width = window.innerWidth;
-		this.context2 = this.canvas2.getContext('2d');
+		this.context2 = this.canvas2.getContext("2d");
 
-		this.display = document.getElementById('WEASDisplay');
+		this.display = document.getElementById("WEASDisplay");
 	}
 
 	/**
-	* converts calculated output property number-array to string-associative-array
-	* @param {ArrayLike<number>} dProps processed properties
-	* @return {any}
-	* @ignore
-	*/
+	 * converts calculated output property number-array to string-associative-array
+	 * @param {ArrayLike<number>} dProps processed properties
+	 * @return {any}
+	 * @ignore
+	 */
 	private getProps(dProps: ArrayLike<number>) {
 		const keys = Object.keys(PropIDs);
 		const res = {};
@@ -361,25 +384,25 @@ export class WEAS extends CComponent {
 	}
 
 	/**
-	* !! CAVEAT: only available after init and module load !!
-	* <br/>
-	* Will send the processing settings to the WebAssembly module
-	* @public
-	* @return {Promise} finished event
-	*/
+	 * !! CAVEAT: only available after init and module load !!
+	 * <br/>
+	 * Will send the processing settings to the WebAssembly module
+	 * @public
+	 * @return {Promise} finished event
+	 */
 	public updateSettings(): Promise<void> {
 		if (!this.weasModule) return;
 
 		// show or hide debug info
 		if (this.settings.debugging) {
-			if (!this.mainElm.classList.contains('show')) {
-				this.mainElm.classList.add('show');
+			if (!this.mainElm.classList.contains("show")) {
+				this.mainElm.classList.add("show");
 			}
 		} else {
-			this.mainElm.classList.remove('show');
+			this.mainElm.classList.remove("show");
 		}
 
-		const {run} = this.weasModule;
+		const { run } = this.weasModule;
 
 		return new Promise((resolve) => {
 			const keys = Object.keys(SettIDs);
@@ -390,78 +413,100 @@ export class WEAS extends CComponent {
 			}
 
 			// isolated Function running inside worker
-			run(({module, instance, exports, params}) => {
-				const ex = instance.exports as any;
-				const {data} = params[0];
-				const arrDat = new Float64Array(data);
-				exports.__getFloat64ArrayView(ex.audioSettings).set(arrDat);
-			},
-			// Data passed to worker
-			{
-				data: sett.buffer,
-			})
+			run(
+				({ module, instance, exports, params }) => {
+					const ex = instance.exports as any;
+					const { data } = params[0];
+					const arrDat = new Float64Array(data);
+					exports.__getFloat64ArrayView(ex.audioSettings).set(arrDat);
+				},
+				// Data passed to worker
+				{
+					data: sett.buffer,
+				}
+			)
 				// Back to main context
 				.then(() => {
-					Smallog.debug('Sent Settings to WEAS: ' + JSON.stringify(sett));
+					Smallog.debug("Sent Settings to WEAS: " + JSON.stringify(sett));
 					resolve();
 				});
 		});
 	}
 
 	/**
-	* @return {boolean} false if:
-	* <br/>
-	* - processing is disabled
-	* <br/>
-	* - there is no data
-	* <br/>
-	* - the data is silent
-	* <br/>
-	* - data is too old (> 3s)
-	* @public
-	*/
+	 * @return {boolean} false if:
+	 * <br/>
+	 * - processing is disabled
+	 * <br/>
+	 * - there is no data
+	 * <br/>
+	 * - the data is silent
+	 * <br/>
+	 * - data is too old (> 3s)
+	 * @public
+	 */
 	public hasAudio() {
 		if (this.settings.show_canvas) this.updateCanvas();
 
-		return this.settings.audioprocessing &&
-			this.lastAudio && this.lastAudio.silent == 0 &&
-			(performance.now() - this.lastAudio.time < 3000);
+		return (
+			this.settings.audioprocessing &&
+			this.lastAudio &&
+			this.lastAudio.silent <= 0 &&
+			performance.now() - this.lastAudio.time < 3000
+		);
 	}
 
 	/**
-	* Update the debug canvas
-	*/
+	 * Update the debug canvas
+	 */
 	private updateCanvas() {
 		// update "raw" canvas
 
 		// clear the intersection
 		this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
-		this.context1.fillStyle = 'rgb(255,0,0)';
-		const barWidth = Math.round(1.0 / this.inBuff.length * this.canvas1.width);
+		this.context1.fillStyle = "rgb(255,0,0)";
+		const barWidth = Math.round(
+			(1.0 / this.inBuff.length) * this.canvas1.width
+		);
 		const halfCount = this.inBuff.length / 2;
 		for (let i = 0; i < halfCount; ++i) {
-			const height = this.canvas1.height * this.inBuff[i] / 2;
-			this.context1.fillRect(barWidth * i, this.canvas1.height - height, barWidth, height);
+			const height = (this.canvas1.height * this.inBuff[i]) / 2;
+			this.context1.fillRect(
+				barWidth * i,
+				this.canvas1.height - height,
+				barWidth,
+				height
+			);
 		}
-		this.context1.fillStyle = 'rgb(0,0,255)';
+		this.context1.fillStyle = "rgb(0,0,255)";
 		for (let i = halfCount; i < this.inBuff.length; ++i) {
-			const height = this.canvas1.height * this.inBuff[191 - i] / 2;
-			this.context1.fillRect(barWidth * i, this.canvas1.height - height, barWidth, height);
+			const height = (this.canvas1.height * this.inBuff[191 - i]) / 2;
+			this.context1.fillRect(
+				barWidth * i,
+				this.canvas1.height - height,
+				barWidth,
+				height
+			);
 		}
 
 		// update "processed" data
 		const tmpData = Object.assign({}, this.lastAudio);
 		tmpData.data = null;
-		this.display.innerText = JSON.stringify(tmpData, null, '\t');
+		this.display.innerText = JSON.stringify(tmpData, null, "\t");
 
 		// update "processed" canvas
 		this.context2.clearRect(0, 0, this.canvas2.width, this.canvas2.height);
 
 		if (this.lastAudio && this.lastAudio.data) {
-			this.context2.fillStyle = 'rgb(0,255,0)';
+			this.context2.fillStyle = "rgb(0,255,0)";
 			for (let index = 0; index < this.lastAudio.data.length; index++) {
-				const height = this.canvas2.height * this.lastAudio.data[index] / 2;
-				this.context2.fillRect(barWidth * index, this.canvas2.height - height, barWidth, height);
+				const height = (this.canvas2.height * this.lastAudio.data[index]) / 2;
+				this.context2.fillRect(
+					barWidth * index,
+					this.canvas2.height - height,
+					barWidth,
+					height
+				);
 			}
 			/*
 			// draw average, min & max lines
