@@ -1,38 +1,38 @@
 /* eslint-disable guard-for-in */
 
 /*
-* BeatDetektor.js
-*
-* BeatDetektor - CubicFX Visualizer Beat Detection & Analysis Algorithm
-* Javascript port by Charles J. Cliffe and Corban Brook
-*
-* Copyright (c) 2009 Charles J. Cliffe.
-*
-* BeatDetektor is distributed under the terms of the MIT License.
-* http://opensource.org/licenses/MIT
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-* IN THE SOFTWARE.
-*/
+ * BeatDetektor.js
+ *
+ * BeatDetektor - CubicFX Visualizer Beat Detection & Analysis Algorithm
+ * Javascript port by Charles J. Cliffe and Corban Brook
+ *
+ * Copyright (c) 2009 Charles J. Cliffe.
+ *
+ * BeatDetektor is distributed under the terms of the MIT License.
+ * http://opensource.org/licenses/MIT
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
 
 /**
-* @public
-*/
+ * @public
+ */
 export class Bea_ts {
 	private bd_low: BeatsDetektor = new BeatsDetektor(55, 109);
 	private bd_med: BeatsDetektor = new BeatsDetektor(85, 169);
@@ -44,13 +44,13 @@ export class Bea_ts {
 	private bds: BeatsDetektor[] = [];
 	private bdi = 0;
 
-	private prev_bpm: number = -1;
-	private prev_win: number = -1;
+	private prev_bpm = -1;
+	private prev_win = -1;
 
 	/**
-	* Construct BeatDetektor array
-	* @param {boolean} autoReset stfu
-	*/
+	 * Construct BeatDetektor array
+	 * @param {boolean} autoReset stfu
+	 */
 	constructor(autoReset = true) {
 		this.bds.push(this.bd_low, this.bd_med, this.bd_high, this.bd_ext);
 
@@ -68,12 +68,12 @@ export class Bea_ts {
 	}
 
 	/**
-	* Bpm-Process current data
-	* @param {number} time timestamp as float
-	* @param {Array<number>} data fftData
-	* @return {Array<Object>}
-	* @public
-	*/
+	 * Bpm-Process current data
+	 * @param {number} time timestamp as float
+	 * @param {Array<number>} data fftData
+	 * @return {Array<Object>}
+	 * @public
+	 */
 	public process(time, data) {
 		const groupings = true;
 		const chooseAvg = false;
@@ -82,7 +82,7 @@ export class Bea_ts {
 
 		// weigh previous result in
 		if (this.prev_bpm > 0) {
-			results.push({value: this.prev_bpm, weight: this.prev_win});
+			results.push({ value: this.prev_bpm, weight: this.prev_win });
 		}
 
 		this.bds.forEach((bd) => {
@@ -91,13 +91,13 @@ export class Bea_ts {
 				const tmp = [];
 				let maxW = 0;
 				bd.bpm_contest.forEach((val, key) => {
-					tmp.push({value: key / 10, weight: val});
+					tmp.push({ value: key / 10, weight: val });
 					if (val > maxW) maxW = val;
 				});
-				const srt = tmp.sort((a, b) => b.weight- a.weight);
+				const srt = tmp.sort((a, b) => b.weight - a.weight);
 				for (let i = 0; i < Math.min(srt.length, 10); i++) {
 					const obj = srt[i];
-					results.push({value: obj.value, weight: obj.weight /* / maxW */});
+					results.push({ value: obj.value, weight: obj.weight /* / maxW */ });
 				}
 			}
 		});
@@ -122,13 +122,17 @@ export class Bea_ts {
 					const mn = Math.min(result.value, comp.value);
 					const ismn = comp.value == mn;
 					let mult = mx / mn;
-					if (mult > 2.5 && mult < 3.5) mult /= 3; // max is ~ 3x multiple of min
-					else if (mult > 1.5 && mult < 2.50) mult /= 2; // max is ~ 2x multiple of min
+					if (mult > 2.5 && mult < 3.5) mult /= 3;
+					// max is ~ 3x multiple of min
+					else if (mult > 1.5 && mult < 2.5) mult /= 2; // max is ~ 2x multiple of min
 					// do weighing calculation
 					let weight = 0;
-					if (mult > 0.96 && mult < 1.04) weight = (ismn ? 1.0 : 1.0) - Math.abs(mult - 1.00); // is 1/1 beat
-					if (mult > 0.64 && mult < 0.68) weight = (ismn ? 0.8 : 0.5) - Math.abs(mult - 0.66); // is 2/3 beat
-					if (mult > 0.72 && mult < 0.78) weight = (ismn ? 0.3 : 0.4) - Math.abs(mult - 0.75); // is 3/4 beat
+					if (mult > 0.96 && mult < 1.04)
+						weight = (ismn ? 1.0 : 1.0) - Math.abs(mult - 1.0); // is 1/1 beat
+					if (mult > 0.64 && mult < 0.68)
+						weight = (ismn ? 0.8 : 0.5) - Math.abs(mult - 0.66); // is 2/3 beat
+					if (mult > 0.72 && mult < 0.78)
+						weight = (ismn ? 0.3 : 0.4) - Math.abs(mult - 0.75); // is 3/4 beat
 					// calculate sum
 					resWeight += weight * comp.weight;
 				}
@@ -136,7 +140,7 @@ export class Bea_ts {
 				let value = result.value;
 				if (value < 90) value *= 2;
 				if (value > 180) value /= 2;
-				candidates.push({value, weight: (result.weight * 2 + resWeight) / 3});
+				candidates.push({ value, weight: (result.weight * 2 + resWeight) / 3 });
 			}
 
 			// group by rounded numbers x,0 | x,5 | x+1,0
@@ -157,8 +161,8 @@ export class Bea_ts {
 						grps[val] = (grps[val] + this.winRewards[v2]) / 2;
 					}
 				});
-				candidates = grps.map((v, i) =>{
-					return {value: i / 10, weight: v};
+				candidates = grps.map((v, i) => {
+					return { value: i / 10, weight: v };
 				});
 			}
 
@@ -167,9 +171,9 @@ export class Bea_ts {
 
 			// get average
 			if (chooseAvg) {
-				const half = (candidates.length / 2);
+				const half = candidates.length / 2;
 				let avg = 0;
-				candidates.forEach((c, i) => avg += i < half ? c.value : 0);
+				candidates.forEach((c, i) => (avg += i < half ? c.value : 0));
 				avg /= half;
 				// choose closest to average
 				let choiceI = -1;
@@ -255,7 +259,6 @@ export class Bea_ts {
 	}
 }
 
-
 /**
 BeatDetektor class
 
@@ -338,16 +341,28 @@ class BeatsDetektor {
 		BD_MINIMUM_CONTRIBUTIONS: 8, // At least x ranges must agree to process a result
 		BD_FINISH_LINE: 60.0, // Contest values wil be normalized to this finish line
 		// this is the 'funnel' that pulls ranges in / out of alignment based on trigger detection
-		BD_REWARD_TOLERANCES: [0.001, 0.005, 0.01, 0.02, 0.04, 0.08, 0.10, 0.15, 0.30], // .1%, .5%, 1%, 2%, 4%, 8%, 10%, 15%
-		BD_REWARD_MULTIPLIERS: [20.0, 10.0, 8.0, 1.0, 1.0/2.0, 1.0/4.0, 1.0/8.0, 1/16.0, 1/32.0],
+		BD_REWARD_TOLERANCES: [
+			0.001, 0.005, 0.01, 0.02, 0.04, 0.08, 0.1, 0.15, 0.3,
+		], // .1%, .5%, 1%, 2%, 4%, 8%, 10%, 15%
+		BD_REWARD_MULTIPLIERS: [
+			20.0,
+			10.0,
+			8.0,
+			1.0,
+			1.0 / 2.0,
+			1.0 / 4.0,
+			1.0 / 8.0,
+			1 / 16.0,
+			1 / 32.0,
+		],
 	};
 
 	BPM_MIN: any;
 	BPM_MAX: any;
 
-	beat_counter: number = 0;
-	half_counter: number = 0;
-	quarter_counter: number = 0;
+	beat_counter = 0;
+	half_counter = 0;
+	quarter_counter = 0;
 
 	a_freq_range: Float64Array;
 	ma_freq_range: Float64Array;
@@ -361,42 +376,42 @@ class BeatsDetektor {
 	detection_quality: Float64Array;
 	detection: Array<boolean>;
 
-	ma_quality_avg: number = 0;
-	ma_quality_total: number = 0;
+	ma_quality_avg = 0;
+	ma_quality_total = 0;
 
 	bpm_contest: number[];
 	bpm_contest_lo: number[];
 
-	quality_total: number = 0;
-	quality_avg: number = 0;
+	quality_total = 0;
+	quality_avg = 0;
 
-	current_bpm: number = 0;
-	current_bpm_lo: number = 0;
-	winning_bpm: number = 0;
-	win_val: number = 0;
-	winning_bpm_lo: number = 0;
-	win_val_lo: number = 0;
+	current_bpm = 0;
+	current_bpm_lo = 0;
+	winning_bpm = 0;
+	win_val = 0;
+	winning_bpm_lo = 0;
+	win_val_lo = 0;
 
-	win_bpm_int: number = 0;
-	win_bpm_int_lo: number = 0;
+	win_bpm_int = 0;
+	win_bpm_int_lo = 0;
 
-	bpm_predict: number = 0;
-	is_erratic: boolean = false;
+	bpm_predict = 0;
+	is_erratic = false;
 
-	bpm_offset: number = 0;
+	bpm_offset = 0;
 
-	last_timer: number = 0;
-	last_update: number = 0;
-	bpm_timer: number = 0;
-	maa_quality_avg: number = 0;
+	last_timer = 0;
+	last_update = 0;
+	bpm_timer = 0;
+	maa_quality_avg = 0;
 
 	/**
-	* Create new instance of BeatsDetektor. See above for details
-	* @param {number} bpm_minimum estimation lower bound
-	* @param {number} bpm_maximum estimation upper bound
-	* @param {Object} alt_config alternative config (optional)
-	* @public
-	*/
+	 * Create new instance of BeatsDetektor. See above for details
+	 * @param {number} bpm_minimum estimation lower bound
+	 * @param {number} bpm_maximum estimation upper bound
+	 * @param {Object} alt_config alternative config (optional)
+	 * @public
+	 */
 	constructor(bpm_minimum = 85, bpm_maximum = 169, alt_config?) {
 		if (alt_config) this.config = alt_config;
 
@@ -426,14 +441,16 @@ class BeatsDetektor {
 		this.reset();
 
 		if (console) {
-			console.log('BeatsDetektor('+this.BPM_MIN+','+this.BPM_MAX+') created.');
+			console.log(
+				"BeatsDetektor(" + this.BPM_MIN + "," + this.BPM_MAX + ") created."
+			);
 		}
 	}
 
 	/**
-	* Null everthing
-	* @public
-	*/
+	 * Null everthing
+	 * @public
+	 */
 	public reset() {
 		//	var bpm_avg = 60.0/((this.BPM_MIN+this.BPM_MAX)/2.0);
 
@@ -443,8 +460,10 @@ class BeatsDetektor {
 			this.maa_freq_range[i] = 0.0;
 			this.last_detection[i] = 0.0;
 
-			this.ma_bpm_range[i] =
-			this.maa_bpm_range[i] = 60.0/this.BPM_MIN + ((60.0/this.BPM_MAX-60.0/this.BPM_MIN) * (i/this.config.BD_DETECTION_RANGES));
+			this.ma_bpm_range[i] = this.maa_bpm_range[i] =
+				60.0 / this.BPM_MIN +
+				(60.0 / this.BPM_MAX - 60.0 / this.BPM_MIN) *
+					(i / this.config.BD_DETECTION_RANGES);
 
 			this.detection_quality[i] = 0.0;
 			this.detection[i] = false;
@@ -484,12 +503,12 @@ class BeatsDetektor {
 	}
 
 	/**
-	* Process BPM for fft Data Frame
-	* @param {number} timer_seconds
-	* @param {Array<number>} fft_data
-	* @return {number} win_bpm_int
-	* @public
-	*/
+	 * Process BPM for fft Data Frame
+	 * @param {number} timer_seconds
+	 * @param {Array<number>} fft_data
+	 * @return {number} win_bpm_int
+	 * @public
+	 */
 	public process(timer_seconds, fft_data): number {
 		// first call
 		if (!this.last_timer) {
@@ -517,18 +536,17 @@ class BeatsDetektor {
 		let x;
 		let v;
 
-		const bpm_floor = 60.0/this.BPM_MAX;
-		const bpm_ceil = 60.0/this.BPM_MIN;
+		const bpm_floor = 60.0 / this.BPM_MAX;
+		const bpm_ceil = 60.0 / this.BPM_MIN;
 
-		const range_step = (fft_data.length / this.config.BD_DETECTION_RANGES);
+		const range_step = fft_data.length / this.config.BD_DETECTION_RANGES;
 		let range = 0;
 
-
-		for (x=0; x<fft_data.length; x+=range_step) {
+		for (x = 0; x < fft_data.length; x += range_step) {
 			this.a_freq_range[range] = 0;
 
 			// accumulate frequency values for this range
-			for (i = x; i<x+range_step; i++) {
+			for (i = x; i < x + range_step; i++) {
 				v = Math.abs(fft_data[i]);
 				this.a_freq_range[range] += v;
 			}
@@ -539,36 +557,53 @@ class BeatsDetektor {
 			// two sets of averages chase this one at a
 
 			// moving average, increment closer to a_freq_range at a rate of 1.0 / BD_DETECTION_RATE seconds
-			this.ma_freq_range[range] -= (this.ma_freq_range[range]-this.a_freq_range[range])*this.last_update*this.config.BD_DETECTION_RATE;
+			this.ma_freq_range[range] -=
+				(this.ma_freq_range[range] - this.a_freq_range[range]) *
+				this.last_update *
+				this.config.BD_DETECTION_RATE;
 			// moving average of moving average, increment closer to this.ma_freq_range at a rate of 1.0 / BD_DETECTION_RATE seconds
-			this.maa_freq_range[range] -= (this.maa_freq_range[range]-this.ma_freq_range[range])*this.last_update*this.config.BD_DETECTION_RATE;
+			this.maa_freq_range[range] -=
+				(this.maa_freq_range[range] - this.ma_freq_range[range]) *
+				this.last_update *
+				this.config.BD_DETECTION_RATE;
 
 			// if closest moving average peaks above trailing (with a tolerance of BD_DETECTION_FACTOR) then trigger a detection for this range
-			const det = (this.ma_freq_range[range]*this.config.BD_DETECTION_FACTOR >= this.maa_freq_range[range]);
+			const det =
+				this.ma_freq_range[range] * this.config.BD_DETECTION_FACTOR >=
+				this.maa_freq_range[range];
 
 			// compute bpm clamps for comparison to gap lengths
 
 			// clamp detection averages to input ranges
-			if (this.ma_bpm_range[range] > bpm_ceil) this.ma_bpm_range[range] = bpm_ceil;
-			if (this.ma_bpm_range[range] < bpm_floor) this.ma_bpm_range[range] = bpm_floor;
-			if (this.maa_bpm_range[range] > bpm_ceil) this.maa_bpm_range[range] = bpm_ceil;
-			if (this.maa_bpm_range[range] < bpm_floor) this.maa_bpm_range[range] = bpm_floor;
+			if (this.ma_bpm_range[range] > bpm_ceil)
+				this.ma_bpm_range[range] = bpm_ceil;
+			if (this.ma_bpm_range[range] < bpm_floor)
+				this.ma_bpm_range[range] = bpm_floor;
+			if (this.maa_bpm_range[range] > bpm_ceil)
+				this.maa_bpm_range[range] = bpm_ceil;
+			if (this.maa_bpm_range[range] < bpm_floor)
+				this.maa_bpm_range[range] = bpm_floor;
 
 			let rewarded = false;
 
 			// new detection since last, test it's quality
 			if (!this.detection[range] && det) {
 				// calculate length of gap (since start of last trigger)
-				let trigger_gap = timestamp-this.last_detection[range];
+				let trigger_gap = timestamp - this.last_detection[range];
 
 				// trigger falls within acceptable range,
-				if (trigger_gap < bpm_ceil && trigger_gap > (bpm_floor)) {
+				if (trigger_gap < bpm_ceil && trigger_gap > bpm_floor) {
 					// compute gap and award quality
 
 					// use our tolerances as a funnel to edge detection towards the most likely value
 					for (i = 0; i < this.config.BD_REWARD_TOLERANCES.length; i++) {
-						if (Math.abs(this.ma_bpm_range[range]-trigger_gap) < this.ma_bpm_range[range]*this.config.BD_REWARD_TOLERANCES[i]) {
-							this.detection_quality[range] += this.config.BD_QUALITY_REWARD * this.config.BD_REWARD_MULTIPLIERS[i];
+						if (
+							Math.abs(this.ma_bpm_range[range] - trigger_gap) <
+							this.ma_bpm_range[range] * this.config.BD_REWARD_TOLERANCES[i]
+						) {
+							this.detection_quality[range] +=
+								this.config.BD_QUALITY_REWARD *
+								this.config.BD_REWARD_MULTIPLIERS[i];
 							rewarded = true;
 						}
 					}
@@ -583,15 +618,19 @@ class BeatsDetektor {
 					// test for 1/2 beat
 					trigger_gap /= 2.0;
 
-					if (trigger_gap < bpm_ceil && trigger_gap > (bpm_floor)) {
+					if (trigger_gap < bpm_ceil && trigger_gap > bpm_floor) {
 						for (i = 0; i < this.config.BD_REWARD_TOLERANCES.length; i++) {
-							if (Math.abs(this.ma_bpm_range[range]-trigger_gap) < this.ma_bpm_range[range]*this.config.BD_REWARD_TOLERANCES[i]) {
-								this.detection_quality[range] += this.config.BD_QUALITY_REWARD * this.config.BD_REWARD_MULTIPLIERS[i];
+							if (
+								Math.abs(this.ma_bpm_range[range] - trigger_gap) <
+								this.ma_bpm_range[range] * this.config.BD_REWARD_TOLERANCES[i]
+							) {
+								this.detection_quality[range] +=
+									this.config.BD_QUALITY_REWARD *
+									this.config.BD_REWARD_MULTIPLIERS[i];
 								rewarded = true;
 							}
 						}
 					}
-
 
 					// decrement quality if no 1/2 beat reward
 					if (!rewarded) {
@@ -601,34 +640,62 @@ class BeatsDetektor {
 				}
 
 				if (rewarded) {
-					let qmp = (this.detection_quality[range]/this.quality_avg)*this.config.BD_QUALITY_STEP;
+					let qmp =
+						(this.detection_quality[range] / this.quality_avg) *
+						this.config.BD_QUALITY_STEP;
 					if (qmp > 1.0) {
 						qmp = 1.0;
 					}
 
-					this.ma_bpm_range[range] -= (this.ma_bpm_range[range]-trigger_gap) * qmp;
-					this.maa_bpm_range[range] -= (this.maa_bpm_range[range]-this.ma_bpm_range[range]) * qmp;
+					this.ma_bpm_range[range] -=
+						(this.ma_bpm_range[range] - trigger_gap) * qmp;
+					this.maa_bpm_range[range] -=
+						(this.maa_bpm_range[range] - this.ma_bpm_range[range]) * qmp;
 				} else if (trigger_gap >= bpm_floor && trigger_gap <= bpm_ceil) {
-					if (this.detection_quality[range] < this.quality_avg*this.config.BD_QUALITY_TOLERANCE && this.current_bpm) {
-						this.ma_bpm_range[range] -= (this.ma_bpm_range[range]-trigger_gap) * this.config.BD_QUALITY_STEP;
-						this.maa_bpm_range[range] -= (this.maa_bpm_range[range]-this.ma_bpm_range[range]) * this.config.BD_QUALITY_STEP;
+					if (
+						this.detection_quality[range] <
+							this.quality_avg * this.config.BD_QUALITY_TOLERANCE &&
+						this.current_bpm
+					) {
+						this.ma_bpm_range[range] -=
+							(this.ma_bpm_range[range] - trigger_gap) *
+							this.config.BD_QUALITY_STEP;
+						this.maa_bpm_range[range] -=
+							(this.maa_bpm_range[range] - this.ma_bpm_range[range]) *
+							this.config.BD_QUALITY_STEP;
 					}
 					this.detection_quality[range] -= this.config.BD_QUALITY_STEP;
 				} else if (trigger_gap >= bpm_ceil) {
-					if ((this.detection_quality[range] < this.quality_avg*this.config.BD_QUALITY_TOLERANCE) && this.current_bpm) {
-						this.ma_bpm_range[range] -= (this.ma_bpm_range[range]-this.current_bpm) * 0.5;
-						this.maa_bpm_range[range] -= (this.maa_bpm_range[range]-this.ma_bpm_range[range]) * 0.5;
+					if (
+						this.detection_quality[range] <
+							this.quality_avg * this.config.BD_QUALITY_TOLERANCE &&
+						this.current_bpm
+					) {
+						this.ma_bpm_range[range] -=
+							(this.ma_bpm_range[range] - this.current_bpm) * 0.5;
+						this.maa_bpm_range[range] -=
+							(this.maa_bpm_range[range] - this.ma_bpm_range[range]) * 0.5;
 					}
-					this.detection_quality[range]-= this.config.BD_QUALITY_STEP;
+					this.detection_quality[range] -= this.config.BD_QUALITY_STEP;
 				}
 			}
 
-			if ((!rewarded && timestamp-this.last_detection[range] > bpm_ceil) || (det && Math.abs(this.ma_bpm_range[range]-this.current_bpm) > this.bpm_offset)) {
-				this.detection_quality[range] -= this.detection_quality[range]*this.config.BD_QUALITY_STEP*this.config.BD_QUALITY_DECAY*this.last_update;
+			if (
+				(!rewarded && timestamp - this.last_detection[range] > bpm_ceil) ||
+				(det &&
+					Math.abs(this.ma_bpm_range[range] - this.current_bpm) >
+						this.bpm_offset)
+			) {
+				this.detection_quality[range] -=
+					this.detection_quality[range] *
+					this.config.BD_QUALITY_STEP *
+					this.config.BD_QUALITY_DECAY *
+					this.last_update;
 			}
 
 			// quality bottomed out, set to 0
-			if (this.detection_quality[range] < 0.001) this.detection_quality[range]=0.001;
+			if (this.detection_quality[range] < 0.001)
+				this.detection_quality[range] = 0.001;
 
 			this.detection[range] = det;
 
@@ -643,24 +710,31 @@ class BeatsDetektor {
 		// number of bpm ranges that contributed to this test
 		let bpm_contributions = 0;
 
-
 		// accumulate quality weight total
-		for (let x=0; x<this.config.BD_DETECTION_RANGES; x++) {
+		for (let x = 0; x < this.config.BD_DETECTION_RANGES; x++) {
 			this.quality_total += this.detection_quality[x];
 		}
 
-
 		this.quality_avg = this.quality_total / this.config.BD_DETECTION_RANGES;
-
 
 		if (this.quality_total) {
 			// determine the average weight of each quality range
-			this.ma_quality_avg += (this.quality_avg - this.ma_quality_avg) * this.last_update * this.config.BD_DETECTION_RATE/2.0;
+			this.ma_quality_avg +=
+				((this.quality_avg - this.ma_quality_avg) *
+					this.last_update *
+					this.config.BD_DETECTION_RATE) /
+				2.0;
 
-			this.maa_quality_avg += (this.ma_quality_avg - this.maa_quality_avg) * this.last_update;
-			this.ma_quality_total += (this.quality_total - this.ma_quality_total) * this.last_update * this.config.BD_DETECTION_RATE/2.0;
+			this.maa_quality_avg +=
+				(this.ma_quality_avg - this.maa_quality_avg) * this.last_update;
+			this.ma_quality_total +=
+				((this.quality_total - this.ma_quality_total) *
+					this.last_update *
+					this.config.BD_DETECTION_RATE) /
+				2.0;
 
-			this.ma_quality_avg -= 0.98*this.ma_quality_avg*this.last_update*3.0;
+			this.ma_quality_avg -=
+				0.98 * this.ma_quality_avg * this.last_update * 3.0;
 		} else {
 			this.quality_avg = 0.001;
 		}
@@ -673,25 +747,43 @@ class BeatsDetektor {
 		const draft: number[] = [];
 
 		if (this.quality_avg) {
-			for (x=0; x<this.config.BD_DETECTION_RANGES; x++) {
+			for (x = 0; x < this.config.BD_DETECTION_RANGES; x++) {
 				// if this detection range weight*tolerance is higher than the average weight then add it's moving average contribution
-				if (this.detection_quality[x]*this.config.BD_QUALITY_TOLERANCE >= this.ma_quality_avg) {
-					if (this.ma_bpm_range[x] < bpm_ceil && this.ma_bpm_range[x] > bpm_floor) {
+				if (
+					this.detection_quality[x] * this.config.BD_QUALITY_TOLERANCE >=
+					this.ma_quality_avg
+				) {
+					if (
+						this.ma_bpm_range[x] < bpm_ceil &&
+						this.ma_bpm_range[x] > bpm_floor
+					) {
 						// eslint-disable-next-line no-unused-vars
 						bpm_total += this.maa_bpm_range[x];
 
-						let draft_float = Math.round((60.0/this.maa_bpm_range[x])*1000.0);
+						let draft_float = Math.round(
+							(60.0 / this.maa_bpm_range[x]) * 1000.0
+						);
 
-						draft_float = (Math.abs(Math.ceil(draft_float)-(60.0/this.current_bpm)*1000.0)<(Math.abs(Math.floor(draft_float)-(60.0/this.current_bpm)*1000.0)))?Math.ceil(draft_float/10.0):Math.floor(draft_float/10.0);
-						const draft_int = parseInt(draft_float/10.0 as any);
+						draft_float =
+							Math.abs(
+								Math.ceil(draft_float) - (60.0 / this.current_bpm) * 1000.0
+							) <
+							Math.abs(
+								Math.floor(draft_float) - (60.0 / this.current_bpm) * 1000.0
+							)
+								? Math.ceil(draft_float / 10.0)
+								: Math.floor(draft_float / 10.0);
+						const draft_int = parseInt((draft_float / 10.0) as any);
 						//	if (draft_int) console.log(draft_int);
 						if (isNaN(draft[draft_int])) draft[draft_int] = 0;
 
-						draft[draft_int]+=this.detection_quality[x]/this.quality_avg;
+						draft[draft_int] += this.detection_quality[x] / this.quality_avg;
 						bpm_contributions++;
 						if (offset_test_bpm == 0.0) offset_test_bpm = this.maa_bpm_range[x];
 						else {
-							avg_bpm_offset += Math.abs(offset_test_bpm-this.maa_bpm_range[x]);
+							avg_bpm_offset += Math.abs(
+								offset_test_bpm - this.maa_bpm_range[x]
+							);
 						}
 					}
 				}
@@ -699,9 +791,10 @@ class BeatsDetektor {
 		}
 
 		// if we have one or more contributions that pass criteria then attempt to display a guess
-		const has_prediction = bpm_contributions>=this.config.BD_MINIMUM_CONTRIBUTIONS;
+		const has_prediction =
+			bpm_contributions >= this.config.BD_MINIMUM_CONTRIBUTIONS;
 
-		let draft_winner=0;
+		let draft_winner = 0;
 		let win_val = 0;
 
 		if (has_prediction) {
@@ -712,7 +805,7 @@ class BeatsDetektor {
 				}
 			}
 
-			this.bpm_predict = 60.0/(draft_winner/10.0);
+			this.bpm_predict = 60.0 / (draft_winner / 10.0);
 
 			avg_bpm_offset /= bpm_contributions;
 			this.bpm_offset = avg_bpm_offset;
@@ -722,71 +815,88 @@ class BeatsDetektor {
 			}
 		}
 
-		if (this.current_bpm && this.bpm_predict) this.current_bpm -= (this.current_bpm-this.bpm_predict)*this.last_update;
+		if (this.current_bpm && this.bpm_predict)
+			this.current_bpm -=
+				(this.current_bpm - this.bpm_predict) * this.last_update;
 
 		// hold a contest for bpm to find the current mode
-		let contest_max=0;
+		let contest_max = 0;
 
 		for (const contest_i in this.bpm_contest) {
-			if (contest_max < this.bpm_contest[contest_i]) contest_max = this.bpm_contest[contest_i];
-			if (this.bpm_contest[contest_i] > this.config.BD_FINISH_LINE/2.0) {
-				const draft_int_lo = parseInt(Math.round((contest_i as any)/10.0) as any);
-				if (isNaN(this.bpm_contest_lo[draft_int_lo])) this.bpm_contest_lo[draft_int_lo] = 0;
-				this.bpm_contest_lo[draft_int_lo]+= (this.bpm_contest[contest_i]/6.0)*this.last_update;
+			if (contest_max < this.bpm_contest[contest_i])
+				contest_max = this.bpm_contest[contest_i];
+			if (this.bpm_contest[contest_i] > this.config.BD_FINISH_LINE / 2.0) {
+				const draft_int_lo = parseInt(
+					Math.round((contest_i as any) / 10.0) as any
+				);
+				if (isNaN(this.bpm_contest_lo[draft_int_lo]))
+					this.bpm_contest_lo[draft_int_lo] = 0;
+				this.bpm_contest_lo[draft_int_lo] +=
+					(this.bpm_contest[contest_i] / 6.0) * this.last_update;
 			}
 		}
 
 		// normalize to a finish line
 		if (contest_max > this.config.BD_FINISH_LINE) {
 			for (const contest_i in this.bpm_contest) {
-				this.bpm_contest[contest_i]=(this.bpm_contest[contest_i]/contest_max)*this.config.BD_FINISH_LINE;
+				this.bpm_contest[contest_i] =
+					(this.bpm_contest[contest_i] / contest_max) *
+					this.config.BD_FINISH_LINE;
 			}
 		}
 
 		contest_max = 0;
 		for (const contest_i in this.bpm_contest_lo) {
-			if (contest_max < this.bpm_contest_lo[contest_i]) contest_max = this.bpm_contest_lo[contest_i];
+			if (contest_max < this.bpm_contest_lo[contest_i])
+				contest_max = this.bpm_contest_lo[contest_i];
 		}
 
 		// normalize to a finish line
 		if (contest_max > this.config.BD_FINISH_LINE) {
 			for (const contest_i in this.bpm_contest_lo) {
-				this.bpm_contest_lo[contest_i]=(this.bpm_contest_lo[contest_i]/contest_max)*this.config.BD_FINISH_LINE;
+				this.bpm_contest_lo[contest_i] =
+					(this.bpm_contest_lo[contest_i] / contest_max) *
+					this.config.BD_FINISH_LINE;
 			}
 		}
 
-
 		// decay contest values from last loop
 		for (const contest_i in this.bpm_contest) {
-			this.bpm_contest[contest_i]-=this.bpm_contest[contest_i]*(this.last_update/this.config.BD_DETECTION_RATE);
+			this.bpm_contest[contest_i] -=
+				this.bpm_contest[contest_i] *
+				(this.last_update / this.config.BD_DETECTION_RATE);
 		}
 
 		// decay contest values from last loop
 		for (const contest_i in this.bpm_contest_lo) {
-			this.bpm_contest_lo[contest_i]-=this.bpm_contest_lo[contest_i]*(this.last_update/this.config.BD_DETECTION_RATE);
+			this.bpm_contest_lo[contest_i] -=
+				this.bpm_contest_lo[contest_i] *
+				(this.last_update / this.config.BD_DETECTION_RATE);
 		}
 
-		this.bpm_timer+=this.last_update;
+		this.bpm_timer += this.last_update;
 
 		let winner;
 		let winner_lo;
 
 		// attempt to display the beat at the beat interval ;)
-		if (this.bpm_timer > this.winning_bpm/4.0 && this.current_bpm) {
+		if (this.bpm_timer > this.winning_bpm / 4.0 && this.current_bpm) {
 			this.win_val = 0;
 			this.win_val_lo = 0;
 
-			if (this.winning_bpm) while (this.bpm_timer > this.winning_bpm/4.0) this.bpm_timer -= this.winning_bpm/4.0;
+			if (this.winning_bpm)
+				while (this.bpm_timer > this.winning_bpm / 4.0)
+					this.bpm_timer -= this.winning_bpm / 4.0;
 
 			// increment beat counter
 			this.quarter_counter++;
-			this.half_counter= Math.floor(this.quarter_counter/2);
-			this.beat_counter = Math.floor(this.quarter_counter/4);
+			this.half_counter = Math.floor(this.quarter_counter / 2);
+			this.beat_counter = Math.floor(this.quarter_counter / 4);
 
 			// award the winner of this iteration
-			const idx = Math.floor(Math.round((60.0/this.current_bpm)*10.0));
+			const idx = Math.floor(Math.round((60.0 / this.current_bpm) * 10.0));
 			if (isNaN(this.bpm_contest[idx])) this.bpm_contest[idx] = 0;
-			this.bpm_contest[idx]+=this.config.BD_QUALITY_REWARD;
+			this.bpm_contest[idx] += this.config.BD_QUALITY_REWARD;
 
 			// find the overall winner so far
 			for (const contest_i in this.bpm_contest) {
@@ -798,7 +908,7 @@ class BeatsDetektor {
 
 			if (winner) {
 				this.win_bpm_int = parseInt(winner);
-				this.winning_bpm = (60.0/(winner/10.0));
+				this.winning_bpm = 60.0 / (winner / 10.0);
 			}
 
 			// find the overall winner so far
@@ -811,10 +921,10 @@ class BeatsDetektor {
 
 			if (winner_lo) {
 				this.win_bpm_int_lo = parseInt(winner_lo);
-				this.winning_bpm_lo = 60.0/winner_lo;
+				this.winning_bpm_lo = 60.0 / winner_lo;
 			}
 
-			if (console && (this.beat_counter % 4) == 0) {
+			if (console && this.beat_counter % 4 == 0) {
 				// console.log(`Bea.ts(${this.BPM_MIN}, ${this.BPM_MAX}): [ Current Estimate: ${winner} BPM ] [ Time: ${Math.floor(timer_seconds*1000.0)/1000.0}s, Quality: ${Math.floor(this.quality_total*1000.0)/1000.0}, Rank: ${Math.floor(this.win_val*1000.0)/1000.0}, Jitter: ${Math.floor(this.bpm_offset*1000000.0)/1000000.0} ]`);
 			}
 		}
@@ -824,9 +934,9 @@ class BeatsDetektor {
 }
 
 /**
-* simple bass kick visualizer assistant module
-* @public
-*/
+ * simple bass kick visualizer assistant module
+ * @public
+ */
 // class BeatsKick {
 // 	is_kick = false;
 
@@ -847,10 +957,9 @@ class BeatsDetektor {
 // 	}
 // }
 
-
 /**
-* simple vu spectrum visualizer assistant module
-*/
+ * simple vu spectrum visualizer assistant module
+ */
 // class BeatSpect {
 // 	vu_levels = [];
 
@@ -900,5 +1009,3 @@ class BeatsDetektor {
 // 		return this.vu_levels[x];
 // 	}
 // }
-
-

@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/consistent-type-definitions */
+/* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable no-unused-vars */
 /**
  * Interface for GL-ES3 Typization
  * (yet to be implemented in ts-spec)
  */
 
-interface GLESObject { }
+interface GLESObject {}
 
 interface GLESActiveInfo {
 	readonly name: string;
@@ -12,15 +14,15 @@ interface GLESActiveInfo {
 	readonly type: number;
 }
 
-interface GLESBuffer extends GLESObject { }
+interface GLESBuffer extends GLESObject {}
 
-interface GLESFramebuffer extends GLESObject { }
+interface GLESFramebuffer extends GLESObject {}
 
-interface GLESProgram extends GLESObject { }
+interface GLESProgram extends GLESObject {}
 
-interface GLESRenderbuffer extends GLESObject { }
+interface GLESRenderbuffer extends GLESObject {}
 
-interface GLESShader extends GLESObject { }
+interface GLESShader extends GLESObject {}
 
 interface GLESShaderPrecisionFormat {
 	readonly precision: number;
@@ -28,14 +30,18 @@ interface GLESShaderPrecisionFormat {
 	readonly rangeMin: number;
 }
 
-interface GLESTexture extends GLESObject { }
+interface GLESTexture extends GLESObject {}
 
-interface GLESUniformLocation { }
+interface GLESUniformLocation {}
 
 declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	activeTexture(texture: number): void;
 	attachShader(program: GLESProgram | null, shader: GLESShader | null): void;
-	bindAttribLocation(program: GLESProgram | null, index: number, name: string): void;
+	bindAttribLocation(
+		program: GLESProgram | null,
+		index: number,
+		name: string
+	): void;
 	bindBuffer(target: number, buffer: GLESBuffer | null): void;
 	bindFramebuffer(target: number, framebuffer: GLESFramebuffer | null): void;
 	bindRenderbuffer(target: number, renderbuffer: GLESRenderbuffer | null): void;
@@ -44,9 +50,22 @@ declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	blendEquation(mode: number): void;
 	blendEquationSeparate(modeRGB: number, modeAlpha: number): void;
 	blendFunc(sfactor: number, dfactor: number): void;
-	blendFuncSeparate(srcRGB: number, dstRGB: number, srcAlpha: number, dstAlpha: number): void;
-	bufferData(target: number, size: number | ArrayBufferView | ArrayBuffer, usage: number): void;
-	bufferSubData(target: number, offset: number, data: ArrayBufferView | ArrayBuffer): void;
+	blendFuncSeparate(
+		srcRGB: number,
+		dstRGB: number,
+		srcAlpha: number,
+		dstAlpha: number
+	): void;
+	bufferData(
+		target: number,
+		size: number | ArrayBufferView | ArrayBuffer,
+		usage: number
+	): void;
+	bufferSubData(
+		target: number,
+		offset: number,
+		data: ArrayBufferView | ArrayBuffer
+	): void;
 	checkFramebufferStatus(target: number): number;
 	clear(mask: number): void;
 	clearColor(red: number, green: number, blue: number, alpha: number): void;
@@ -56,8 +75,26 @@ declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	compileShader(shader: GLESShader | null): void;
 	// compressedTexImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, data: ArrayBufferView | ArrayBuffer): void;
 	// compressedTexSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, data: ArrayBufferView | ArrayBuffer): void;
-	copyTexImage2D(target: number, level: number, internalformat: number, x: number, y: number, width: number, height: number, border: number): void;
-	copyTexSubImage2D(target: number, level: number, xoffset: number, yoffset: number, x: number, y: number, width: number, height: number): void;
+	copyTexImage2D(
+		target: number,
+		level: number,
+		internalformat: number,
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		border: number
+	): void;
+	copyTexSubImage2D(
+		target: number,
+		level: number,
+		xoffset: number,
+		yoffset: number,
+		x: number,
+		y: number,
+		width: number,
+		height: number
+	): void;
 	createBuffer(): GLESBuffer | null;
 	createFramebuffer(): GLESFramebuffer | null;
 	createProgram(): GLESProgram | null;
@@ -83,33 +120,69 @@ declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	enableVertexAttribArray(index: number): void;
 	finish(): void;
 	flush(): void;
-	framebufferRenderbuffer(target: number, attachment: number, renderbuffertarget: number, renderbuffer: GLESRenderbuffer | null): void;
-	framebufferTexture2D(target: number, attachment: number, textarget: number, texture: GLESTexture | null, level: number): void;
+	framebufferRenderbuffer(
+		target: number,
+		attachment: number,
+		renderbuffertarget: number,
+		renderbuffer: GLESRenderbuffer | null
+	): void;
+	framebufferTexture2D(
+		target: number,
+		attachment: number,
+		textarget: number,
+		texture: GLESTexture | null,
+		level: number
+	): void;
 	frontFace(mode: number): void;
 	generateMipmap(target: number): void;
-	getActiveAttrib(program: GLESProgram | null, index: number): GLESActiveInfo | null;
-	getActiveUniform(program: GLESProgram | null, index: number): GLESActiveInfo | null;
+	getActiveAttrib(
+		program: GLESProgram | null,
+		index: number
+	): GLESActiveInfo | null;
+	getActiveUniform(
+		program: GLESProgram | null,
+		index: number
+	): GLESActiveInfo | null;
 	getAttachedShaders(program: GLESProgram | null): GLESShader[] | null;
 	getAttribLocation(program: GLESProgram | null, name: string): number;
 	getBooleanv(pname: number): boolean;
 	getBufferParameteriv(target: number, pname: number): number;
 	getError(): number;
 	getFloatv(pname: number): number;
-	getFramebufferAttachmentParameteriv(target: number, attachment: number, pname: number): number;
+	getFramebufferAttachmentParameteriv(
+		target: number,
+		attachment: number,
+		pname: number
+	): number;
 	getIntegerv(pname: number): number;
 	getProgramiv(program: GLESProgram, pname: number): number;
 	getProgramInfoLog(program: GLESProgram | null): string | null;
-	getRenderbufferParameteriv(program: GLESProgram | null, pname: number): number;
+	getRenderbufferParameteriv(
+		program: GLESProgram | null,
+		pname: number
+	): number;
 	getShaderiv(shader: GLESShader, pname: number): number;
 	getShaderInfoLog(shader: GLESShader | null): string | null;
-	getShaderPrecisionFormat(shadertype: number, precisiontype: number): GLESShaderPrecisionFormat | null;
+	getShaderPrecisionFormat(
+		shadertype: number,
+		precisiontype: number
+	): GLESShaderPrecisionFormat | null;
 	getShaderSource(shader: GLESShader | null): string | null;
 	getString(name: number): string;
 	getTexParameterfv(target: number, pname: number): number;
 	getTexParameteriv(target: number, pname: number): number;
-	getUniformfv(program: GLESProgram | null, location: GLESUniformLocation | null): number;
-	getUniformiv(program: GLESProgram | null, location: GLESUniformLocation | null): number;
-	getUniformLocation(program: GLESProgram | null, name: string): GLESUniformLocation | null;
+	getUniformfv(
+		program: GLESProgram | null,
+		location: GLESUniformLocation | null
+	): number;
+	getUniformiv(
+		program: GLESProgram | null,
+		location: GLESUniformLocation | null
+	): number;
+	getUniformLocation(
+		program: GLESProgram | null,
+		name: string
+	): GLESUniformLocation | null;
 	getVertexAttribfv(index: number, pname: number): number;
 	getVertexAttribiv(index: number, pname: number): number;
 	getVertexAttribPointerv(index: number, pname: number): number;
@@ -127,17 +200,36 @@ declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	polygonOffset(factor: number, units: number): void;
 	// readPixels(x: number, y: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView | null): void;
 	releaseShaderCompiler(): void;
-	renderbufferStorage(target: number, internalformat: number, width: number, height: number): void;
+	renderbufferStorage(
+		target: number,
+		internalformat: number,
+		width: number,
+		height: number
+	): void;
 	sampleCoverage(value: number, invert: boolean): void;
 	scissor(x: number, y: number, width: number, height: number): void;
-	shaderBinary(shader: GLESShader, binaryformat: number, bin: ArrayBuffer | ArrayBufferView): void;
+	shaderBinary(
+		shader: GLESShader,
+		binaryformat: number,
+		bin: ArrayBuffer | ArrayBufferView
+	): void;
 	shaderSource(shader: GLESShader | null, source: string): void;
 	stencilFunc(func: number, ref: number, mask: number): void;
-	stencilFuncSeparate(face: number, func: number, ref: number, mask: number): void;
+	stencilFuncSeparate(
+		face: number,
+		func: number,
+		ref: number,
+		mask: number
+	): void;
 	stencilMask(mask: number): void;
 	stencilMaskSeparate(face: number, mask: number): void;
 	stencilOp(fail: number, zfail: number, zpass: number): void;
-	stencilOpSeparate(face: number, fail: number, zfail: number, zpass: number): void;
+	stencilOpSeparate(
+		face: number,
+		fail: number,
+		zfail: number,
+		zpass: number
+	): void;
 	// texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, pixels: ArrayBufferView | null): void;
 	texParameterf(target: number, pname: number, param: number): void;
 	texParameterfv(target: number, pname: number, params: Float32Array): void;
@@ -152,17 +244,51 @@ declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	uniform2fv(location: GLESUniformLocation, v: Float32Array): void;
 	uniform2i(location: GLESUniformLocation | null, x: number, y: number): void;
 	uniform2iv(location: GLESUniformLocation, v: Int32Array): void;
-	uniform3f(location: GLESUniformLocation | null, x: number, y: number, z: number): void;
+	uniform3f(
+		location: GLESUniformLocation | null,
+		x: number,
+		y: number,
+		z: number
+	): void;
 	uniform3fv(location: GLESUniformLocation, v: Float32Array): void;
-	uniform3i(location: GLESUniformLocation | null, x: number, y: number, z: number): void;
+	uniform3i(
+		location: GLESUniformLocation | null,
+		x: number,
+		y: number,
+		z: number
+	): void;
 	uniform3iv(location: GLESUniformLocation, v: Int32Array): void;
-	uniform4f(location: GLESUniformLocation | null, x: number, y: number, z: number, w: number): void;
+	uniform4f(
+		location: GLESUniformLocation | null,
+		x: number,
+		y: number,
+		z: number,
+		w: number
+	): void;
 	uniform4fv(location: GLESUniformLocation, v: Float32Array): void;
-	uniform4i(location: GLESUniformLocation | null, x: number, y: number, z: number, w: number): void;
+	uniform4i(
+		location: GLESUniformLocation | null,
+		x: number,
+		y: number,
+		z: number,
+		w: number
+	): void;
 	uniform4iv(location: GLESUniformLocation, v: Int32Array): void;
-	uniformMatrix2fv(location: GLESUniformLocation, transpose: boolean, value: Float32Array): void;
-	uniformMatrix3fv(location: GLESUniformLocation, transpose: boolean, value: Float32Array): void;
-	uniformMatrix4fv(location: GLESUniformLocation, transpose: boolean, value: Float32Array): void;
+	uniformMatrix2fv(
+		location: GLESUniformLocation,
+		transpose: boolean,
+		value: Float32Array
+	): void;
+	uniformMatrix3fv(
+		location: GLESUniformLocation,
+		transpose: boolean,
+		value: Float32Array
+	): void;
+	uniformMatrix4fv(
+		location: GLESUniformLocation,
+		transpose: boolean,
+		value: Float32Array
+	): void;
 	useProgram(program: GLESProgram | null): void;
 	validateProgram(program: GLESProgram | null): void;
 	vertexAttrib1f(indx: number, x: number): void;
@@ -171,9 +297,22 @@ declare interface GLESRenderingContext extends WebGL2RenderingContext {
 	vertexAttrib2fv(indx: number, values: Float32Array): void;
 	vertexAttrib3f(indx: number, x: number, y: number, z: number): void;
 	vertexAttrib3fv(indx: number, values: Float32Array): void;
-	vertexAttrib4f(indx: number, x: number, y: number, z: number, w: number): void;
+	vertexAttrib4f(
+		indx: number,
+		x: number,
+		y: number,
+		z: number,
+		w: number
+	): void;
 	vertexAttrib4fv(indx: number, values: Float32Array): void;
-	vertexAttribPointer(indx: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void;
+	vertexAttribPointer(
+		indx: number,
+		size: number,
+		type: number,
+		normalized: boolean,
+		stride: number,
+		offset: number
+	): void;
 	viewport(x: number, y: number, width: number, height: number): void;
 
 	readonly DEPTH_BUFFER_BIT: number;

@@ -1,31 +1,30 @@
 /**
-* @author hexxone / https://hexx.one
-*
-* @license
-* Copyright (c) 2021 hexxone All rights reserved.
-* Licensed under the GNU GENERAL PUBLIC LICENSE.
-* See LICENSE file in the project root for full license information.
-*/
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2021 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ */
 
-import {CComponent, CSettings, waitReady, WEAS} from '.';
+import { CComponent, CSettings, waitReady, WEAS } from ".";
 
-
-const ELM_ID = 'fpstats';
+const ELM_ID = "fpstats";
 
 /**
-* Custom Stats settings
-* @public
-* @extends {CSettings}
-*/
+ * Custom Stats settings
+ * @public
+ * @extends {CSettings}
+ */
 export class FPSettings extends CSettings {
-	debugging: boolean = false;
+	debugging = false;
 }
 
 /**
-* Custom FPS Stats module
-* @public
-* @extends {CComponent}
-*/
+ * Custom FPS Stats module
+ * @public
+ * @extends {CComponent}
+ */
 export class FPStats extends CComponent {
 	public settings: FPSettings = new FPSettings();
 
@@ -33,31 +32,30 @@ export class FPStats extends CComponent {
 	// FPS
 	private fpsHolder: HTMLElement;
 	private lastUpdate: number = performance.now();
-	private frameCount: number = 0;
+	private frameCount = 0;
 	// usage
 	private useHolder: HTMLElement;
 	// cpu
 	private cpuHolder: HTMLElement;
 	private cpuBegin: number = performance.now();
 	private cpuEnd: number = performance.now();
-	private cpuMS: number = 0;
+	private cpuMS = 0;
 	// gpu
 	private gpuHolder: HTMLElement;
 	private gpuBegin: number = performance.now();
 	private gpuEnd: number = performance.now();
-	private gpuMS: number = 0;
+	private gpuMS = 0;
 	// audio
 	private auProvider: WEAS = null;
 	private audHolder: HTMLElement;
-	private audioMS: number = 0;
+	private audioMS = 0;
 	private bpmHolder: HTMLDivElement;
 
-
 	/**
-	* Create hidden element
-	* @param {WEAS} audio (optional)
-	* @param {WEICUE} cue (optional)
-	*/
+	 * Create hidden element
+	 * @param {WEAS} audio (optional)
+	 * @param {WEICUE} cue (optional)
+	 */
 	constructor(audio?: WEAS) {
 		super();
 		this.auProvider = audio;
@@ -69,11 +67,11 @@ export class FPStats extends CComponent {
 	}
 
 	/**
-	* Make style
-	* @ignore
-	*/
+	 * Make style
+	 * @ignore
+	 */
 	private injectCSS() {
-		const st = document.createElement('style');
+		const st = document.createElement("style");
 		st.innerHTML = `
 		#${ELM_ID} {
 			opacity: 0;
@@ -94,58 +92,63 @@ export class FPStats extends CComponent {
 	}
 
 	/**
-	* Make dom
-	* @ignore
-	*/
+	 * Make dom
+	 * @ignore
+	 */
 	private injectHTML() {
 		// root
-		this.container = document.createElement('div');
+		this.container = document.createElement("div");
 		this.container.id = ELM_ID;
 		document.body.append(this.container);
 		// fps
-		this.fpsHolder = document.createElement('div');
-		this.fpsHolder.innerText = 'FPS: 0';
+		this.fpsHolder = document.createElement("div");
+		this.fpsHolder.innerText = "FPS: 0";
 		// cpu
-		this.cpuHolder = document.createElement('div');
-		this.cpuHolder.innerText = 'CPU: 0.00 ms';
+		this.cpuHolder = document.createElement("div");
+		this.cpuHolder.innerText = "CPU: 0.00 ms";
 		// gpu
-		this.gpuHolder = document.createElement('div');
-		this.gpuHolder.innerText = 'GPU: 0.00 ms';
+		this.gpuHolder = document.createElement("div");
+		this.gpuHolder.innerText = "GPU: 0.00 ms";
 		// usage
-		this.useHolder = document.createElement('div');
-		this.useHolder.innerText = 'All: 0.00%';
+		this.useHolder = document.createElement("div");
+		this.useHolder.innerText = "All: 0.00%";
 		// append
-		this.container.append(this.fpsHolder, this.cpuHolder, this.gpuHolder, this.useHolder);
+		this.container.append(
+			this.fpsHolder,
+			this.cpuHolder,
+			this.gpuHolder,
+			this.useHolder
+		);
 		// audio
 		if (this.auProvider) {
-			this.bpmHolder = document.createElement('div');
-			this.bpmHolder.innerText = 'BPM: 0 ~ ';
+			this.bpmHolder = document.createElement("div");
+			this.bpmHolder.innerText = "BPM: 0 ~ ";
 
-			this.audHolder = document.createElement('div');
-			this.audHolder.innerText = 'Audio: 0 ms';
+			this.audHolder = document.createElement("div");
+			this.audHolder.innerText = "Audio: 0 ms";
 
 			this.container.append(this.bpmHolder, this.audHolder);
 		}
 	}
 
 	/**
-	* update visible
-	* @public
-	* @return {Promise}
-	*/
+	 * update visible
+	 * @public
+	 * @return {Promise}
+	 */
 	public updateSettings(): Promise<void> {
 		// show or hide debug info
 		return waitReady().then(() => {
-			if (this.settings.debugging) this.container.classList.add('show');
-			else this.container.classList.remove('show');
+			if (this.settings.debugging) this.container.classList.add("show");
+			else this.container.classList.remove("show");
 		});
 	}
 
 	/**
-	* Start measuring interval
-	* @public
-	* @param {boolean} cpu True if Cpu, false if GPU
-	*/
+	 * Start measuring interval
+	 * @public
+	 * @param {boolean} cpu True if Cpu, false if GPU
+	 */
 	public begin(cpu: boolean) {
 		if (!this.settings.debugging) return;
 
@@ -154,10 +157,10 @@ export class FPStats extends CComponent {
 	}
 
 	/**
-	* End measuring interval
-	* @public
-	* @param {boolean} cpu True if Cpu, false if GPU
-	*/
+	 * End measuring interval
+	 * @public
+	 * @param {boolean} cpu True if Cpu, false if GPU
+	 */
 	public end(cpu: boolean) {
 		if (!this.settings.debugging) return;
 
@@ -166,13 +169,13 @@ export class FPStats extends CComponent {
 	}
 
 	/**
-	* update the html representation
-	* @public
-	*/
+	 * update the html representation
+	 * @public
+	 */
 	public update() {
 		this.frameCount++;
-		this.cpuMS += (this.cpuEnd - this.cpuBegin);
-		this.gpuMS += (this.gpuEnd - this.gpuBegin);
+		this.cpuMS += this.cpuEnd - this.cpuBegin;
+		this.gpuMS += this.gpuEnd - this.gpuBegin;
 
 		if (this.auProvider && this.auProvider.lastAudio) {
 			this.audioMS = (this.audioMS + this.auProvider.lastAudio.ellapsed) / 2;
@@ -180,7 +183,7 @@ export class FPStats extends CComponent {
 
 		// only update text ~every second
 		const now = performance.now();
-		if (now < (this.lastUpdate + 1000)) return;
+		if (now < this.lastUpdate + 1000) return;
 
 		// calculate
 		const elapsd = (now - this.lastUpdate) / 1000;
@@ -195,11 +198,16 @@ export class FPStats extends CComponent {
 		this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} ms`;
 		this.useHolder.innerText = `All: ${yusage.toFixed(2)} %`;
 
-		if (this.audHolder) this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
-		if (this.bpmHolder && this.auProvider.lastAudio && this.auProvider.lastAudio.bpm instanceof Array) {
+		if (this.audHolder)
+			this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
+		if (
+			this.bpmHolder &&
+			this.auProvider.lastAudio &&
+			this.auProvider.lastAudio.bpm instanceof Array
+		) {
 			let bts = 0;
 			const bp = this.auProvider.lastAudio.bpm;
-			bp.forEach((b) => bts += b.value);
+			bp.forEach((b) => (bts += b.value));
 			bts /= bp.length;
 			this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
 		}
@@ -209,9 +217,9 @@ export class FPStats extends CComponent {
 	}
 
 	/**
-	* All back to 0
-	* @public
-	*/
+	 * All back to 0
+	 * @public
+	 */
 	public reset() {
 		this.frameCount = this.cpuMS = this.gpuMS = this.audioMS = 0;
 	}

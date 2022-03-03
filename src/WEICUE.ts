@@ -1,53 +1,51 @@
 /**
-* @author hexxone / https://hexx.one
-*
-* @license
-* Copyright (c) 2021 hexxone All rights reserved.
-* Licensed under the GNU GENERAL PUBLIC LICENSE.
-* See LICENSE file in the project root for full license information.
-*/
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2021 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ */
 
-import {CComponent, CSettings, rgbToObj, Smallog, waitReady, WEAS} from '.';
-import {ICUE} from './ICUE';
+import { CComponent, CSettings, rgbToObj, Smallog, waitReady, WEAS } from ".";
+import { ICUE } from "./ICUE";
 
+const IMG_SRC = "./img/icue.png";
 
-const IMG_SRC = './img/icue.png';
-
-const ClassName: string = '[WEICUE] ';
-const canvasX: number = 23;
-const canvasY: number = 7;
-const WaitTime: number = 30;
-const Transition: number = 3;
-
+const ClassName = "[WEICUE] ";
+const canvasX = 23;
+const canvasY = 7;
+const WaitTime = 30;
+const Transition = 3;
 
 /**
-* iCUE processing settings
-* @public
-* @extends {CSettings}
-*/
+ * iCUE processing settings
+ * @public
+ * @extends {CSettings}
+ */
 export class CUESettings extends CSettings {
-	public icue_mode: number = 1;
-	public icue_area_xoff: number = 50;
-	public icue_area_yoff: number = 90;
-	public icue_area_width: number = 75;
-	public icue_area_height: number = 30;
-	public icue_area_blur: number = 5;
-	public icue_area_decay: number = 15;
-	public icue_main_color: string = '0 0.8 0';
+	public icue_mode = 1;
+	public icue_area_xoff = 50;
+	public icue_area_yoff = 90;
+	public icue_area_width = 75;
+	public icue_area_height = 30;
+	public icue_area_blur = 5;
+	public icue_area_decay = 15;
+	public icue_main_color = "0 0.8 0";
 	// AudiOrbits bg Color; used as "decay"-color aswell
-	public main_color: string = '0 0 0';
+	public main_color = "0 0 0";
 }
 
 /**
-* WEICUE
-* <br/>
-* Wallpaper Engine iCUE effects for web wallpapers
-* <br/>
-* Uses several different methods to create
-* Lighting effects for Corsair ICUE devices.
-* @public
-* @extends {CComponent}
-*/
+ * WEICUE
+ * <br/>
+ * Wallpaper Engine iCUE effects for web wallpapers
+ * <br/>
+ * Uses several different methods to create
+ * Lighting effects for Corsair ICUE devices.
+ * @public
+ * @extends {CComponent}
+ */
 export class WEICUE extends CComponent {
 	private cue: ICUE;
 	private weas: WEAS;
@@ -66,24 +64,24 @@ export class WEICUE extends CComponent {
 
 	// runtime values
 	public settings: CUESettings = new CUESettings();
-	public isAvailable: boolean = false;
-	public PAUSED: boolean = false;
+	public isAvailable = false;
+	public PAUSED = false;
 
 	/**
-	* Starts listening for led/icue plugin
-	* and prepares helper elements
-	* @param {WEAS} weas Audio supplier for non-projection mode
-	*/
+	 * Starts listening for led/icue plugin
+	 * and prepares helper elements
+	 * @param {WEAS} weas Audio supplier for non-projection mode
+	 */
 	constructor(weas: WEAS) {
 		super();
 		this.weas = weas;
 
 		// Plugin handler
-		window['wallpaperPluginListener'] = {
+		window["wallpaperPluginListener"] = {
 			onPluginLoaded: (name: string, version: string) => {
 				const lower = name.toLocaleLowerCase();
-				if (lower === 'cue' || lower === 'led') {
-					this.cue = window['cue'];
+				if (lower === "cue" || lower === "led") {
+					this.cue = window["cue"];
 					this.isAvailable = true;
 					Smallog.debug(`Plugin loaded: ${name}, v${version}`, ClassName);
 				}
@@ -99,11 +97,12 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* style for iCue messages, preview and helper
-	* @ignore
-	*/
+	 * style for iCue messages, preview and helper
+	 * @ignore
+	 * @returns {void}
+	 */
 	private injectCSS() {
-		const st = document.createElement('style');
+		const st = document.createElement("style");
 		st.innerHTML = `
 		#icueholder {
 			opacity: 0;
@@ -150,26 +149,28 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* Prepare html elements
-	* @ignore
-	*/
+	 * Prepare html elements
+	 * @ignore
+	 * @returns {void}
+	 */
 	private injectHTML() {
 		// create container
-		this.holder = document.createElement('div');
-		this.holder.id = 'icueholder';
+		this.holder = document.createElement("div");
+		this.holder.id = "icueholder";
 		// create icon (no ref needed)
-		const imgg = document.createElement('img');
-		imgg.id = 'icuelogo';
-		imgg.setAttribute('src', IMG_SRC);
-		imgg.setAttribute('alt', 'ICUE Icon');
+		const imgg = document.createElement("img");
+		imgg.id = "icuelogo";
+		imgg.setAttribute("src", IMG_SRC);
+		imgg.setAttribute("alt", "ICUE Icon");
 		// make text holder
-		this.texter = document.createElement('div');
-		this.texter.id = 'icuetext';
+		this.texter = document.createElement("div");
+		this.texter.id = "icuetext";
 
 		// preview area
-		this.preview = document.createElement('div');
-		this.preview.classList.add('cuePreview');
-		this.preview.innerHTML = '<h1>This is the LED/iCUE Projection-Area preview.<br />It will hide automatically.<br /><br />You can disable LED/iCUE projection under:<br />"Settings > 💡 LED/iCUE > Projection-mode = None"</h1>';
+		this.preview = document.createElement("div");
+		this.preview.classList.add("cuePreview");
+		this.preview.innerHTML =
+			'<h1>This is the LED/iCUE Projection-Area preview.<br />It will hide automatically.<br /><br />You can disable LED/iCUE projection under:<br />"Settings > 💡 LED/iCUE > Projection-mode = None"</h1>';
 
 		// append image and text
 		this.holder.append(imgg, this.texter);
@@ -177,58 +178,59 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* show a message by icue
-	* @param {string} msg
-	* @param {boolean} waiting
-	* @ignore
-	*/
-	private icueMessage(msg: string, waiting :boolean = false) {
-		Smallog.debug('MSG:  ' + msg, ClassName);
+	 * show a message by icue
+	 * @param {string} msg show text
+	 * @param {boolean} waiting use Wait or Transition time
+	 * @ignore
+	 * @returns {void}
+	 */
+	private icueMessage(msg: string, waiting = false) {
+		Smallog.debug("MSG:  " + msg, ClassName);
 		// set text
 		this.texter.innerHTML = msg;
 		// show
-		this.holder.classList.add('show');
-		if (waiting) this.holder.classList.add('waiting');
+		this.holder.classList.add("show");
+		if (waiting) this.holder.classList.add("waiting");
 		// hide again
-		const waiTime = waiting ? (WaitTime) : (Transition * 1000 + 4000);
+		const waiTime = waiting ? WaitTime : Transition * 1000 + 4000;
 		setTimeout(() => {
-			this.holder.classList.remove('show');
-			if (waiting) this.holder.classList.remove('waiting');
+			this.holder.classList.remove("show");
+			if (waiting) this.holder.classList.remove("waiting");
 		}, waiTime);
 	}
 
 	/**
-	* helper
-	* @param {boolean} inPx suffix "px" string to number (allows direct css use)
-	* @return {Object} area
-	* @ignore
-	*/
+	 * helper
+	 * @param {boolean} inPx suffix "px" string to number (allows direct css use)
+	 * @return {Object} area
+	 * @ignore
+	 */
 	private getArea(inPx = false) {
 		const sett = this.settings;
 		const wwid = window.innerWidth;
 		const whei = window.innerHeight;
-		const w = wwid * sett.icue_area_width / 100;
-		const h = whei * sett.icue_area_height / 100;
-		const l = ((wwid - w) * sett.icue_area_xoff / 100);
-		const t = ((whei - h) * sett.icue_area_yoff / 100);
+		const w = (wwid * sett.icue_area_width) / 100;
+		const h = (whei * sett.icue_area_height) / 100;
+		const l = ((wwid - w) * sett.icue_area_xoff) / 100;
+		const t = ((whei - h) * sett.icue_area_yoff) / 100;
 		return {
-			width: w + (inPx ? 'px' : ''),
-			height: h + (inPx ? 'px' : ''),
-			left: l + (inPx ? 'px' : ''),
-			top: t + (inPx ? 'px' : ''),
+			width: w + (inPx ? "px" : ""),
+			height: h + (inPx ? "px" : ""),
+			left: l + (inPx ? "px" : ""),
+			top: t + (inPx ? "px" : ""),
 		};
 	}
 
 	/**
-	* convert data for icue
-	* @param {ImageData} imageData
-	* @return {string}
-	* @ignore
-	*/
+	 * convert data for icue
+	 * @param {ImageData} imageData source
+	 * @return {string} encoded image
+	 * @ignore
+	 */
 	private getEncodedCanvasImageData(imageData: ImageData) {
 		const colorArray = [];
 		for (let d = 0; d < imageData.data.length; d += 4) {
-			const write = d / 4 * 3;
+			const write = (d / 4) * 3;
 			colorArray[write] = imageData.data[d];
 			colorArray[write + 1] = imageData.data[d + 1];
 			colorArray[write + 2] = imageData.data[d + 2];
@@ -237,19 +239,25 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* canvas blur helper function
-	* @param {HTMLCanvasElement} canvas
-	* @param {CanvasRenderingContext2D} ctx
-	* @param {number} blur
-	* @ignore
-	*/
-	private gBlurCanvas(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, blur: number) {
+	 * canvas blur helper function
+	 * @param {HTMLCanvasElement} canvas source & target
+	 * @param {CanvasRenderingContext2D} ctx context
+	 * @param {number} blur amount
+	 * @ignore
+	 * @returns {void}
+	 */
+	private gBlurCanvas(
+		canvas: HTMLCanvasElement,
+		ctx: CanvasRenderingContext2D,
+		blur: number
+	) {
 		let sum = 0;
 		const delta = 5;
 		const alpha_left = 1 / (2 * Math.PI * delta * delta);
 		const step = blur < 3 ? 1 : 2;
 
-		let x; let weight;
+		let x;
+		let weight;
 		for (let y = -blur; y <= blur; y += step) {
 			for (x = -blur; x <= blur; x += step) {
 				weight = alpha_left * Math.exp(-(x * x + y * y) / (2 * delta * delta));
@@ -258,7 +266,11 @@ export class WEICUE extends CComponent {
 		}
 		for (let y = -blur; y <= blur; y += step) {
 			for (x = -blur; x <= blur; x += step) {
-				ctx.globalAlpha = alpha_left * Math.exp(-(x * x + y * y) / (2 * delta * delta)) / sum * blur * blur;
+				ctx.globalAlpha =
+					((alpha_left * Math.exp(-(x * x + y * y) / (2 * delta * delta))) /
+						sum) *
+					blur *
+					blur;
 				ctx.drawImage(canvas, x, y);
 			}
 		}
@@ -266,40 +278,40 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* Show waiting message and init canvas
-	* @ignore
-	*/
+	 * Show waiting message and init canvas
+	 * @ignore
+	 * @returns {void}
+	 */
 	private init() {
 		const sett = this.settings;
 		// dont initialize if disabled
 		if (sett.icue_mode == 0) return;
 
-		this.icueMessage('LED: waiting for plugin.', true);
+		this.icueMessage("LED: waiting for plugin.", true);
 		this.initCUE(0);
-		Smallog.debug('init...', ClassName);
+		Smallog.debug("init...", ClassName);
 
 		// recreate if reinit
 		if (this.icueInterval) clearInterval(this.icueInterval);
 		if (this.helperCanvas) document.body.removeChild(this.helperCanvas);
 		// setup canvas
-		this.helperCanvas = document.createElement('canvas');
-		this.helperCanvas.id = 'helpCvs';
+		this.helperCanvas = document.createElement("canvas");
+		this.helperCanvas.id = "helpCvs";
 		this.helperCanvas.width = canvasX;
 		this.helperCanvas.height = canvasY;
-		this.helperCanvas.style.display = 'none';
-		this.helperContext = this.helperCanvas.getContext('2d');
+		this.helperCanvas.style.display = "none";
+		this.helperContext = this.helperCanvas.getContext("2d");
 		document.body.appendChild(this.helperCanvas);
 
 		// update devices about every 33ms/30fps. iCue doesnt really support higher values
 		this.icueInterval = window.setInterval(() => this.updateFrame(), 1000 / 30);
 	}
 
-
 	/**
-	* show or hide preview
-	* @public
-	* @return {Promise} finished
-	*/
+	 * show or hide preview
+	 * @public
+	 * @return {Promise} finished
+	 */
 	public updateSettings(): Promise<void> {
 		// reset timeout?
 		if (this.prevTimeout) {
@@ -309,31 +321,32 @@ export class WEICUE extends CComponent {
 		// update / show preview
 		if (this.isAvailable && this.preview && this.settings.icue_mode == 1) {
 			Object.assign(this.preview.style, this.getArea(true));
-			this.preview.classList.add('show');
+			this.preview.classList.add("show");
 			this.prevTimeout = setTimeout(() => {
-				this.preview.classList.remove('show');
+				this.preview.classList.remove("show");
 			}, 6000);
 		}
 		return Promise.resolve();
 	}
 
 	/**
-	* will initialize ICUE api & usage
-	* @param {number} count Retries (will stop at 100)
-	* @ignore
-	*/
+	 * will initialize ICUE api & usage
+	 * @param {number} count Retries (will stop at 100)
+	 * @ignore
+	 * @returns {void}
+	 */
 	private initCUE(count: number) {
 		// wait for plugins
 		if (!this.isAvailable) {
 			if (count < 100) setTimeout(() => this.initCUE(++count), 150);
-			else this.icueMessage('LED: Plugin not found!');
+			else this.icueMessage("LED: Plugin not found!");
 			return;
 		}
 		// setup devices
 		this.icueDevices = [];
 
 		this.cue.getDeviceCount((deviceCount) => {
-			this.icueMessage('LED: Found ' + deviceCount + ' devices.');
+			this.icueMessage("LED: Found " + deviceCount + " devices.");
 			for (let xi = 0; xi < deviceCount; xi++) {
 				const xl = xi;
 				this.cue.getDeviceInfo(xl, (info) => {
@@ -348,16 +361,25 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* do the thing...
-	* @ignore
-	*/
+	 * do the thing...
+	 * @ignore
+	 * @returns {void}
+	 */
 	private updateFrame() {
 		const sett = this.settings;
-		if (this.PAUSED || !this.isAvailable || sett.icue_mode == 0 || this.icueDevices.length < 1) return;
+		if (
+			this.PAUSED ||
+			!this.isAvailable ||
+			sett.icue_mode == 0 ||
+			this.icueDevices.length < 1
+		)
+			return;
 		// projection mode
 		if (sett.icue_mode == 1) {
 			// get scaled down image data and encode it for icue
-			const encDat = this.getEncodedCanvasImageData(this.helperContext.getImageData(0, 0, canvasX, canvasY));
+			const encDat = this.getEncodedCanvasImageData(
+				this.helperContext.getImageData(0, 0, canvasX, canvasY)
+			);
 			// update all icueDevices with data
 			for (let xi = 0; xi < this.icueDevices.length; xi++) {
 				this.cue.setLedColorsByImageData(xi, encDat, canvasX, canvasY);
@@ -369,7 +391,7 @@ export class WEICUE extends CComponent {
 			let mlt = 255;
 			if (this.weas.hasAudio()) {
 				const aud = this.weas.lastAudio;
-				mlt *= aud.average / aud.range / aud.intensity * 10;
+				mlt *= (aud.average / aud.range / aud.intensity) * 10;
 			}
 			// get lol objects
 			const ledCol = rgbToObj(sett.icue_main_color, mlt);
@@ -381,13 +403,20 @@ export class WEICUE extends CComponent {
 	}
 
 	/**
-	* copy main canvas portion to our helper
-	* @public
-	* @param {HTMLCanvasElementq} mainCanvas
-	*/
+	 * copy main canvas portion to our helper
+	 * @public
+	 * @param {HTMLCanvasElementq} mainCanvas target
+	 * @returns {void}
+	 */
 	public updateCanvas(mainCanvas: HTMLCanvasElement) {
 		const sett = this.settings;
-		if (!this.isAvailable || !mainCanvas || sett.icue_mode == 0 || this.icueDevices.length < 1) return;
+		if (
+			!this.isAvailable ||
+			!mainCanvas ||
+			sett.icue_mode == 0 ||
+			this.icueDevices.length < 1
+		)
+			return;
 
 		if (sett.icue_mode == 1) {
 			// get helper vars
@@ -395,12 +424,25 @@ export class WEICUE extends CComponent {
 			const hctx = this.helperContext;
 			// get real rgb values
 			const cO = rgbToObj(sett.main_color);
-			hctx.fillStyle = `rgba(${cO.r}, ${cO.g}, ${cO.b}, ${sett.icue_area_decay / 100})`;
+			hctx.fillStyle = `rgba(${cO.r}, ${cO.g}, ${cO.b}, ${
+				sett.icue_area_decay / 100
+			})`;
 			hctx.fillRect(0, 0, canvasX, canvasY);
 			// scale down and copy the image to the helper canvas
-			hctx.drawImage(mainCanvas, area.left, area.top, area.width, area.height, 0, 0, canvasX, canvasY);
+			hctx.drawImage(
+				mainCanvas,
+				area.left,
+				area.top,
+				area.width,
+				area.height,
+				0,
+				0,
+				canvasX,
+				canvasY
+			);
 			// blur the helper projection canvas
-			if (sett.icue_area_blur > 0) this.gBlurCanvas(this.helperCanvas, hctx, sett.icue_area_blur);
+			if (sett.icue_area_blur > 0)
+				this.gBlurCanvas(this.helperCanvas, hctx, sett.icue_area_blur);
 		}
 	}
 }

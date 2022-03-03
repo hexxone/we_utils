@@ -1,23 +1,23 @@
 /**
-* @author hexxone / https://hexx.one
-*
-* @license
-* Copyright (c) 2021 hexxone All rights reserved.
-* Licensed under the GNU GENERAL PUBLIC LICENSE.
-* See LICENSE file in the project root for full license information.
-*
-* @description
-* Displays a html load bar with given progress.
-*
-*/
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2021 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ *
+ * @description
+ * Displays a html load bar with given progress.
+ *
+ */
 
-import {waitReady} from '.';
+import { waitReady } from ".";
 
-const mainColor = '#69dc00aa';
+const mainColor = "#69dc00aa";
 
 /**
-* Visual Reload-Bar
-*/
+ * Visual Reload-Bar
+ */
 export class LoadHelper {
 	private _outer: HTMLDivElement;
 	private _bar: HTMLDivElement;
@@ -26,8 +26,8 @@ export class LoadHelper {
 	public progress = 0;
 
 	/**
-	* Create and prepare when document is ready
-	*/
+	 * Create and prepare when document is ready
+	 */
 	constructor() {
 		waitReady().then(() => {
 			this.injectCSS();
@@ -38,11 +38,12 @@ export class LoadHelper {
 	}
 
 	/**
-	* Make custom style
-	* @ignore
-	*/
+	 * Make custom style
+	 * @ignore
+	 * @returns {void}
+	 */
 	private injectCSS() {
-		const st = document.createElement('style');
+		const st = document.createElement("style");
 		st.innerHTML = `
 		#ldhlpr-bar {
 			position: absolute;
@@ -75,23 +76,24 @@ export class LoadHelper {
 	}
 
 	/**
-	* Make custom html elements
-	* @ignore
-	*/
+	 * Make custom html elements
+	 * @ignore
+	 * @returns {void}
+	 */
 	private injectHTML() {
-		this._outer = document.createElement('div');
-		this._outer.id = 'loadhelper';
-		this._bar = document.createElement('div');
-		this._bar.id = 'ldhlpr-bar';
-		this._tex = document.createElement('h1');
-		this._tex.id = 'ldhlpr-text';
+		this._outer = document.createElement("div");
+		this._outer.id = "loadhelper";
+		this._bar = document.createElement("div");
+		this._bar.id = "ldhlpr-bar";
+		this._tex = document.createElement("h1");
+		this._tex.id = "ldhlpr-text";
 		this._outer.append(this._bar, this._tex);
 		document.body.append(this._outer);
 	}
 
-	public setText(text = '') {
-		let txt = '--- Loading ---';
-		if (text != '') txt += `<br>${text}`;
+	public setText(text = "") {
+		let txt = "--- Loading ---";
+		if (text != "") txt += `<br>${text}`;
 		this._tex.innerHTML = txt;
 	}
 
@@ -101,20 +103,21 @@ export class LoadHelper {
 	}
 
 	/**
-	* always reset bar to 0
-	* @public
-	* @param {boolean} visible
-	*/
+	 * always reset bar to 0
+	 * @public
+	 * @param {boolean} visible show / hide
+	 * @returns {void}
+	 */
 	public show(visible: boolean) {
 		const e1 = this._bar;
 		const e2 = this._tex;
-		e1.classList.remove('show');
-		e2.classList.remove('show');
+		e1.classList.remove("show");
+		e2.classList.remove("show");
 		if (visible) {
 			setTimeout(() => {
-				e1.classList.add('show');
-				e2.classList.add('show');
+				e1.classList.add("show");
+				e2.classList.add("show");
 			}, 10);
 		}
 	}
-};
+}
