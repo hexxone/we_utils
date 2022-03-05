@@ -114,19 +114,3 @@ export function sharedWorker(
 	if (iso) bldr = bldr.replace(".wasm", ".shared.wasm");
 	return wascWorker(bldr, memory, iso, options, useWorker);
 }
-
-/**
- * Shorthand for Typed array stuff
- * @public
- */
-export const AnyTypedArray:
-	| Uint32Array
-	| Float32Array
-	| Float64Array
-	| Uint8Array
-	| Int8Array
-	| Uint16Array
-	| Int16Array
-	| Int32Array
-	| BigUint64Array
-	| BigInt64Array = null;
