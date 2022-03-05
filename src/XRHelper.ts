@@ -5,7 +5,7 @@
  */
 
 import { CSettings, CComponent, waitReady } from "./";
-import { XRSessionInit } from "./XRWebGL";
+import { XRSessionInit } from "./three.ts/src/XRWebGL";
 
 /**
  * XR Settings
