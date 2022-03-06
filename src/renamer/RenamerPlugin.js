@@ -254,8 +254,7 @@ class RenamerPlugin {
 				// check if replacement is in "" string
 				// check if replacement is in '' string
 				// check if replacement is in `` string
-				const patt =
-					/'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)"|`((?:\\.|[^`])*)`/gim;
+				const patt = /'((?:\\.|[^'])*)'|"((?:\\.|[^"])*)"|`((?:\\.|[^`])*)`/gim;
 				let match;
 				while ((match = patt.exec(newPd)) != null && !isInvalid) {
 					// console.log(match.index + ' ' + patt.lastIndex);
@@ -347,9 +346,7 @@ class RenamerPlugin {
 			let val = globalMap[k];
 			if (val.length > 4) {
 				if (keys.length > 4) {
-					val = `${splFunc}('${btoa(
-						caesarCipher(val.join(delim))
-					)}')`;
+					val = `${splFunc}('${btoa(caesarCipher(val.join(delim)))}')`;
 				} else {
 					val = `"${val.join(delim)}".split('${delim}')`;
 				}
@@ -413,7 +410,7 @@ class RenamerPlugin {
 	 * @return {void}
 	 */
 	processSource(compilation, name, child) {
-		if (child._valueIsBuffer) {
+		if (child._valueIsBuffer || !child.source) {
 			console.log("Value is Buffer!");
 			return;
 		}
@@ -425,9 +422,7 @@ class RenamerPlugin {
 			compilation.updateAsset(name, new RawSource(processed));
 			// calculate saved memory
 			const savedChars = source.length - processed.length;
-			console.info(
-				"[" + pluginName + "] Saved: " + savedChars + " chars"
-			);
+			console.info("[" + pluginName + "] Saved: " + savedChars + " chars");
 		}
 	}
 
@@ -440,16 +435,12 @@ class RenamerPlugin {
 	apply(compiler) {
 		compiler.hooks.emit.tap(pluginName, (compilation) => {
 			try {
-				console.info(
-					"[" + pluginName + "] Using Regex: " + this.options.regex
-				);
+				console.info("[" + pluginName + "] Using Regex: " + this.options.regex);
 
 				// process all compiled .js files
 				for (const assetFile in compilation.assets) {
 					if (!assetFile || !assetFile.endsWith(".js")) continue;
-					console.info(
-						"[" + pluginName + "] Processing: " + assetFile
-					);
+					console.info("[" + pluginName + "] Processing: " + assetFile);
 
 					// get the processed asset object / source
 					const asset = compilation.getAsset(assetFile);
