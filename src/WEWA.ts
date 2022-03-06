@@ -7,7 +7,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { Smallog, waitReady, OfflineHelper, WascUtil } from "./";
+import { Smallog, waitReady, OfflineHelper, WascUtil } from ".";
 
 const LogHead = "[WEWWA] ";
 const DefLang = "de-de";

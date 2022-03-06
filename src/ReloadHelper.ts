@@ -11,7 +11,7 @@
  *
  */
 
-import { CComponent, CSettings, waitReady } from "./";
+import { CComponent, CSettings, waitReady } from ".";
 
 /**
  * Reload-bar settings

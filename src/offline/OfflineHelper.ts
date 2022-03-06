@@ -7,7 +7,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { Smallog } from "../";
+import { Smallog } from "..";
 
 // this should pack the serviceworker like a webwoker.
 import OfflineWorker from "worker-loader!./Offline";
@@ -63,16 +63,9 @@ function register(
 			navigator.serviceWorker
 				.register(workerPath, { scope: "/" })
 				.then(
-					() =>
-						Smallog.info(
-							"service-worker registration complete.",
-							oh
-						),
+					() => Smallog.info("service-worker registration complete.", oh),
 					(reason) =>
-						Smallog.error(
-							"service-worker registration failur: " + reason,
-							oh
-						)
+						Smallog.error("service-worker registration failur: " + reason, oh)
 				)
 				.then(() => resolve(true));
 			return true;
@@ -91,14 +84,12 @@ function register(
 async function reset(): Promise<boolean> {
 	return new Promise((resolve) => {
 		if ("serviceWorker" in navigator) {
-			navigator.serviceWorker
-				.getRegistrations()
-				.then(async (registrations) => {
-					for (const registration of registrations) {
-						await registration.unregister();
-					}
-					resolve(true);
-				});
+			navigator.serviceWorker.getRegistrations().then(async (registrations) => {
+				for (const registration of registrations) {
+					await registration.unregister();
+				}
+				resolve(true);
+			});
 		} else {
 			Smallog.error("not supported!", oh);
 			resolve(false);

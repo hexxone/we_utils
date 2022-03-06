@@ -4,6 +4,8 @@
  * @author hexxone / https://hexx.one
  */
 
+import { BasePass } from "../..";
+
 import {
 	Camera,
 	Color,
@@ -11,8 +13,7 @@ import {
 	Scene,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../../";
-import { BasePass } from "./BasePass";
+} from "../../three.ts/src";
 
 /**
  * Shader Render Helper
@@ -34,13 +35,13 @@ export class RenderPass implements BasePass {
 	overMat: Material = null;
 
 	/**
-     * Construct helper
-     * @param {Scene} scene Scene
-     * @param {Camera} camera Camera
-     * @param {Material} overMat Override material
-     * @param {Color} clearColor Clear color
-     * @param {number} clearAlpha Clear alpha
-     */
+	 * Construct helper
+	 * @param {Scene} scene Scene
+	 * @param {Camera} camera Camera
+	 * @param {Material} overMat Override material
+	 * @param {Color} clearColor Clear color
+	 * @param {number} clearAlpha Clear alpha
+	 */
 	constructor(
 		scene: Scene,
 		camera: Camera,
@@ -58,39 +59,39 @@ export class RenderPass implements BasePass {
 	}
 
 	/**
-     * precompile shader
-     * @param {WebGLRenderer} renderer Context
-     */
+	 * precompile shader
+	 * @param {WebGLRenderer} renderer Context
+	 */
 	public prepare(renderer: WebGLRenderer) {
 		renderer.compile(this.scene, this.camera);
 	}
 
 	/**
-     * Destroy shader
-     */
+	 * Destroy shader
+	 */
 	public dispose() {
 		throw new Error("Method not implemented.");
 	}
 
 	/**
-     * Updated screen size
-     * @param {number} width X
-     * @param {number} height Y
-     */
+	 * Updated screen size
+	 * @param {number} width X
+	 * @param {number} height Y
+	 */
 	public setSize(width: number, height: number) {
 		return;
 	}
 
 	/**
-     * Render Frame
-     * @param {WebGLRenderer} renderer Context
-     * @param {WebGLRenderTarget} writeBuffer Output
-     * @param {WebGLRenderTarget} readBuffer Input
-     * @param {boolean} maskActive filter
-     * @param {boolean} renderToScreen render to canvas OR buffer
-     * @param {Camera} camera (optional)
-     * @public
-     */
+	 * Render Frame
+	 * @param {WebGLRenderer} renderer Context
+	 * @param {WebGLRenderTarget} writeBuffer Output
+	 * @param {WebGLRenderTarget} readBuffer Input
+	 * @param {boolean} maskActive filter
+	 * @param {boolean} renderToScreen render to canvas OR buffer
+	 * @param {Camera} camera (optional)
+	 * @public
+	 */
 	public render(
 		renderer: WebGLRenderer,
 		writeBuffer: WebGLRenderTarget,
@@ -128,8 +129,7 @@ export class RenderPass implements BasePass {
 
 		renderer.render(this.scene, this.camera);
 
-		if (this.clearColor)
-			renderer.setClearColor(oldClearColor, oldClearAlpha);
+		if (this.clearColor) renderer.setClearColor(oldClearColor, oldClearAlpha);
 
 		this.scene.overrideMaterial = null;
 		renderer.autoClear = oldAutoClear;

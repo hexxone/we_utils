@@ -8,6 +8,7 @@
  */
 
 import { CComponent, CSettings, rgbToObj, Smallog, waitReady, WEAS } from ".";
+
 import { ICUE } from "./ICUE";
 
 const IMG_SRC = "./img/icue.png";

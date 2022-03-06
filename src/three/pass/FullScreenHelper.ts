@@ -1,16 +1,24 @@
 /**
-* @author alteredq / http://alteredqualia.com/
-*
-* @author hexxone / https://hexx.one
-*/
+ * @author alteredq / http://alteredqualia.com/
+ *
+ * @author hexxone / https://hexx.one
+ */
 
-import {Camera, BufferGeometry, Mesh, Material, OrthographicCamera, PlaneBufferGeometry, WebGLRenderer} from '../../';
+import {
+	Camera,
+	BufferGeometry,
+	Mesh,
+	Material,
+	OrthographicCamera,
+	PlaneBufferGeometry,
+	WebGLRenderer,
+} from "../../three.ts/src";
 
 /**
-* Helper for passes that need to fill the viewport with a single quad.
-* used to render on a PlaneGeometry ("texture")
-* @public
-*/
+ * Helper for passes that need to fill the viewport with a single quad.
+ * used to render on a PlaneGeometry ("texture")
+ * @public
+ */
 export class FullScreenHelper {
 	private _mat = null;
 
@@ -19,9 +27,9 @@ export class FullScreenHelper {
 	public mesh: Mesh = null;
 
 	/**
-	* instantiate
-	* @param {Material} material
-	*/
+	 * instantiate
+	 * @param {Material} material
+	 */
 	constructor(material: Material) {
 		this._mat = material;
 		this.camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -30,32 +38,32 @@ export class FullScreenHelper {
 	}
 
 	/**
-	* precompile shader
-	* @param {WebGLRenderer} renderer
-	*/
+	 * precompile shader
+	 * @param {WebGLRenderer} renderer
+	 */
 	public prepare(renderer: WebGLRenderer) {
 		renderer.compile(this.mesh as any, this.camera);
 	}
 
 	/**
-	* Change mesh material
-	* @param {Material} mat
-	*/
+	 * Change mesh material
+	 * @param {Material} mat
+	 */
 	public setMaterial(mat: Material) {
 		this.mesh.material = mat;
 	}
 
 	/**
-	* Render the 2D-environment
-	* @param {WebGLRenderer} renderer
-	*/
+	 * Render the 2D-environment
+	 * @param {WebGLRenderer} renderer
+	 */
 	public render(renderer: WebGLRenderer) {
 		renderer.render(this.mesh, this.camera);
 	}
 
 	/**
-	* Destroy 2D-environment
-	*/
+	 * Destroy 2D-environment
+	 */
 	public dispose() {
 		this.camera.clear();
 		this.mesh.clear();

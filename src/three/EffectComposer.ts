@@ -4,18 +4,18 @@
  * @author hexxone / https://hexx.one
  */
 
+import { RenderPass, BasePass } from "..";
+
 import {
-	RenderPass,
-	BasePass,
 	LinearFilter,
+	PerspectiveCamera,
+	Quaternion,
 	RGBAFormat,
 	Scene,
-	PerspectiveCamera,
-	WebGLRenderer,
 	Vector2,
+	WebGLRenderer,
 	WebGLRenderTarget,
-	Quaternion,
-} from "../";
+} from "../three.ts/src";
 
 /**
  * render shader chain

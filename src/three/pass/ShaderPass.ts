@@ -4,16 +4,15 @@
  * @author hexxone / https://hexx.one
  */
 
+import { BasePass, BaseShader, FullScreenHelper } from "../..";
+
 import {
-	BasePass,
-	BaseShader,
-	FullScreenHelper,
 	ShaderMaterial,
 	UniformsUtils,
 	Vector2,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../../";
+} from "../../three.ts/src";
 
 /**
  * ThreeJS Pass for easy full screen shaders
