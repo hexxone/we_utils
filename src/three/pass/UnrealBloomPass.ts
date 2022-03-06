@@ -3,13 +3,16 @@
  */
 
 import {
-	AdditiveBlending,
 	BasePass,
-	Color,
 	CopyShader,
 	FullScreenHelper,
-	LinearFilter,
 	LuminosityHighPassShader,
+} from "../..";
+
+import {
+	AdditiveBlending,
+	Color,
+	LinearFilter,
 	MeshBasicMaterial,
 	RGBAFormat,
 	ShaderMaterial,
@@ -18,7 +21,7 @@ import {
 	Vector3,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../../";
+} from "../../three.ts/src";
 
 /**
  * Inspired from Unreal Engine
@@ -61,12 +64,12 @@ export class UnrealBloomPass implements BasePass {
 	private blurDirY = new Vector2(0.0, 1.0);
 
 	/**
-     * Construct bloom shader
-     * @param {Vector2} resolution size
-     * @param {number} strength multiplier
-     * @param {number} radius size
-     * @param {number} threshold min val
-     */
+	 * Construct bloom shader
+	 * @param {Vector2} resolution size
+	 * @param {number} strength multiplier
+	 * @param {number} radius size
+	 * @param {number} threshold min val
+	 */
 	constructor(
 		resolution: Vector2,
 		strength: number,
@@ -92,20 +95,12 @@ export class UnrealBloomPass implements BasePass {
 		this.renderTargetBright.texture.generateMipmaps = false;
 
 		for (let i = 0; i < this.nMips; i++) {
-			const renderTargetHorizonal = new WebGLRenderTarget(
-				resx,
-				resy,
-				pars
-			);
+			const renderTargetHorizonal = new WebGLRenderTarget(resx, resy, pars);
 			renderTargetHorizonal.texture.name = "UnrealBloomPass.h" + i;
 			renderTargetHorizonal.texture.generateMipmaps = false;
 			this.renderTargetsHorizontal.push(renderTargetHorizonal);
 
-			const renderTargetVertical = new WebGLRenderTarget(
-				resx,
-				resy,
-				pars
-			);
+			const renderTargetVertical = new WebGLRenderTarget(resx, resy, pars);
 			renderTargetVertical.texture.name = "UnrealBloomPass.v" + i;
 			renderTargetVertical.texture.generateMipmaps = false;
 			this.renderTargetsVertical.push(renderTargetVertical);
@@ -124,8 +119,7 @@ export class UnrealBloomPass implements BasePass {
 		this.materialHighPassFilter = new ShaderMaterial();
 		this.materialHighPassFilter.uniforms = this.highPassUniforms;
 		this.materialHighPassFilter.vertexShader = highPassShader.vertexShader;
-		this.materialHighPassFilter.fragmentShader =
-            highPassShader.fragmentShader;
+		this.materialHighPassFilter.fragmentShader = highPassShader.fragmentShader;
 		this.materialHighPassFilter.defines = {};
 
 		// Gaussian Blur Materials
@@ -137,8 +131,10 @@ export class UnrealBloomPass implements BasePass {
 			this.separableBlurMaterials.push(
 				this.getSeperableBlurMaterial(kernelSizeArray[i])
 			);
-			this.separableBlurMaterials[i].uniforms["texSize"].value =
-                new Vector2(resx, resy);
+			this.separableBlurMaterials[i].uniforms["texSize"].value = new Vector2(
+				resx,
+				resy
+			);
 
 			resx = Math.round(resx / 2);
 			resy = Math.round(resy / 2);
@@ -147,15 +143,15 @@ export class UnrealBloomPass implements BasePass {
 		// Composite material
 		this.compositeMaterial = this.getCompositeMaterial(this.nMips);
 		this.compositeMaterial.uniforms["blurTexture1"].value =
-            this.renderTargetsVertical[0].texture;
+			this.renderTargetsVertical[0].texture;
 		this.compositeMaterial.uniforms["blurTexture2"].value =
-            this.renderTargetsVertical[1].texture;
+			this.renderTargetsVertical[1].texture;
 		this.compositeMaterial.uniforms["blurTexture3"].value =
-            this.renderTargetsVertical[2].texture;
+			this.renderTargetsVertical[2].texture;
 		this.compositeMaterial.uniforms["blurTexture4"].value =
-            this.renderTargetsVertical[3].texture;
+			this.renderTargetsVertical[3].texture;
 		this.compositeMaterial.uniforms["blurTexture5"].value =
-            this.renderTargetsVertical[4].texture;
+			this.renderTargetsVertical[4].texture;
 		this.compositeMaterial.uniforms["bloomStrength"].value = strength;
 		this.compositeMaterial.uniforms["bloomRadius"].value = 0.1;
 		this.compositeMaterial.needsUpdate = true;
@@ -170,7 +166,7 @@ export class UnrealBloomPass implements BasePass {
 			new Vector3(1, 1, 1),
 		];
 		this.compositeMaterial.uniforms["bloomTintColors"].value =
-            this.bloomTintColors;
+			this.bloomTintColors;
 
 		// copy material
 
@@ -190,18 +186,18 @@ export class UnrealBloomPass implements BasePass {
 	}
 
 	/**
-     * precompile shader
-     * @param {WebGLRenderer} renderer renderer
-     * @returns {void}
-     */
+	 * precompile shader
+	 * @param {WebGLRenderer} renderer renderer
+	 * @returns {void}
+	 */
 	prepare(renderer: WebGLRenderer) {
 		this.fsQuad.prepare(renderer);
 	}
 
 	/**
-     * Destroy shader
-     * @returns {void}
-     */
+	 * Destroy shader
+	 * @returns {void}
+	 */
 	dispose() {
 		for (let i = 0; i < this.renderTargetsHorizontal.length; i++) {
 			this.renderTargetsHorizontal[i].dispose();
@@ -214,11 +210,11 @@ export class UnrealBloomPass implements BasePass {
 	}
 
 	/**
-     * Updated screen size
-     * @param {number} width X
-     * @param {number} height Y
-     * @returns {void}
-     */
+	 * Updated screen size
+	 * @param {number} width X
+	 * @param {number} height Y
+	 * @returns {void}
+	 */
 	setSize(width: number, height: number) {
 		let resx = Math.round(width / 2);
 		let resy = Math.round(height / 2);
@@ -228,8 +224,10 @@ export class UnrealBloomPass implements BasePass {
 			this.renderTargetsHorizontal[i].setSize(resx, resy);
 			this.renderTargetsVertical[i].setSize(resx, resy);
 
-			this.separableBlurMaterials[i].uniforms["texSize"].value =
-                new Vector2(resx, resy);
+			this.separableBlurMaterials[i].uniforms["texSize"].value = new Vector2(
+				resx,
+				resy
+			);
 
 			resx = Math.round(resx / 2);
 			resy = Math.round(resy / 2);
@@ -237,14 +235,14 @@ export class UnrealBloomPass implements BasePass {
 	}
 
 	/**
-     * Render Frame
-     * @param {WebGLRenderer} renderer Context
-     * @param {WebGLRenderTarget} writeBuffer Output
-     * @param {WebGLRenderTarget} readBuffer Input
-     * @param {boolean} maskActive filter
-     * @param {boolean} renderToScreen render to canvas OR buffer
-     * @returns {void}
-     */
+	 * Render Frame
+	 * @param {WebGLRenderer} renderer Context
+	 * @param {WebGLRenderTarget} writeBuffer Output
+	 * @param {WebGLRenderTarget} readBuffer Input
+	 * @param {boolean} maskActive filter
+	 * @param {boolean} renderToScreen render to canvas OR buffer
+	 * @returns {void}
+	 */
 	render(
 		renderer: WebGLRenderer,
 		writeBuffer: WebGLRenderTarget,
@@ -288,17 +286,17 @@ export class UnrealBloomPass implements BasePass {
 			this.fsQuad.setMaterial(this.separableBlurMaterials[i]);
 
 			this.separableBlurMaterials[i].uniforms["colorTexture"].value =
-                inputRenderTarget.texture;
+				inputRenderTarget.texture;
 			this.separableBlurMaterials[i].uniforms["direction"].value =
-                this.blurDirX;
+				this.blurDirX;
 			renderer.setRenderTarget(this.renderTargetsHorizontal[i]);
 			renderer.clear();
 			this.fsQuad.render(renderer);
 
 			this.separableBlurMaterials[i].uniforms["colorTexture"].value =
-                this.renderTargetsHorizontal[i].texture;
+				this.renderTargetsHorizontal[i].texture;
 			this.separableBlurMaterials[i].uniforms["direction"].value =
-                this.blurDirY;
+				this.blurDirY;
 			renderer.setRenderTarget(this.renderTargetsVertical[i]);
 			renderer.clear();
 			this.fsQuad.render(renderer);
@@ -312,7 +310,7 @@ export class UnrealBloomPass implements BasePass {
 		this.compositeMaterial.uniforms["bloomStrength"].value = this.strength;
 		this.compositeMaterial.uniforms["bloomRadius"].value = this.radius;
 		this.compositeMaterial.uniforms["bloomTintColors"].value =
-            this.bloomTintColors;
+			this.bloomTintColors;
 
 		renderer.setRenderTarget(this.renderTargetsHorizontal[0]);
 		renderer.clear();
@@ -322,7 +320,7 @@ export class UnrealBloomPass implements BasePass {
 
 		this.fsQuad.setMaterial(this.materialCopy);
 		this.copyUniforms["tDiffuse"].value =
-            this.renderTargetsHorizontal[0].texture;
+			this.renderTargetsHorizontal[0].texture;
 
 		if (maskActive) renderer.context.enable(renderer.context.STENCIL_TEST);
 
@@ -335,22 +333,22 @@ export class UnrealBloomPass implements BasePass {
 	}
 
 	/**
-     * Make seperable material
-     * @param {number} kernelRadius size
-     * @return {ShaderMaterial} material
-     */
+	 * Make seperable material
+	 * @param {number} kernelRadius size
+	 * @return {ShaderMaterial} material
+	 */
 	private getSeperableBlurMaterial(kernelRadius) {
 		const sm = new ShaderMaterial();
 
 		sm.defines = {
-			"KERNEL_RADIUS": kernelRadius,
-			"SIGMA": kernelRadius,
+			KERNEL_RADIUS: kernelRadius,
+			SIGMA: kernelRadius,
 		};
 
 		sm.uniforms = {
-			"colorTexture": { value: null },
-			"texSize": { value: new Vector2(0.5, 0.5) },
-			"direction": { value: new Vector2(0.5, 0.5) },
+			colorTexture: { value: null },
+			texSize: { value: new Vector2(0.5, 0.5) },
+			direction: { value: new Vector2(0.5, 0.5) },
 		};
 
 		sm.vertexShader = `
@@ -393,27 +391,27 @@ export class UnrealBloomPass implements BasePass {
 	}
 
 	/**
-     * Make helper material
-     * @param {number} nMips MipMaps
-     * @return {ShaderMaterial} material
-     */
+	 * Make helper material
+	 * @param {number} nMips MipMaps
+	 * @return {ShaderMaterial} material
+	 */
 	private getCompositeMaterial(nMips) {
 		const sm = new ShaderMaterial();
 		sm.defines = {
-			"NUM_MIPS": nMips,
+			NUM_MIPS: nMips,
 		};
 
 		sm.uniforms = {
-			"blurTexture1": { value: null },
-			"blurTexture2": { value: null },
-			"blurTexture3": { value: null },
-			"blurTexture4": { value: null },
-			"blurTexture5": { value: null },
-			"dirtTexture": { value: null },
-			"bloomStrength": { value: 1.0 },
-			"bloomFactors": { value: null },
-			"bloomTintColors": { value: null },
-			"bloomRadius": { value: 0.0 },
+			blurTexture1: { value: null },
+			blurTexture2: { value: null },
+			blurTexture3: { value: null },
+			blurTexture4: { value: null },
+			blurTexture5: { value: null },
+			dirtTexture: { value: null },
+			bloomStrength: { value: 1.0 },
+			bloomFactors: { value: null },
+			bloomTintColors: { value: null },
+			bloomRadius: { value: 0.0 },
 		};
 
 		sm.vertexShader = `

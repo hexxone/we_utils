@@ -13,13 +13,9 @@ import {
 	Smallog,
 	waitReady,
 	WascInterface,
-	wascWorker,
-	WascLoader,
-	ASUtil,
 	sharedWorker,
-} from "../";
-
-import { Bea_ts } from "./Bea";
+	Bea_ts,
+} from "..";
 
 const DAT_LEN = 128;
 const LISTENAME = "wallpaperRegisterAudioListener";

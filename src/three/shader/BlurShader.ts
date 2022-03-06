@@ -1,32 +1,33 @@
 /**
-* @author hexxone / https://hexx.one
-*
-* @license
-* Copyright (c) 2021 hexxone All rights reserved.
-* Licensed under the GNU GENERAL PUBLIC LICENSE.
-* See LICENSE file in the project root for full license information.
-*/
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2021 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ */
 
-import {BaseShader, Vector2} from '../..';
+import { BaseShader } from "../..";
+import { Vector2 } from "../../three.ts/src";
 
-import vertex from './vertex/Basic.glsl';
-import fragment from './fragment/Blur.glsl';
+import vertex from "./vertex/Basic.glsl";
+import fragment from "./fragment/Blur.glsl";
 
 /**
-* Blur shader with Alpha support
-* @public
-* @implements {BaseShader}
-*/
+ * Blur shader with Alpha support
+ * @public
+ * @implements {BaseShader}
+ */
 export class BlurShader implements BaseShader {
 	defines = null;
 
-	shaderID = 'blurShader';
+	shaderID = "blurShader";
 
 	uniforms = {
-		"tDiffuse": {value: null},
-		"iResolution": {value: new Vector2(1, 1)},
-		"u_sigma": {value: 0.5},
-		"u_dir": {value: new Vector2(0.1, 0.1)},
+		tDiffuse: { value: null },
+		iResolution: { value: new Vector2(1, 1) },
+		u_sigma: { value: 0.5 },
+		u_dir: { value: new Vector2(0.1, 0.1) },
 	};
 
 	vertexShader = vertex;
