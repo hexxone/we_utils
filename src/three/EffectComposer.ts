@@ -1,23 +1,26 @@
 /**
-* @author alteredq / http://alteredqualia.com/
-*
-* @author hexxone / https://hexx.one
-*/
+ * @author alteredq / http://alteredqualia.com/
+ *
+ * @author hexxone / https://hexx.one
+ */
 
-import {RenderPass, BasePass, LinearFilter, RGBAFormat, Scene, PerspectiveCamera, WebGLRenderer, Vector2, WebGLRenderTarget, Quaternion} from '../';
-
-
-const defaultParams = {
-	minFilter: LinearFilter,
-	magFilter: LinearFilter,
-	format: RGBAFormat,
-	stencilBuffer: false,
-};
+import {
+	RenderPass,
+	BasePass,
+	LinearFilter,
+	RGBAFormat,
+	Scene,
+	PerspectiveCamera,
+	WebGLRenderer,
+	Vector2,
+	WebGLRenderTarget,
+	Quaternion,
+} from "../";
 
 /**
-* render shader chain
-* @public
-*/
+ * render shader chain
+ * @public
+ */
 export class EffectComposer {
 	// given on construct
 	private scene: Scene;
@@ -46,31 +49,52 @@ export class EffectComposer {
 	// public
 	public passes: BasePass[] = [];
 
-
 	/**
-	* Instantiate
-	* @param {Scene} scene Scene
-	* @param {PerspectiveCamera} camera camera
-	* @param {WebGLRenderer} renderer renderer
-	* @param {string} globalPrec global precision
-	* @param {Color} clearCol Color
-	* @param {WebGLRenderTarget} renderTarget target to Reset (optional)
-	*/
-	constructor(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, globalPrec = 'mediump', clearCol?: any, renderTarget?: WebGLRenderTarget) {
+	 * Instantiate
+	 * @param {Scene} scene Scene
+	 * @param {PerspectiveCamera} camera camera
+	 * @param {WebGLRenderer} renderer renderer
+	 * @param {string} globalPrec global precision
+	 * @param {Color} clearCol Color
+	 * @param {WebGLRenderTarget} renderTarget target to Reset (optional)
+	 */
+	constructor(
+		scene: Scene,
+		camera: PerspectiveCamera,
+		renderer: WebGLRenderer,
+		globalPrec = "mediump",
+		clearCol?: any,
+		renderTarget?: WebGLRenderTarget
+	) {
 		this.scene = scene;
 		this.camera = camera;
 		this.renderer = renderer;
 		this.viewSize = renderer.getSize(new Vector2());
 
-		this.xrCam = new PerspectiveCamera(camera.fov, camera.aspect, camera.near, camera.far);
+		this.xrCam = new PerspectiveCamera(
+			camera.fov,
+			camera.aspect,
+			camera.near,
+			camera.far
+		);
 
 		// use a new default render target if none is given
-		this.defaultTarget = new WebGLRenderTarget(this.viewSize.width, this.viewSize.height, defaultParams);
-		this.defaultTarget.texture.name = 'EffectComposer.dt';
+		this.defaultTarget = new WebGLRenderTarget(
+			this.viewSize.width,
+			this.viewSize.height,
+			{
+				minFilter: LinearFilter,
+				magFilter: LinearFilter,
+				format: RGBAFormat,
+				stencilBuffer: false,
+			}
+		);
+
+		this.defaultTarget.texture.name = "EffectComposer.dt";
 
 		if (renderTarget === undefined) {
 			renderTarget = this.defaultTarget.clone();
-			renderTarget.texture.name = 'EffectComposer.rt';
+			renderTarget.texture.name = "EffectComposer.rt";
 		}
 
 		// set write buffer for shader pass rendering
@@ -79,7 +103,7 @@ export class EffectComposer {
 
 		// set input buffer for shader pass rendering
 		this.renderRead = renderTarget.clone();
-		this.renderRead.texture.name = 'EffectComposer.rr';
+		this.renderRead.texture.name = "EffectComposer.rr";
 		this.readBuffer = this.renderRead;
 
 		this.passes = [];
@@ -91,32 +115,32 @@ export class EffectComposer {
 	}
 
 	/**
-	* Precompile all shaders...
-	* @returns {void}
-	*/
+	 * Precompile all shaders...
+	 * @returns {void}
+	 */
 	public precompile(): void {
 		this.renderer.compile(this.scene, this.camera);
 		this.passes.forEach((pass) => pass.prepare(this.renderer));
 	}
 
 	/**
-	* Append a shader to the chain
-	* @public
-	* @param {BasePass} p Shader to add
-	* @returns {void}
-	*/
+	 * Append a shader to the chain
+	 * @public
+	 * @param {BasePass} p Shader to add
+	 * @returns {void}
+	 */
 	public addPass(p: BasePass) {
 		p.setSize(this.viewSize.width, this.viewSize.height);
 		this.passes.push(p);
 	}
 
 	/**
-	* Insert a shader in the chain
-	* @public
-	* @param {BasePass} p Shader to add
-	* @param {number} index position
-	* @returns {void}
-	*/
+	 * Insert a shader in the chain
+	 * @public
+	 * @param {BasePass} p Shader to add
+	 * @param {number} index position
+	 * @returns {void}
+	 */
 	public insertPass(p: BasePass, index: number) {
 		p.setSize(this.viewSize.width, this.viewSize.height);
 		this.passes.splice(index, 0, p);
@@ -125,7 +149,7 @@ export class EffectComposer {
 	/**
 	 * Update clear color
 	 * @param {any} clearCol Color
-	* @returns {void}
+	 * @returns {void}
 	 */
 	public setClearColor(clearCol: any) {
 		this.normPass.clearColor = clearCol;
@@ -133,11 +157,11 @@ export class EffectComposer {
 	}
 
 	/**
-	* Checks if the given shader should be rendererd to screen
-	* @param {number} passIndex position
-	* @return {boolean}
-	* @returns {void}
-	*/
+	 * Checks if the given shader should be rendererd to screen
+	 * @param {number} passIndex position
+	 * @return {boolean}
+	 * @returns {void}
+	 */
 	private isLastEnabledPass(passIndex: number) {
 		for (let i = passIndex + 1; i < this.passes.length; i++) {
 			if (this.passes[i].enabled) return false;
@@ -146,12 +170,12 @@ export class EffectComposer {
 	}
 
 	/**
-	* Render the shader-chain for 1 frame
-	* @public
-	* @param {number} deltaTime if not given, will calculate its own
-	* @param {XRFrame} frame Currently rendering XR frame?
-	* @returns {void}
-	*/
+	 * Render the shader-chain for 1 frame
+	 * @public
+	 * @param {number} deltaTime if not given, will calculate its own
+	 * @param {XRFrame} frame Currently rendering XR frame?
+	 * @returns {void}
+	 */
 	public render(deltaTime?: number, frame?: XRFrame) {
 		// deltaTime value is in seconds
 		const dn = performance.now();
@@ -193,13 +217,17 @@ export class EffectComposer {
 
 				// position
 				const varPos = view.transform.position;
-				this.xrCam.position.set(camPos.x + varPos.x,
+				this.xrCam.position.set(
+					camPos.x + varPos.x,
 					camPos.y + (varPos.y - 1.6),
-					camPos.z + varPos.z);
+					camPos.z + varPos.z
+				);
 
 				// orientation
 				const vo = view.transform.orientation;
-				this.xrCam.setRotationFromQuaternion(new Quaternion(vo.x, vo.y, vo.z, vo.w));
+				this.xrCam.setRotationFromQuaternion(
+					new Quaternion(vo.x, vo.y, vo.z, vo.w)
+				);
 
 				// matrix
 				this.xrCam.projectionMatrix.fromArray(view.projectionMatrix);
@@ -213,11 +241,23 @@ export class EffectComposer {
 				this.renderer.setViewport(offX, 0, viewSize, size.height);
 
 				// pass buffers flipped to avoid swap
-				this.xrPass.render(this.renderer, this.readBuffer, this.writeBuffer, false, !hasTargets);
+				this.xrPass.render(
+					this.renderer,
+					this.readBuffer,
+					this.writeBuffer,
+					false,
+					!hasTargets
+				);
 				this.passes.forEach((pass, i) => {
 					if (!pass.enabled) return;
 					pass.setSize(viewSize, size.height);
-					pass.render(this.renderer, this.writeBuffer, this.readBuffer, false, this.isLastEnabledPass(i));
+					pass.render(
+						this.renderer,
+						this.writeBuffer,
+						this.readBuffer,
+						false,
+						this.isLastEnabledPass(i)
+					);
 					if (pass.needsSwap) this.swapBuffers();
 				});
 			}
@@ -231,11 +271,23 @@ export class EffectComposer {
 			this.renderer.setScissor(0, 0, size.width, size.height);
 			this.renderer.setViewport(0, 0, size.width, size.height);
 			// pass buffers flipped to avoid swap
-			this.normPass.render(this.renderer, this.readBuffer, this.writeBuffer, false, !hasTargets);
+			this.normPass.render(
+				this.renderer,
+				this.readBuffer,
+				this.writeBuffer,
+				false,
+				!hasTargets
+			);
 			this.passes.forEach((pass, i) => {
 				if (!pass.enabled) return;
 				pass.setSize(size.width, size.height);
-				pass.render(this.renderer, this.writeBuffer, this.readBuffer, false, this.isLastEnabledPass(i));
+				pass.render(
+					this.renderer,
+					this.writeBuffer,
+					this.readBuffer,
+					false,
+					this.isLastEnabledPass(i)
+				);
 				if (pass.needsSwap) this.swapBuffers();
 			});
 		}
@@ -244,15 +296,15 @@ export class EffectComposer {
 	}
 
 	/**
-	* Destroy the current shader-chain
-	* @public
-	* @param {WebGLRenderTarget} renderTarget target to Reset (optional)
-	* @returns {void}
-	*/
+	 * Destroy the current shader-chain
+	 * @public
+	 * @param {WebGLRenderTarget} renderTarget target to Reset (optional)
+	 * @returns {void}
+	 */
 	public reset(renderTarget?: WebGLRenderTarget) {
 		if (renderTarget === undefined) {
 			renderTarget = this.defaultTarget.clone();
-			renderTarget.texture.name = 'EffectComposer.wt';
+			renderTarget.texture.name = "EffectComposer.wt";
 		}
 
 		this.renderWrite.dispose();
@@ -262,7 +314,7 @@ export class EffectComposer {
 		this.writeBuffer = this.renderWrite;
 
 		this.renderRead = renderTarget.clone();
-		this.renderRead.texture.name = 'EffectComposer.rt';
+		this.renderRead.texture.name = "EffectComposer.rt";
 		this.readBuffer = this.renderRead;
 
 		this.passes = [];
@@ -271,12 +323,12 @@ export class EffectComposer {
 	}
 
 	/**
-	* Updated buffer size
-	* @public
-	* @param {number} width X
-	* @param {number} height Y
-	* @returns {void}
-	*/
+	 * Updated buffer size
+	 * @public
+	 * @param {number} width X
+	 * @param {number} height Y
+	 * @returns {void}
+	 */
 	public setSize(width: number, height: number) {
 		this.renderWrite.setSize(width, height);
 		this.renderRead.setSize(width, height);
@@ -287,12 +339,12 @@ export class EffectComposer {
 	/* UTILS */
 
 	/**
-	* Some shaders write to Input rather than Output...
-	*
-	* This is a workaround to pass their data further down the render-chain
-	* @ignore
-	* @returns {void}
-	*/
+	 * Some shaders write to Input rather than Output...
+	 *
+	 * This is a workaround to pass their data further down the render-chain
+	 * @ignore
+	 * @returns {void}
+	 */
 	private swapBuffers() {
 		const tmp = this.readBuffer;
 		this.readBuffer = this.writeBuffer;
