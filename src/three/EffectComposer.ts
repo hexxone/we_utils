@@ -15,7 +15,7 @@ import {
 	Vector2,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../three.ts/src";
+} from "three.ts/src/";
 
 /**
  * render shader chain

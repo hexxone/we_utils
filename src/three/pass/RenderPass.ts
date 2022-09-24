@@ -13,7 +13,7 @@ import {
 	Scene,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../../three.ts/src";
+} from "three.ts/src/";
 
 /**
  * Shader Render Helper

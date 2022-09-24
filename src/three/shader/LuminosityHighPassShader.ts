@@ -9,7 +9,7 @@
  */
 
 import { BaseShader } from "../..";
-import { Color } from "../../three.ts/src";
+import { Color } from "three.ts/src/";
 
 import vertex from "./vertex/Basic.glsl";
 import fragment from "./fragment/Luminosity.glsl";

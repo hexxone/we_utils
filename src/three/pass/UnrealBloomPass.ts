@@ -21,7 +21,7 @@ import {
 	Vector3,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../../three.ts/src";
+} from "three.ts/src/";
 
 /**
  * Inspired from Unreal Engine

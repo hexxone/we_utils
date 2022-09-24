@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const glslMin = require('@yushijinhun/three-minifier-common/glsl-minifier');
+const glslMin = require("@yushijinhun/three-minifier-common/glsl-minifier");
 
 /**
  *
@@ -19,7 +19,7 @@ function parse(loader, source, context, cb) {
 		imports.push({
 			key: match[1],
 			target: match[0],
-			content: '',
+			content: "",
 		});
 		match = importPattern.exec(source);
 	}
@@ -36,8 +36,9 @@ function parse(loader, source, context, cb) {
  * @param cb
  * @returns
  */
-function processImports(loader, source, context, imports, cb) {
+function processImports(loader, source, context, imports, cb, lvl = 0) {
 	// if no imports left, resolve
+	console.log("[GLSLoader] Walking on lvl: " + lvl);
 	if (imports.length === 0) {
 		return cb(null, source);
 	}
@@ -50,7 +51,7 @@ function processImports(loader, source, context, imports, cb) {
 		}
 
 		loader.addDependency(resolved);
-		fs.readFile(resolved, 'utf-8', (err, src) => {
+		fs.readFile(resolved, "utf-8", (err, src) => {
 			if (err) {
 				return cb(err);
 			}
@@ -63,7 +64,7 @@ function processImports(loader, source, context, imports, cb) {
 				const newSource = source.replace(imp.target, bld);
 
 				// call all imports recursively
-				processImports(loader, newSource, context, imports, cb);
+				processImports(loader, newSource, context, imports, cb, lvl++);
 			});
 		});
 	});
@@ -98,7 +99,7 @@ function optimize(src) {
 /**
  * @param {string} source file
  */
-exports.default = function(source) {
+exports.default = function (source) {
 	this.cacheable();
 	const cb = this.async();
 
@@ -107,8 +108,14 @@ exports.default = function(source) {
 
 		// do minifying
 		const repl = optimize(bld);
-		console.log('[GLSLoader] Shortened program by: ' + (bld.length - repl.length) + ' chars');
+		console.log(
+			"[GLSLoader] Shortened program by: " +
+				(bld.length - repl.length) +
+				" chars"
+		);
 
 		cb(null, `export default ${JSON.stringify(repl)}`);
+
+		delete repl; // "gc"
 	});
 };

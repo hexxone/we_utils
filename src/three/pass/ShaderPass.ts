@@ -12,7 +12,7 @@ import {
 	Vector2,
 	WebGLRenderer,
 	WebGLRenderTarget,
-} from "../../three.ts/src";
+} from "three.ts/src/";
 
 /**
  * ThreeJS Pass for easy full screen shaders
