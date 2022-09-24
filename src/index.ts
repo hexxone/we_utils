@@ -4,9 +4,6 @@ export * from "./offline/OfflineHelper";
 // custom effects
 export * from "./three";
 
-// three.ts lib
-//export * from "./three.ts/src";
-
 // Web-AssemblyScript entry-point
 export * from "./wasc-worker";
 

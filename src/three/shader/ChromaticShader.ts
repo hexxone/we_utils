@@ -8,7 +8,7 @@
  */
 
 import { BaseShader } from "./BaseShader";
-import { Vector2 } from "../../three.ts/src";
+import { Vector2 } from "three.ts/src/";
 
 import vertex from "./vertex/Basic.glsl";
 import fragment from "./fragment/Chromatic.glsl";

@@ -12,7 +12,7 @@ import {
 	OrthographicCamera,
 	PlaneBufferGeometry,
 	WebGLRenderer,
-} from "../../three.ts/src";
+} from "three.ts/src/";
 
 /**
  * Helper for passes that need to fill the viewport with a single quad.

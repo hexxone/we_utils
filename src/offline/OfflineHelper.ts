@@ -10,7 +10,9 @@
 import { Smallog } from "..";
 
 // this should pack the serviceworker like a webwoker.
-import OfflineWorker from "worker-loader!./Offline";
+
+// import OfflineWorker from "worker-loader!./Offline.worker";
+const OfflineWorker = () => new Worker(new URL("./Offline.worker.js", import.meta.url));
 
 const oh = "[OfflineHelper] ";
 
@@ -34,7 +36,7 @@ const oh = "[OfflineHelper] ";
 // eslint-disable-next-line require-jsdoc
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DontRemove() {
-	return new OfflineWorker();
+	return OfflineWorker();
 }
 
 /**
