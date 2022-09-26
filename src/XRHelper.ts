@@ -4,8 +4,10 @@
  * @author Mugen87 / https://github.com/Mugen87
  */
 
-import { CSettings, CComponent, waitReady } from ".";
 import { XRSessionInit } from "three.ts/src/XRWebGL";
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
+import { waitReady } from "./Util";
 
 /**
  * XR Settings

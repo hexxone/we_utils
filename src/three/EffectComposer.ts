@@ -4,8 +4,6 @@
  * @author hexxone / https://hexx.one
  */
 
-import { RenderPass, BasePass } from "..";
-
 import {
 	LinearFilter,
 	PerspectiveCamera,
@@ -16,6 +14,8 @@ import {
 	WebGLRenderer,
 	WebGLRenderTarget,
 } from "three.ts/src/";
+import { BasePass } from "./pass/BasePass";
+import { RenderPass } from "./pass/RenderPass";
 
 /**
  * render shader chain

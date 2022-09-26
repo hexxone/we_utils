@@ -7,15 +7,12 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import {
-	CComponent,
-	CSettings,
-	Smallog,
-	waitReady,
-	WascInterface,
-	sharedWorker,
-	Bea_ts,
-} from "..";
+import { CComponent } from "../CComponent";
+import { CSettings } from "../CSettings";
+import { Smallog } from "../Smallog";
+import { sharedWorker, waitReady } from "../Util";
+import { WascInterface } from "../wasc-worker/WascInterface";
+import { Bea_ts } from "./Bea";
 
 const DAT_LEN = 128;
 const LISTENAME = "wallpaperRegisterAudioListener";

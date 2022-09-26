@@ -7,8 +7,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { BaseShader } from "./BaseShader";
 import { Vector2 } from "three.ts/src/";
+
+import { BaseShader } from "./BaseShader";
 
 import vertex from "./vertex/Basic.glsl";
 import fragment from "./fragment/Chromatic.glsl";

@@ -7,7 +7,7 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { Smallog } from ".";
+import { Smallog } from "./Smallog";
 
 /**
  * Base-Component Settings helper

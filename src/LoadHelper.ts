@@ -11,7 +11,7 @@
  *
  */
 
-import { waitReady } from ".";
+import { waitReady } from "./Util";
 
 const mainColor = "#69dc00aa";
 

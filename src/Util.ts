@@ -9,7 +9,8 @@
  * @ignore
  */
 
-import { WascInterface, wascWorker } from ".";
+import { wascWorker } from "./wasc-worker";
+import { WascInterface } from "./wasc-worker/WascInterface";
 
 // promise resolve queue
 const promQueue: ((val) => void)[] = [];
