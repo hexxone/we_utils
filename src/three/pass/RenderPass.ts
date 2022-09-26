@@ -4,8 +4,6 @@
  * @author hexxone / https://hexx.one
  */
 
-import { BasePass } from "../..";
-
 import {
 	Camera,
 	Color,
@@ -14,6 +12,8 @@ import {
 	WebGLRenderer,
 	WebGLRenderTarget,
 } from "three.ts/src/";
+
+import { BasePass } from "./BasePass";
 
 /**
  * Shader Render Helper

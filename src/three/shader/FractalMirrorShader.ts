@@ -9,8 +9,9 @@
  * @description
  */
 
-import { BaseShader } from "../..";
 import { Vector2 } from "three.ts/src/";
+
+import { BaseShader } from "./BaseShader";
 
 import vertex from "./vertex/Basic.glsl";
 import fragment from "./fragment/FractalMirror.glsl";

@@ -7,7 +7,10 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { CComponent, CSettings, waitReady, WEAS } from ".";
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
+import { waitReady } from "./Util";
+import { WEAS } from "./weas/WEAS";
 
 const ELM_ID = "fpstats";
 

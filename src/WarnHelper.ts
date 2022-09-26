@@ -7,7 +7,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { CSettings, CComponent, waitReady } from ".";
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
+import { waitReady } from "./Util";
 
 const ELM_ID = "triggerwarn";
 const IMG_SRC = "./img/triggerwarn.png";

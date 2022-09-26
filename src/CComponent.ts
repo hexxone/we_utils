@@ -7,7 +7,8 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { CSettings, Smallog } from ".";
+import { CSettings } from "./CSettings";
+import { Smallog } from "./Smallog";
 
 /**
  * Base-Component for a TypeScript Web Wallpaper

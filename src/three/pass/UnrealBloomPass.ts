@@ -3,13 +3,6 @@
  */
 
 import {
-	BasePass,
-	CopyShader,
-	FullScreenHelper,
-	LuminosityHighPassShader,
-} from "../..";
-
-import {
 	AdditiveBlending,
 	Color,
 	LinearFilter,
@@ -22,6 +15,11 @@ import {
 	WebGLRenderer,
 	WebGLRenderTarget,
 } from "three.ts/src/";
+import { CopyShader } from "../shader/CopyShader";
+import { LuminosityHighPassShader } from "../shader/LuminosityHighPassShader";
+
+import { BasePass } from "./BasePass";
+import { FullScreenHelper } from "./FullScreenHelper";
 
 /**
  * Inspired from Unreal Engine

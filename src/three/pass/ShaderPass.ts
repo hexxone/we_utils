@@ -4,8 +4,6 @@
  * @author hexxone / https://hexx.one
  */
 
-import { BasePass, BaseShader, FullScreenHelper } from "../..";
-
 import {
 	ShaderMaterial,
 	UniformsUtils,
@@ -13,6 +11,11 @@ import {
 	WebGLRenderer,
 	WebGLRenderTarget,
 } from "three.ts/src/";
+
+import { BaseShader } from "../shader/BaseShader";
+
+import { BasePass } from "./BasePass";
+import { FullScreenHelper } from "./FullScreenHelper";
 
 /**
  * ThreeJS Pass for easy full screen shaders

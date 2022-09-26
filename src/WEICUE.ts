@@ -7,9 +7,12 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { CComponent, CSettings, rgbToObj, Smallog, waitReady, WEAS } from ".";
-
+import { CComponent } from "./CComponent";
+import { CSettings } from "./CSettings";
 import { ICUE } from "./ICUE";
+import { Smallog } from "./Smallog";
+import { rgbToObj, waitReady } from "./Util";
+import { WEAS } from "./weas/WEAS";
 
 const IMG_SRC = "./img/icue.png";
 
