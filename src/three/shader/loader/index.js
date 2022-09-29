@@ -38,7 +38,8 @@ function parse(loader, source, context, cb) {
  */
 function processImports(loader, source, context, imports, cb, lvl = 0) {
 	// if no imports left, resolve
-	console.log("[GLSLoader] Walking on lvl: " + lvl);
+	if(lvl > 0) 
+		console.log("[GLSLoader] Walking on lvl: " + lvl);
 	if (imports.length === 0) {
 		return cb(null, source);
 	}

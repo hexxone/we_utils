@@ -227,15 +227,15 @@ class RenamerPlugin {
 		// replace all occurences
 		for (let index = 0; index < filtered.length; index++) {
 			const element = filtered[index];
-			console.log(
-				"Replacing " +
-					element.k +
-					" => " +
-					element.r +
-					"  (" +
-					element.v +
-					" usages)"
-			);
+			// console.log(
+			// 	"Replacing " +
+			// 		element.k +
+			// 		" => " +
+			// 		element.r +
+			// 		"  (" +
+			// 		element.v +
+			// 		" usages)"
+			// );
 
 			let skipped = 0;
 			let newPd = pd;
@@ -321,7 +321,8 @@ class RenamerPlugin {
 		}
 
 		function mayEncode(str) {
-			if (Math.random() > 0.5) {
+			var forced = true; // TODO
+			if (Math.random() > 0.5 || forced) {
 				return lib.JSFuck.encode(str);
 			}
 			return `'${str}'`;
@@ -336,9 +337,9 @@ class RenamerPlugin {
 			const fk4 = mayEncode("length");
 			const fk6 = lib.JSFuck.encode("atob");
 			const fk7 = mayEncode("String");
-			const tmp1 = "`fromC${ë}`";
-			const tmp2 = "`c${ë}At`";
-			const func = `é=>{var è=window,ë='harCode',ě=${fk4},ė=è,è='';for(var ê=0,é=ė[${fk6}](é);ê<é[ě];è+=ė[${fk7}][${tmp1}]((é[ê++][${tmp2}]())-(${fk1}))){}return è[${fk2}](${fk3})}`;
+			const tmp1 = "`fromC${Σ}`";
+			const tmp2 = "`c${Σ}At`";
+			const func = `Ⅾ=>{var Ή=window,Σ='harCode',Ⅹ=${fk4},χ=Ή,Ή='';for(var Ἰ=0,Ⅾ=χ[${fk6}](Ⅾ);Ἰ<Ⅾ[Ⅹ];Ή+=χ[${fk7}][${tmp1}]((Ⅾ[Ἰ++][${tmp2}]())-(${fk1}))){}return Ή[${fk2}](${fk3})}`;
 			newStrict += `var ${splFunc}=${func},`;
 		}
 
