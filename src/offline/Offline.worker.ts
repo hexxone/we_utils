@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  *
@@ -23,7 +23,7 @@ const wrk: ServiceWorker = self as any;
 // allowing you to remove outdated cache entries during the update.
 const wName = "[OfflineWorker]";
 const version = "::2.4";
-console.info(wName + "executing.");
+console.info(wName + " executing..");
 
 // The install event fires when the service worker is first installed.
 // You can use this event to prepare the service worker to be able to serve

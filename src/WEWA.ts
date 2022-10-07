@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
@@ -14,52 +14,36 @@ import { WascUtil } from "./wasc-worker/WascUtil";
 
 const LogHead = "[WEWWA] ";
 const DefLang = "de-de";
-const wral = "wallpaperRegisterAudioListener";
-const proj = "project.json";
 
 /**
  * WEWWA
- * <br/>
+ * 
  * Wallpaper Engine Web Wallpaper Adapter
- * <br/>
+ * 
  * This is an aditional TS class to be included in your Typescript/Webpack Wallpaper Engine
  * Web-Wallpaper project - so you can test, run & configure it from a normal web browser.
- * <br/>
+ * 
  * REQUIREMENTS:
- * <br/>
+ * 
  * - HTML5 Browser
- * <br/>
  * - the "project.json" needs to be in the root folder like "index.html"
- * <br/>
  * - this file needs to be included/built in your "index.html"
- * <br/>
- * <br/>
+ * 
+ * 
  * FEATURES:
- * <br/>
+ * 
  * - automatically detecting if the web wallpaper is opened by wallpaper engine or browser
- * <br/>
  * - if opened by wallpaper engine, nothing will happen
- * <br/>
  * - if opened by a browser:
- * <br/>
  *   - use a ServiceWorker to make page always available offline
- * <br/>
  *   - automatically load the "project.json"
- * <br/>
  *   - parse the settings, languages & conditions
- * <br/>
  *   - add respective html elements for each setting type & condition
- * <br/>
  *   - put these elements into an option menu which can be hidden
- * <br/>
  *   - check localStorage for already saved/customized values
- * <br/>
  *   - apply all settings once
- * <br/>
  * - react to changes made in the ui and update them in the wallpaper
- * <br/>
  * - save changes made in the ui to localStorage
- *
  *
  * @todo
  * - inject "audio processing" setting
@@ -73,7 +57,14 @@ const proj = "project.json";
  * @public
  */
 export class WEWWA {
-	private project: any = null;
+
+	private audListener: string;
+	private propListener: string;
+
+	private projectFile: string;
+	private defLang: string;
+
+	private projectData: any = null;
 
 	private htmlMenu: Element = null;
 	private htmlIcon: Element = null;
@@ -94,8 +85,18 @@ export class WEWWA {
 	 * if yes => iniitialize, else => do nothing
 	 * @param {Function} finished Callback for initializing the wallpaper
 	 */
-	constructor(finished) {
-		if (window[wral]) {
+	constructor(
+		audListener = "wallpaperRegisterAudioListener",
+		propListener = "wallpaperPropertyListener",
+		projFile = "project.json", defLang = "de-de",
+		finished?: () => {} | null) {
+
+		this.audListener = audListener;
+		this.propListener = propListener;
+		this.projectFile = projFile;
+		this.defLang = defLang;
+
+		if (window[audListener]) {
 			Smallog.info("detected wallpaper engine => Standby.", LogHead);
 			finished();
 			return;
@@ -104,7 +105,7 @@ export class WEWWA {
 		Smallog.info("wallpaper engine not detected => Init!", LogHead);
 
 		// define audio listener first, so we dont miss when it gets registered.
-		window[wral] = (callback) => {
+		window[audListener] = (callback) => {
 			// set callback to be called later with analysed audio data
 			this.audioCallback = callback;
 			Smallog.info("Registered wallpaper AudioListener.", LogHead);
@@ -115,7 +116,7 @@ export class WEWWA {
 			// make the website available offline using service worker
 			OfflineHelper.register(document.title.replace(" ", "")).then(() => {
 				// continue initializing
-				finished();
+				if (finished !== undefined) finished();
 				this.init();
 
 				// pause and resume on focus events
@@ -131,10 +132,10 @@ export class WEWWA {
 	 * @returns {void}
 	 */
 	private init() {
-		WascUtil.myFetch(proj, "json").then((proj) => {
-			if (proj.type != "web") {
+		WascUtil.myFetch(this.projectFile, "json").then((json) => {
+			if (json.type != "web") {
 				Smallog.error(
-					`Error! Loaded ${proj} is not a web Wallpaper. How did this happen? Aborting...`,
+					`Error! Loaded ${json} is not a web Wallpaper. How did this happen? Aborting...`,
 					LogHead
 				);
 				return;
@@ -142,12 +143,12 @@ export class WEWWA {
 
 			// new NDBG();
 
-			this.project = proj;
+			this.projectData = json;
 			this.loadStorage();
 			this.addStyle();
 			this.addMenu(localStorage.getItem("wewwaLang"));
 			this.evaluateSettings();
-			this.applyProp(proj.general.properties);
+			this.applyProp(json.general.properties);
 		});
 	}
 
@@ -157,15 +158,15 @@ export class WEWWA {
 	 * @returns {void}
 	 */
 	private loadStorage() {
-		const props = this.project.general.properties;
+		const props = this.projectData.general.properties;
 		const last = localStorage.getItem("wewwaLastProps");
 		if (last != null) {
 			const merged = Object.assign(props, JSON.parse(last));
 			merged.audioprocessing = {
-				value: this.project.general.supportsaudioprocessing,
+				value: this.projectData.general.supportsaudioprocessing,
 				type: "hidden",
 			};
-			this.project.general.properties = merged;
+			this.projectData.general.properties = merged;
 			Smallog.debug("Loaded & merged settings.", LogHead);
 		}
 	}
@@ -320,7 +321,7 @@ export class WEWWA {
 		const ce = (e) => document.createElement(e);
 
 		// local vars faster
-		const proj = this.project;
+		const proj = this.projectData;
 		const props = proj.general.properties;
 
 		// create root menu
@@ -704,7 +705,7 @@ export class WEWWA {
 		link.setAttribute(
 			"href",
 			"https://steamcommunity.com/sharedfiles/filedetails/?id=" +
-				proj.workshopid
+			proj.workshopid
 		);
 		link.setAttribute("target", "_blank");
 		link.innerHTML = "<h3>Open Workshop Page</h3>";
@@ -863,7 +864,7 @@ export class WEWWA {
 	 */
 	public setProperty(prop, elm) {
 		// get the type and apply the value
-		const props = this.project.general.properties;
+		const props = this.projectData.general.properties;
 
 		// check for legit setting...
 		if (!props[prop]) {
@@ -939,7 +940,7 @@ export class WEWWA {
 	public evaluateSettings() {
 		// dynamic prefix for evaluation
 		const pre = "wewwaProps";
-		const wewwaProps = this.project.general.properties;
+		const wewwaProps = this.projectData.general.properties;
 
 		localStorage.setItem("wewwaLastProps", JSON.stringify(wewwaProps));
 		for (const p in wewwaProps) {
@@ -1017,7 +1018,7 @@ export class WEWWA {
 	 * @public
 	 */
 	public applyProp(prop) {
-		const wpl = window["wallpaperPropertyListener"];
+		const wpl = window[this.propListener];
 		if (wpl && wpl.applyUserProperties) {
 			wpl.applyUserProperties(prop);
 		}
@@ -1029,7 +1030,7 @@ export class WEWWA {
 	 * @public
 	 */
 	public setPaused(val: boolean) {
-		const wpl = window["wallpaperPropertyListener"];
+		const wpl = window[this.propListener];
 		if (this.isPaused == val) return;
 		if (val && !this.pauseOnUnfocus) return;
 		if (wpl && wpl.setPaused) {
@@ -1058,10 +1059,10 @@ export class WEWWA {
 		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 		return result
 			? [
-					parseInt(result[1], 16) / 255,
-					parseInt(result[2], 16) / 255,
-					parseInt(result[3], 16) / 255,
-			  ].join(" ")
+				parseInt(result[1], 16) / 255,
+				parseInt(result[2], 16) / 255,
+				parseInt(result[3], 16) / 255,
+			].join(" ")
 			: null;
 	}
 
