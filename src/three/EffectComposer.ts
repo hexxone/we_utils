@@ -14,6 +14,7 @@ import {
 	WebGLRenderer,
 	WebGLRenderTarget,
 } from "three.ts/src/";
+
 import { BasePass } from "./pass/BasePass";
 import { RenderPass } from "./pass/RenderPass";
 
@@ -267,7 +268,10 @@ export class EffectComposer {
 			this.renderer.xr.enabled = true;
 		} else {
 			// render default
-			this.camera.rotation.set(0, 0, 0);
+
+			// TODO really needed?
+			// this.camera.rotation.set(0, 0, 0);
+
 			this.renderer.setScissor(0, 0, size.width, size.height);
 			this.renderer.setViewport(0, 0, size.width, size.height);
 			// pass buffers flipped to avoid swap

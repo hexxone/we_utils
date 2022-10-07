@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
@@ -12,7 +12,9 @@ import { CSettings } from "./CSettings";
 import { waitReady } from "./Util";
 import { WEAS } from "./weas/WEAS";
 
-const ELM_ID = "fpstats";
+const Element_Id = "fpstats";
+const Mem_Update_Rate = 19;
+
 
 /**
  * Custom Stats settings
@@ -25,6 +27,7 @@ export class FPSettings extends CSettings {
 
 /**
  * Custom FPS Stats module
+ * 
  * @public
  * @extends {CComponent}
  */
@@ -35,24 +38,33 @@ export class FPStats extends CComponent {
 	// FPS
 	private fpsHolder: HTMLElement;
 	private lastUpdate: number = performance.now();
-	private frameCount = 0;
+	private frameCount = 1;
 	// usage
 	private useHolder: HTMLElement;
 	// cpu
 	private cpuHolder: HTMLElement;
 	private cpuBegin: number = performance.now();
 	private cpuEnd: number = performance.now();
-	private cpuMS = 0;
+	private cpuMS = 1;
 	// gpu
 	private gpuHolder: HTMLElement;
 	private gpuBegin: number = performance.now();
 	private gpuEnd: number = performance.now();
-	private gpuMS = 0;
+	private gpuMS = 1;
 	// audio
 	private auProvider: WEAS = null;
 	private audHolder: HTMLElement;
-	private audioMS = 0;
+	private audioMS = 1;
 	private bpmHolder: HTMLDivElement;
+
+	// memory
+	private memUpdate = 0;
+	private perfMemHolder?: HTMLElement;
+	private gpuMemHolder?: HTMLElement;
+	private domMemHolder?: HTMLElement;
+	private wrkMemHolder?: HTMLElement; // TODO
+
+	// TODO benchmark mode
 
 	/**
 	 * Create hidden element
@@ -76,7 +88,7 @@ export class FPStats extends CComponent {
 	private injectCSS() {
 		const st = document.createElement("style");
 		st.innerHTML = `
-		#${ELM_ID} {
+		#${Element_Id} {
 			opacity: 0;
 			position: fixed;
 			top: 50vh;
@@ -87,7 +99,7 @@ export class FPStats extends CComponent {
 			text-align: left;
 			background: black;
 		}
-		#${ELM_ID}.show {
+		#${Element_Id}.show {
 			opacity: 0.8;
 		}
 		`;
@@ -101,7 +113,7 @@ export class FPStats extends CComponent {
 	private injectHTML() {
 		// root
 		this.container = document.createElement("div");
-		this.container.id = ELM_ID;
+		this.container.id = Element_Id;
 		document.body.append(this.container);
 		// fps
 		this.fpsHolder = document.createElement("div");
@@ -147,6 +159,7 @@ export class FPStats extends CComponent {
 		});
 	}
 
+
 	/**
 	 * Start measuring interval
 	 * @public
@@ -191,15 +204,18 @@ export class FPStats extends CComponent {
 		// calculate
 		const elapsd = (now - this.lastUpdate) / 1000;
 		const efpies = this.frameCount / elapsd;
-		const yusage = (this.cpuMS + this.gpuMS) / 500;
-		const cepeyu = this.cpuMS / this.frameCount;
-		const gepeyu = this.gpuMS / this.frameCount;
+
+		const target = this.getFpsTarget(efpies);
+		const msPerFps = (1000 / target);
+		const cepeyu = this.cpuMS / this.frameCount / msPerFps * 100;
+		const gepeyu = this.gpuMS / this.frameCount / msPerFps * 100;
+		const alluse = (target / efpies) * (cepeyu + gepeyu);
 
 		// apply
-		this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)}`;
-		this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} ms`;
-		this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} ms`;
-		this.useHolder.innerText = `All: ${yusage.toFixed(2)} %`;
+		this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)} / ${target}`;
+		this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} %`;
+		this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} %`;
+		this.useHolder.innerText = `All: ${alluse.toFixed(2)} %`;
 
 		if (this.audHolder)
 			this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
@@ -215,6 +231,11 @@ export class FPStats extends CComponent {
 			this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
 		}
 
+		if (this.memUpdate++ > Mem_Update_Rate) {
+			this.memUpdate = 0;
+			this.updateMemory();
+		}
+
 		this.lastUpdate = now;
 		this.reset();
 	}
@@ -224,6 +245,70 @@ export class FPStats extends CComponent {
 	 * @public
 	 */
 	public reset() {
-		this.frameCount = this.cpuMS = this.gpuMS = this.audioMS = 0;
+		this.frameCount = this.cpuMS = this.gpuMS = this.audioMS = 1;
 	}
+
+
+	private updateMemory() {
+		if (window.crossOriginIsolated && performance["measureUserAgentSpecificMemory"] !== undefined) {
+			performance["measureUserAgentSpecificMemory"]().then(result => {
+				if (result && result.breakdown && result.bytes) {
+					let sum = result.bytes;
+					if (isNaN(sum) || sum <= 0) {
+						console.warn("Invalid performance result: ", result);
+						return;
+					}
+
+					if (!this.perfMemHolder) {
+						this.perfMemHolder = document.createElement("div");
+						this.useHolder.insertAdjacentElement("afterend", this.perfMemHolder);
+					}
+
+					const getDetail = (type: string) =>
+						result.breakdown.find(bd => !!bd && !!bd.types && !!bd.types.includes && bd.types.includes(type)) ?? null
+
+					const addDetail = (gotDetail: any, text: string, gotElement: HTMLElement, insertAfter: HTMLElement) => {
+						if (!!gotDetail && !isNaN(gotDetail.bytes)) {
+							if (!gotElement) {
+								gotElement = document.createElement("div");
+								insertAfter.insertAdjacentElement("afterend", gotElement);
+							}
+							const domMem = gotDetail.bytes;
+							sum -= domMem;
+							gotElement.innerText = `${text}: ${this.formatBytes(domMem)}`;
+						}
+						return gotElement;
+					} 
+
+					this.domMemHolder = addDetail(getDetail("DOM"), "DOM", this.domMemHolder, this.perfMemHolder);
+
+					this.gpuMemHolder = addDetail(getDetail("Canvas"), "VRAM", this.gpuMemHolder, this.perfMemHolder);
+
+
+					this.perfMemHolder.innerText = `RAM: ${this.formatBytes(sum)}`;
+				}
+			}).catch(err => console.error);
+		}
+	}
+
+	private getFpsTarget(current: number) {
+		const margin = current * 0.1;
+		const targets = [600, 480, 360, 240, 144, 120, 90, 75, 60, 30];
+		for (let i = 1; i < targets.length; i++) {
+			if(current > targets[i] + margin)
+				return targets[i - 1];
+		}
+		return 30;
+	}
+
+	private formatBytes(n: number) {
+		const units = ['b', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+		let l = 0;
+		while (n >= 1024 && ++l) {
+			n = n / 1024;
+		}
+		return (n.toFixed(l > 0 ? 2 : 0) + ' ' + units[l]);
+	}
+
+
 }

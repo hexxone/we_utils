@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  *
@@ -17,7 +17,7 @@ const lib = require("./jsfuck.js");
 const { RawSource } = require("webpack-sources");
 
 const validate = require("schema-utils");
-const pluginName = "RenamerPlugin";
+const pluginName = "[RenamerPlugin]";
 
 /**
  * schema for options object
@@ -298,11 +298,11 @@ class RenamerPlugin {
 			// sanity check
 			// @todo bruh
 			if (newPd.match(/\]\][a-zA-Z0-9_]{1,}/)) {
-				console.log("Error double bracket, missing delimiter? ");
+				console.log(pluginName + " Error double bracket, missing delimiter? ");
 				console.log(element);
 			} else {
 				if (skipped > 0)
-					console.log(`Skipped ${skipped} invalid replacements.`);
+					console.log(`${pluginName} Skipped ${skipped} invalid replacements.`);
 				pd = newPd;
 			}
 		}
@@ -363,20 +363,20 @@ class RenamerPlugin {
 			newStrict += `${k}=${val}`;
 		});
 
-		console.log(newStrict);
+		console.log(pluginName + newStrict);
 
 		pd = newStrict + ";" + pd;
 
 		const lengDiff = oldPd.length - pd.length;
 		const expDiff = lengDiff - sum;
 
-		console.log("Replacement complete!");
+		console.log(pluginName + " Replacement complete!");
 		let m = "Actually saved: " + lengDiff + " chars. ";
 		if (expDiff > 0) m += " (" + expDiff + " more than expected)";
 		if (expDiff < 0) m += " (" + Math.abs(expDiff) + " less than expected)";
 		console.log(m);
 		if (lengDiff < 0) {
-			console.log("Did not save any chars! rolling back...");
+			console.log(pluginName + " Did not save any chars! rolling back...");
 			pd = oldPd;
 		}
 
@@ -390,7 +390,7 @@ class RenamerPlugin {
 	 */
 	processString(source) {
 		if (typeof source !== "string") {
-			console.error("Source no string: ", source);
+			console.error(pluginName + " Source no string: ", source);
 			return source;
 		}
 
@@ -412,7 +412,7 @@ class RenamerPlugin {
 	 */
 	processSource(compilation, name, child) {
 		if (child._valueIsBuffer || !child.source) {
-			console.log("Value is Buffer!");
+			console.log(pluginName + " Value is Buffer!");
 			return;
 		}
 		const source = child.source._value;
@@ -423,7 +423,7 @@ class RenamerPlugin {
 			compilation.updateAsset(name, new RawSource(processed));
 			// calculate saved memory
 			const savedChars = source.length - processed.length;
-			console.info("[" + pluginName + "] Saved: " + savedChars + " chars");
+			console.info(pluginName + " Saved: " + savedChars + " chars");
 		}
 	}
 
@@ -436,12 +436,12 @@ class RenamerPlugin {
 	apply(compiler) {
 		compiler.hooks.emit.tap(pluginName, (compilation) => {
 			try {
-				console.info("[" + pluginName + "] Using Regex: " + this.options.regex);
+				console.info(pluginName + " Using Regex: " + this.options.regex);
 
 				// process all compiled .js files
 				for (const assetFile in compilation.assets) {
 					if (!assetFile || !assetFile.endsWith(".js")) continue;
-					console.info("[" + pluginName + "] Processing: " + assetFile);
+					console.info(pluginName + " Processing: " + assetFile);
 
 					// get the processed asset object / source
 					const asset = compilation.getAsset(assetFile);
@@ -456,9 +456,9 @@ class RenamerPlugin {
 				}
 
 				// finish up
-				console.info("[" + pluginName + "] Replaced: ", this.nameMap);
+				console.info(pluginName + " Replaced: ", this.nameMap);
 			} catch (error) {
-				console.info("[" + pluginName + "] Replace error: ", error);
+				console.info(pluginName + " Replace error: ", error);
 			}
 		});
 	}

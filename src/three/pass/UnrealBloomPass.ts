@@ -15,6 +15,7 @@ import {
 	WebGLRenderer,
 	WebGLRenderTarget,
 } from "three.ts/src/";
+
 import { CopyShader } from "../shader/CopyShader";
 import { LuminosityHighPassShader } from "../shader/LuminosityHighPassShader";
 

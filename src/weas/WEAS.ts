@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
@@ -136,6 +136,9 @@ export class WEAS extends CComponent {
 	/** @public transfer buffer (last raw data) */
 	public inBuff = new Float64Array(DAT_LEN);
 
+	// has context been set?
+	initialized = false;
+
 	// web assembly functions
 	weasModule: WascInterface = null;
 
@@ -185,7 +188,7 @@ export class WEAS extends CComponent {
 	private async realInit() {
 		// only listen if wallpaper engine context given
 		if (!window[LISTENAME]) {
-			Smallog.error("'window.wallpaperRegisterAudioListener' not given!");
+			Smallog.warn("'window.wallpaperRegisterAudioListener' not given!");
 			return;
 		}
 		this.init = null;
@@ -203,6 +206,7 @@ export class WEAS extends CComponent {
 
 				this.updateSettings().then(() => {
 					this.registerListener();
+					this.initialized = true;
 					Smallog.debug("WebAssembly Audio provider is ready!");
 				});
 			})
@@ -442,6 +446,7 @@ export class WEAS extends CComponent {
 		if (this.settings.show_canvas) this.updateCanvas();
 
 		return (
+			this.initialized &&
 			this.settings.audioprocessing &&
 			this.lastAudio &&
 			this.lastAudio.silent <= 0 &&
@@ -454,6 +459,8 @@ export class WEAS extends CComponent {
 	 */
 	private updateCanvas() {
 		// update "raw" canvas
+		if(!this.initialized)
+			return;
 
 		// clear the intersection
 		this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);

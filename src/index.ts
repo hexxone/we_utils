@@ -1,3 +1,13 @@
+/**
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2022 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ *
+ */
+
 // Offline-Worker entry-point
 export * from "./offline/OfflineHelper";
 
@@ -5,7 +15,7 @@ export * from "./offline/OfflineHelper";
 export * from "./three";
 
 // Web-AssemblyScript entry-point
-export * from "./wasc-worker";
+export * from "./wasc-worker/";
 
 // basic modules
 export * from "./CSettings";

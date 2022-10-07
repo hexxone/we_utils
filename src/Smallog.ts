@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
@@ -19,13 +19,17 @@ export enum LogLevel {
 	 */
 	Error = 0,
 	/**
+	 * Print warnings and Info
+	 */
+	Warn = 1,
+	/**
 	 * Print error and info messages
 	 */
-	Info = 1,
+	Info = 2,
 	/**
 	 * Print all messages
 	 */
-	Debug = 2,
+	Debug = 3,
 }
 
 /**
@@ -95,6 +99,19 @@ class Smalog {
 		console.error(hdr + msg);
 	}
 
+	/**
+	 * print info message
+	 * @param {string} msg log
+	 * @param {string} hdr overwrite header
+	 * @return {void} nothing
+	 */
+	 warn(msg: string, hdr: string = this.preFix) {
+		if (this.logLevel >= 1) {
+			if (this.printTime) msg = "[" + new Date().toLocaleString() + "] " + msg;
+			if (this.logLevel >= 2) hdr = this.traceCall(hdr);
+			console.warn(hdr + msg);
+		}
+	}
 	/**
 	 * print info message
 	 * @param {string} msg log

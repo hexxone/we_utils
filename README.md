@@ -1,15 +1,14 @@
 # [we_utils](https://github.com/hexxone/we_utils)
 
-### is a collection of utilities, mostly usefull when creating Wallpaper Engine Web Wallpapers with TypeScript / Webpack.
+## A collection of utilities, mostly usefull when creating Wallpaper-Engine Web-Wallpapers with TypeScript & Webpack
 
 I created this repository since I was previously copying back-and-forth lots of code between projects.
 Keeping track of this stuff manually is annoying...
 
-
 ## [Documentation](https://hexxone.github.io/we_utils)
 
-
 ### Dependencies / Libraries
+
 - [TypeScript](https://www.typescriptlang.org/) for typization
 - [three.js](https://threejs.org/) & Examples for webgl rendering
 - [WebAssembly](https://webassembly.org/) for more efficient processing
@@ -17,8 +16,8 @@ Keeping track of this stuff manually is annoying...
 - [wasc-worker](https://github.com/hexxone/wasc-worker) for ez AssemblyScript workers
 - [cookieconsent](https://github.com/osano/cookieconsent) thanks to EU laws
 
-
 ### Features / Contents
+
 - OfflineWorker
 - AssemblyScript Webpack Builder
 - AssemblyScript WebAssembly Module Loader
@@ -33,7 +32,7 @@ Keeping track of this stuff manually is annoying...
 - Worker-Loader definition file
 - Stats.js definition file
 
-
 ### Used by
+
 - [AudiOrbits](https://github.com/hexxone/audiorbits)
 - [ReactiveInk](https://github.com/hexxone/ReactiveInk)

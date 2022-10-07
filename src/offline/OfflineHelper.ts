@@ -2,7 +2,7 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2021 hexxone All rights reserved.
+ * Copyright (c) 2022 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
@@ -11,8 +11,8 @@ import { Smallog } from "../Smallog";
 
 // this should pack the serviceworker like a webwoker.
 
-// import OfflineWorker from "worker-loader!./Offline.worker";
-const OfflineWorker = () => new Worker(new URL("./Offline.worker.js", import.meta.url));
+import OfflineWorker from "worker-loader!./Offline.worker";
+// const OfflineWorker = () => new Worker(new URL(, import.meta.url));
 
 const oh = "[OfflineHelper] ";
 
@@ -36,7 +36,7 @@ const oh = "[OfflineHelper] ";
 // eslint-disable-next-line require-jsdoc
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DontRemove() {
-	return OfflineWorker();
+	return new OfflineWorker();
 }
 
 /**
