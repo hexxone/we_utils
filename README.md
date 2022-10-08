@@ -7,6 +7,10 @@ Keeping track of this stuff manually is annoying...
 
 ## [Documentation](https://hexxone.github.io/we_utils)
 
+## TODO
+
+- fix RenamerPlugin in Prod (Terser Compression)
+
 ### Dependencies / Libraries
 
 - [TypeScript](https://www.typescriptlang.org/) for typization
