@@ -115,3 +115,16 @@ export function sharedWorker(
 	if (iso) bldr = bldr.replace(".wasm", ".shared.wasm");
 	return wascWorker(bldr, memory, iso, options, useWorker);
 }
+
+/**
+ * Checks whether webgl is available in the current browser
+ * @returns {boolean}
+ */
+export function webglSupported() {
+	try {
+		const cvs = document.createElement('canvas');
+		return !!window.WebGLRenderingContext && (cvs.getContext('webgl') || cvs.getContext('experimental-webgl'));
+	} catch (e) {
+		return false;
+	}
+};
