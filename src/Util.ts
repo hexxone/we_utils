@@ -9,7 +9,7 @@
  * @ignore
  */
 
-import { wascWorker } from "./wasc-worker";
+import { wascWorker } from "./wasc-worker/Wasc";
 import { WascInterface } from "./wasc-worker/WascInterface";
 
 // promise resolve queue

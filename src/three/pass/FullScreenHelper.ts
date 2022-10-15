@@ -4,15 +4,13 @@
  * @author hexxone / https://hexx.one
  */
 
-import {
-	Camera,
-	BufferGeometry,
-	Mesh,
-	Material,
-	OrthographicCamera,
-	PlaneBufferGeometry,
-	WebGLRenderer,
-} from "three.ts/src/";
+import { Camera } from "three.ts/src/cameras/Camera";
+import { OrthographicCamera } from "three.ts/src/cameras/OrthographicCamera";
+import { BufferGeometry } from "three.ts/src/core/BufferGeometry";
+import { PlaneBufferGeometry } from "three.ts/src/geometries/PlaneGeometry";
+import { Material } from "three.ts/src/materials/Material";
+import { Mesh } from "three.ts/src/objects/Mesh";
+import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
 
 /**
  * Helper for passes that need to fill the viewport with a single quad.

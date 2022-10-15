@@ -4,15 +4,12 @@
  * @author hexxone / https://hexx.one
  */
 
-import {
-	Camera,
-	Color,
-	Material,
-	Scene,
-	WebGLRenderer,
-	WebGLRenderTarget,
-} from "three.ts/src/";
-
+import { Camera } from "three.ts/src/cameras/Camera";
+import { Material } from "three.ts/src/materials/Material";
+import { Color } from "three.ts/src/math/Color";
+import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
+import { WebGLRenderTarget } from "three.ts/src/renderers/WebGLRenderTarget";
+import { Scene } from "three.ts/src/scenes/Scene";
 import { BasePass } from "./BasePass";
 
 /**

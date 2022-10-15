@@ -39,6 +39,8 @@ function DontRemove() {
 	return new OfflineWorker();
 }
 
+// TODO check if offlinefiles exist before registering
+
 /**
  * @description
  * In order to intercept ALL fetch-requests offline, the scope "/" (root) is required.

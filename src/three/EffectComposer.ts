@@ -4,17 +4,13 @@
  * @author hexxone / https://hexx.one
  */
 
-import {
-	LinearFilter,
-	PerspectiveCamera,
-	Quaternion,
-	RGBAFormat,
-	Scene,
-	Vector2,
-	WebGLRenderer,
-	WebGLRenderTarget,
-} from "three.ts/src/";
-
+import { PerspectiveCamera } from "../three.ts/src/cameras/PerspectiveCamera";
+import { LinearFilter, RGBAFormat } from "../three.ts/src/constants";
+import { Quaternion } from "../three.ts/src/math/Quaternion";
+import { Vector2 } from "../three.ts/src/math/Vector2";
+import { WebGLRenderer } from "../three.ts/src/renderers/WebGLRenderer";
+import { WebGLRenderTarget } from "../three.ts/src/renderers/WebGLRenderTarget";
+import { Scene } from "../three.ts/src/scenes/Scene";
 import { BasePass } from "./pass/BasePass";
 import { RenderPass } from "./pass/RenderPass";
 
