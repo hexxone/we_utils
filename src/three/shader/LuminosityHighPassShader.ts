@@ -8,12 +8,11 @@
  * See LICENSE file in the project root for full license information.
  */
 
-import { Color } from "three.ts/src/";
-
 import { BaseShader } from "./BaseShader";
 
 import vertex from "./vertex/Basic.glsl";
 import fragment from "./fragment/Luminosity.glsl";
+import { Color } from "three.ts/src/math/Color";
 
 /**
  * Luminosity

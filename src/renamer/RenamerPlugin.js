@@ -115,6 +115,12 @@ class RenamerPlugin {
 	 * @return {string} res
 	 */
 	shortenAccessors(pd) {
+		if(typeof pd !== "string") {
+			console.error(`Data is not string: '${typeof pd}'`);
+			return pd;
+		}
+
+
 		// 杀 屠 大 门 安 天
 		const candids = this.shuffle(
 			"職 識 辦 辯 色 特 持 谁 准 彩 就 是 空 虚 纸 张 图 片 末 未 已 己 土 士 干 千 人 入".split(

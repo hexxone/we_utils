@@ -2,20 +2,16 @@
  * @author spidersharma / http://eduperiment.com/
  */
 
-import {
-	AdditiveBlending,
-	Color,
-	LinearFilter,
-	MeshBasicMaterial,
-	RGBAFormat,
-	ShaderMaterial,
-	UniformsUtils,
-	Vector2,
-	Vector3,
-	WebGLRenderer,
-	WebGLRenderTarget,
-} from "three.ts/src/";
 
+import { AdditiveBlending, LinearFilter, RGBAFormat } from "three.ts/src/constants";
+import { MeshBasicMaterial } from "three.ts/src/materials/MeshBasicMaterial";
+import { ShaderMaterial } from "three.ts/src/materials/ShaderMaterial";
+import { Color } from "three.ts/src/math/Color";
+import { Vector2 } from "three.ts/src/math/Vector2";
+import { Vector3 } from "three.ts/src/math/Vector3";
+import { UniformsUtils } from "three.ts/src/renderers/shaders/UniformsUtils";
+import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
+import { WebGLRenderTarget } from "three.ts/src/renderers/WebGLRenderTarget";
 import { CopyShader } from "../shader/CopyShader";
 import { LuminosityHighPassShader } from "../shader/LuminosityHighPassShader";
 

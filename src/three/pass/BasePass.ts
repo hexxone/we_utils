@@ -5,7 +5,8 @@
  * Basic shader pass interface
  */
 
-import { WebGLRenderer, WebGLRenderTarget } from "three.ts/src/";
+import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
+import { WebGLRenderTarget } from "three.ts/src/renderers/WebGLRenderTarget";
 
 export type BasePass = {
 	// child name

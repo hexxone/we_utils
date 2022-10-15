@@ -4,14 +4,11 @@
  * @author hexxone / https://hexx.one
  */
 
-import {
-	ShaderMaterial,
-	UniformsUtils,
-	Vector2,
-	WebGLRenderer,
-	WebGLRenderTarget,
-} from "three.ts/src/";
-
+import { ShaderMaterial } from "three.ts/src/materials/ShaderMaterial";
+import { Vector2 } from "three.ts/src/math/Vector2";
+import { UniformsUtils } from "three.ts/src/renderers/shaders/UniformsUtils";
+import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
+import { WebGLRenderTarget } from "three.ts/src/renderers/WebGLRenderTarget";
 import { BaseShader } from "../shader/BaseShader";
 
 import { BasePass } from "./BasePass";

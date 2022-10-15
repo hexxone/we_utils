@@ -9,7 +9,7 @@
  * @description
  */
 
-import { Vector2 } from "three.ts/src/";
+import { Vector2 } from "three.ts/src/math/Vector2";
 
 import { BaseShader } from "./BaseShader";
 
