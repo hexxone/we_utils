@@ -52,7 +52,7 @@ function DontRemove() {
  *
  * @public
  * @param {string} name - the name of the worker
- * @param {string} worker - the path to the worker
+ * @param {string} worker - the Url to instanitate
  * @param {string} oFile - the path to the offline json file
  * @return {Promise<boolean>} finished
  */
@@ -69,7 +69,7 @@ function register(
 				.then(
 					() => Smallog.info("service-worker registration complete.", oh),
 					(reason) =>
-						Smallog.error("service-worker registration failur: " + reason, oh)
+						Smallog.error("service-worker registration failure: " + reason, oh)
 				)
 				.then(() => resolve(true));
 			return true;
