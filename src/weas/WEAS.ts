@@ -128,7 +128,7 @@ const PropIDs = {
  */
 export class WEAS extends CComponent {
 	/** @public last processed audio object */
-	public lastAudio: WEAudio = null;
+	public lastAudio: WEAudio | undefined;
 
 	/** @public settings object */
 	public settings: WEASettings = new WEASettings();
@@ -168,8 +168,8 @@ export class WEAS extends CComponent {
 
 	/**
 	 * convert float based audio to int
-	 * @param {Array<number>} data
-	 * @return {Array<number>}
+	 * @param {Array<number>} data as
+	 * @return {Array<number>} asd
 	 */
 	private convertAudio(data) {
 		const stereo = [];
@@ -184,6 +184,7 @@ export class WEAS extends CComponent {
 	 * initializes audio processing pipeline
 	 * and starts listening on audio data
 	 * @ignore
+	 * @returns {void}
 	 */
 	private async realInit() {
 		// only listen if wallpaper engine context given
@@ -220,6 +221,7 @@ export class WEAS extends CComponent {
 	/**
 	 * Registers the wallpaper engine audio listener
 	 * @ignore
+	 * @returns {void}
 	 */
 	private registerListener() {
 		// register audio callback on module
@@ -306,6 +308,7 @@ export class WEAS extends CComponent {
 	/**
 	 * Inject preview CSS
 	 * @ignore
+	 * @returns {void}
 	 */
 	private injectCSS() {
 		const st = document.createElement("style");
@@ -334,6 +337,7 @@ export class WEAS extends CComponent {
 	/**
 	 * Inject preview canvas
 	 * @ignore
+	 * @returns {void}
 	 */
 	private injectHTML() {
 		this.mainElm = document.createElement("div");
@@ -369,6 +373,7 @@ export class WEAS extends CComponent {
 	 * @param {ArrayLike<number>} dProps processed properties
 	 * @return {any}
 	 * @ignore
+	 * @returns {void}
 	 */
 	private getProps(dProps: ArrayLike<number>) {
 		const keys = Object.keys(PropIDs);
@@ -456,6 +461,7 @@ export class WEAS extends CComponent {
 
 	/**
 	 * Update the debug canvas
+	 * @returns {void}
 	 */
 	private updateCanvas() {
 		// update "raw" canvas
@@ -521,6 +527,7 @@ export class WEAS extends CComponent {
 	 * Draww Context2 line
 	 * @param {string} style
 	 * @param {number} y
+	 * @returns {void}
 	 */
 	private drawHorizontLine(style, y) {
 		const ctx = this.context2;

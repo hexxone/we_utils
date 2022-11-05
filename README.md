@@ -33,7 +33,6 @@ Keeping track of this stuff manually is annoying...
 - WarnHelper for Seizure warnings
 - Wallpaper Engine iCUE Library (WEICUE)
 - Wallpaper Engine Wallpaper Adapter (WEWWA)
-- Worker-Loader definition file
 - Stats.js definition file
 
 ### Used by
