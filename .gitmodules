@@ -4,3 +4,6 @@
 [submodule "src/three.ts"]
 	path = src/three.ts
 	url = https://github.com/hexxone/three.ts
+[submodule "src/worker-loader-fork"]
+	path = src/worker-loader-fork
+	url = https://github.com/hexxone/worker-loader-fork.git
