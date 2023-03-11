@@ -115,7 +115,7 @@ class RenamerPlugin {
 	 * @return {string} res
 	 */
 	shortenAccessors(pd) {
-		if(typeof pd !== "string") {
+		if (typeof pd !== "string") {
 			console.error(`Data is not string: '${typeof pd}'`);
 			return pd;
 		}
@@ -337,15 +337,21 @@ class RenamerPlugin {
 		let newStrict = "";
 		const keys = Object.keys(globalMap);
 		if (keys.length > 4) {
+			// do some small scr1pt-k1ddy pr0tect1on :)
 			const fk1 = lib.JSFuck.encode(rndOff.toString());
 			const fk2 = mayEncode("split");
 			const fk3 = lib.JSFuck.encode(delim);
 			const fk4 = mayEncode("length");
 			const fk6 = lib.JSFuck.encode("atob");
 			const fk7 = mayEncode("String");
-			const tmp1 = "`fromC${Σ}`";
-			const tmp2 = "`c${Σ}At`";
-			const func = `Ⅾ=>{var Ή=window,Σ='harCode',Ⅹ=${fk4},χ=Ή,Ή='';for(var Ἰ=0,Ⅾ=χ[${fk6}](Ⅾ);Ἰ<Ⅾ[Ⅹ];Ή+=χ[${fk7}][${tmp1}]((Ⅾ[Ἰ++][${tmp2}]())-(${fk1}))){}return Ή[${fk2}](${fk3})}`;
+			const fk8 = lib.JSFuck.encode("har") + `+Δ+` + lib.JSFuck.encode("ode");
+			const fk9 = lib.JSFuck.encode("from");
+			const fk10 = lib.JSFuck.encode("At");
+			const fk11 = lib.JSFuck.encode("C");
+
+			const tmp1 = "`${" + fk9 + "}${Δ}${Σ}`";
+			const tmp2 = "`c${Σ}${" + fk10 + "}`";
+			const func = `Ⅾ=>{var Δ=${fk11},Ή=window,Σ=${fk8},Ⅹ=${fk4},χ=Ή,one='6765742072336b74206b6964646f',Ή=[]+[],α=Ή;for(var Ἰ=0,Ⅾ=χ[${fk6}](Ⅾ);Ἰ<Ⅾ[Ⅹ];Ή+=χ[${fk7}][${tmp1}]((Ⅾ[Ἰ++][${tmp2}]())-(${fk1}))){}return Ή[${fk2}](${fk3})}`;
 			newStrict += `var ${splFunc}=${func},`;
 		}
 
