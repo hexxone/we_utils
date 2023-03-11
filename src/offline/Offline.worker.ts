@@ -43,14 +43,14 @@ wrk.addEventListener("install", function (event: any) {
 		// let's request the files to store in cache
 		fetch(jsonPath)
 			.then((response) => response.json())
-		// after we received the files to store, we open the cache
+			// after we received the files to store, we open the cache
 			.then((data) =>
 				caches
 					.open(wName + version)
-				// then map the array and add one-by-one
+					// then map the array and add one-by-one
 					.then((cache) => data.map((url) => cache.add(url)))
 			)
-		// log success
+			// log success
 			.then(() => console.info(wName + " install completed"))
 	);
 });
@@ -78,10 +78,7 @@ wrk.addEventListener("fetch", function (event: any) {
 		caches.match(event.request).then(async (cached) => {
 			// return immediately if cache successfull
 			if (cached) {
-				console.info(
-					wName + " fetch event(cached): ",
-					event.request.url
-				);
+				console.info(wName + " fetch event(cached): ", event.request.url);
 				return cached;
 			}
 
@@ -90,10 +87,10 @@ wrk.addEventListener("fetch", function (event: any) {
 			if (preload) return preload;
 
 			/**
-             * We copy the response before replying to the network request.
-             * @param {Response} response This will be stored on the ServiceWorker cache.
-             * @return {Response} cached
-             */
+			 * We copy the response before replying to the network request.
+			 * @param {Response} response This will be stored on the ServiceWorker cache.
+			 * @return {Response} cached
+			 */
 			function fetchedFromNetwork(response: Response) {
 				const cacheCopy = response.clone();
 				console.info(
@@ -115,26 +112,26 @@ wrk.addEventListener("fetch", function (event: any) {
 			}
 
 			/**
-             * When this method is called, it means we were unable to produce a response
-             * from either the cache or the network. This is our last opportunity
-             * to produce a meaningful response even when all else fails.
-             * E.g.
-             * - Test the Accept header and then return one of the `offlineFundamentals`
-             * e.g: `return caches.match('/some/cached/image.png')`
-             * - consider the origin. It's easier to decide what "unavailable" means
-             * for requests against your origins than for requests against a third party,
-             * such as an ad provider.
-             * - Generate a Response programmaticaly, as shown below, and return that.
-             * @return {Response} fallback
-             */
+			 * When this method is called, it means we were unable to produce a response
+			 * from either the cache or the network. This is our last opportunity
+			 * to produce a meaningful response even when all else fails.
+			 * E.g.
+			 * - Test the Accept header and then return one of the `offlineFundamentals`
+			 * e.g: `return caches.match('/some/cached/image.png')`
+			 * - consider the origin. It's easier to decide what "unavailable" means
+			 * for requests against your origins than for requests against a third party,
+			 * such as an ad provider.
+			 * - Generate a Response programmaticaly, as shown below, and return that.
+			 * @return {Response} fallback
+			 */
 			function unableToResolve() {
 				console.info(
 					wName + " fetch request failed in both cache and network."
 				);
 				return new Response("Service Unavailable", {
-					"status": 503,
-					"statusText": "Service Unavailable",
-					"headers": new Headers({
+					status: 503,
+					statusText: "Service Unavailable",
+					headers: new Headers({
 						"Content-Type": "text/html",
 					}),
 				});
@@ -143,16 +140,13 @@ wrk.addEventListener("fetch", function (event: any) {
 			// fallback to fetching from network
 			return (
 				fetch(event.request)
-				// We handle the network request with success and failure scenarios.
+					// We handle the network request with success and failure scenarios.
 					.then(fetchedFromNetwork, unableToResolve)
-				// we are done
+					// we are done
 					.then(() =>
-						console.info(
-							wName + " fetch event(networked): ",
-							event.request.url
-						)
+						console.info(wName + " fetch event(networked): ", event.request.url)
 					)
-				// We should catch errors on the fetchedFromNetwork handler as well.
+					// We should catch errors on the fetchedFromNetwork handler as well.
 					.catch(unableToResolve)
 			);
 		})
@@ -177,17 +171,17 @@ wrk.addEventListener("activate", function (event: any) {
 		// This method will resolve an array of available cache keys.
 		caches
 			.keys()
-		// We return a promise that settles when all outdated caches are deleted.
+			// We return a promise that settles when all outdated caches are deleted.
 			.then((keys) =>
 				Promise.all(
 					// Filter by keys that don't start with the latest version prefix.
 					keys
 						.filter((key) => !key.endsWith(version))
-					// Return a promise that's fulfilled when each outdated cache is deleted.
+						// Return a promise that's fulfilled when each outdated cache is deleted.
 						.map((key) => caches.delete(key))
 				)
 			)
-		// completed
+			// completed
 			.then(() => console.info(wName + " activate completed."));
 	});
 

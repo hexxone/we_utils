@@ -26,9 +26,9 @@ export class XRSettings extends CSettings {
 export class XRHelper extends CComponent {
 	public settings: XRSettings = new XRSettings();
 
-	private nav: Navigator;
-	private button: HTMLButtonElement;
-	private currentSession: XRSession;
+	private nav!: Navigator;
+	private button!: HTMLButtonElement;
+	private currentSession: XRSession | undefined;
 
 	/**
 	 * Get typed navigator
@@ -80,7 +80,7 @@ export class XRHelper extends CComponent {
 	 */
 	private async isSupported() {
 		if ("xr" in this.nav) {
-			return await this.nav.xr.isSessionSupported("immersive-vr");
+			return await this.nav.xr?.isSessionSupported("immersive-vr");
 		}
 		return false;
 	}
@@ -92,7 +92,7 @@ export class XRHelper extends CComponent {
 	 * @return {Promise<boolean>} success if VR is available
 	 */
 	public async enableSession(
-		sessionCallback: (xrs: XRSession) => void
+		sessionCallback: (xrs: XRSession | null) => void
 	): Promise<boolean> {
 		return new Promise((resolve) =>
 			// check availability
@@ -121,13 +121,13 @@ export class XRHelper extends CComponent {
 						const sessionInit: XRSessionInit = {
 							optionalFeatures: ["local-floor"],
 						};
-						this.nav.xr.requestSession("immersive-vr", sessionInit).then(
+						this.nav.xr?.requestSession("immersive-vr", sessionInit).then(
 							(sess) => {
 								this.currentSession = sess;
 
 								const lstnr = (/* event*/) => {
-									this.currentSession.removeEventListener("end", lstnr);
-									this.currentSession = null;
+									this.currentSession?.removeEventListener("end", lstnr);
+									this.currentSession = undefined;
 									this.button.textContent = "Enter VR";
 									sessionCallback(null);
 								};
