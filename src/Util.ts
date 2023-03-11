@@ -128,3 +128,14 @@ export function webglSupported() {
 		return false;
 	}
 };
+
+/**
+ * Tries to get the correct inner Window Size (for mobile browser mainly).
+ * This is needed because some mobile browsers include the nav-bar size in the "innerHeight" prop...
+ * @returns Tuple x,y
+ */
+export function getRealWindowSize(): { x: number; y: number } {
+	const realHeight = document.documentElement.clientHeight ?? window.innerHeight;
+	const realWidth = document.documentElement.clientWidth ?? window.innerWidth;
+	return { x: realWidth, y: realHeight };
+}

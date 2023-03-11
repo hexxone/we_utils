@@ -9,7 +9,8 @@
  */
 
 // Offline-Worker entry-point
-export * from "./offline/OfflineHelper";
+// Not exported specifically because including this index.ts would automatically build the worker.
+// export * from "./offline/OfflineHelper";
 
 // custom effects
 export * from "./three";

@@ -10,7 +10,7 @@
 import { CComponent } from "../CComponent";
 import { CSettings } from "../CSettings";
 import { Smallog } from "../Smallog";
-import { sharedWorker, waitReady } from "../Util";
+import { getRealWindowSize, sharedWorker, waitReady } from "../Util";
 import { WascInterface } from "../wasc-worker/WascInterface";
 import { Bea_ts } from "./Bea";
 
@@ -353,12 +353,16 @@ export class WEAS extends CComponent {
 		`;
 		document.body.append(this.mainElm);
 
+
+		const { x: realWidth, y: realHeight } = getRealWindowSize();
+		// TODO should also apply Height ????
+
 		this.canvas1 = document.getElementById("WEASCanvas1") as HTMLCanvasElement;
-		this.canvas1.width = window.innerWidth;
+		this.canvas1.width = realWidth;
 		this.context1 = this.canvas1.getContext("2d");
 
 		this.canvas2 = document.getElementById("WEASCanvas2") as HTMLCanvasElement;
-		this.canvas2.width = window.innerWidth;
+		this.canvas2.width = realWidth;
 		this.context2 = this.canvas2.getContext("2d");
 
 		this.display = document.getElementById("WEASDisplay");
