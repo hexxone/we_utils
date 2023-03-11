@@ -17,21 +17,21 @@ const DefLang = "de-de";
 
 /**
  * WEWWA
- * 
+ *
  * Wallpaper Engine Web Wallpaper Adapter
- * 
+ *
  * This is an aditional TS class to be included in your Typescript/Webpack Wallpaper Engine
  * Web-Wallpaper project - so you can test, run & configure it from a normal web browser.
- * 
+ *
  * REQUIREMENTS:
- * 
+ *
  * - HTML5 Browser
  * - the "project.json" needs to be in the root folder like "index.html"
  * - this file needs to be included/built in your "index.html"
- * 
- * 
+ *
+ *
  * FEATURES:
- * 
+ *
  * - automatically detecting if the web wallpaper is opened by wallpaper engine or browser
  * - if opened by wallpaper engine, nothing will happen
  * - if opened by a browser:
@@ -57,7 +57,6 @@ const DefLang = "de-de";
  * @public
  */
 export class WEWWA {
-
 	private audListener: string;
 	private propListener: string;
 
@@ -83,14 +82,19 @@ export class WEWWA {
 	/**
 	 * Check if we are running in Web-Mode
 	 * if yes => iniitialize, else => do nothing
+	 * @param {string} audListener to register
+	 * @param {string} propListener to register
+	 * @param {string} projFile to register
+	 * @param {string} defLang default languague from project file
 	 * @param {Function} finished Callback for initializing the wallpaper
 	 */
 	constructor(
 		audListener = "wallpaperRegisterAudioListener",
 		propListener = "wallpaperPropertyListener",
-		projFile = "project.json", defLang = "de-de",
-		finished?: () => {} | null) {
-
+		projFile = "project.json",
+		defLang = "en-us",
+		finished?: () => void
+	) {
 		this.audListener = audListener;
 		this.propListener = propListener;
 		this.projectFile = projFile;
@@ -98,7 +102,7 @@ export class WEWWA {
 
 		if (window[audListener]) {
 			Smallog.info("detected wallpaper engine => Standby.", LogHead);
-			finished();
+			if (finished !== undefined) finished();
 			return;
 		}
 
@@ -705,7 +709,7 @@ export class WEWWA {
 		link.setAttribute(
 			"href",
 			"https://steamcommunity.com/sharedfiles/filedetails/?id=" +
-			proj.workshopid
+				proj.workshopid
 		);
 		link.setAttribute("target", "_blank");
 		link.innerHTML = "<h3>Open Workshop Page</h3>";
@@ -1059,10 +1063,10 @@ export class WEWWA {
 		const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
 		return result
 			? [
-				parseInt(result[1], 16) / 255,
-				parseInt(result[2], 16) / 255,
-				parseInt(result[3], 16) / 255,
-			].join(" ")
+					parseInt(result[1], 16) / 255,
+					parseInt(result[2], 16) / 255,
+					parseInt(result[3], 16) / 255,
+			  ].join(" ")
 			: null;
 	}
 
