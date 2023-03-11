@@ -11,7 +11,7 @@ import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
 import { ICUE } from "./ICUE";
 import { Smallog } from "./Smallog";
-import { rgbToObj, waitReady } from "./Util";
+import { getRealWindowSize, rgbToObj, waitReady } from "./Util";
 import { WEAS } from "./weas/WEAS";
 
 const IMG_SRC = "./img/icue.png";
@@ -210,13 +210,12 @@ export class WEICUE extends CComponent {
 	 * @ignore
 	 */
 	private getArea(inPx = false) {
+		const { x: realWidth, y: realHeight } = getRealWindowSize();
 		const sett = this.settings;
-		const wwid = window.innerWidth;
-		const whei = window.innerHeight;
-		const w = (wwid * sett.icue_area_width) / 100;
-		const h = (whei * sett.icue_area_height) / 100;
-		const l = ((wwid - w) * sett.icue_area_xoff) / 100;
-		const t = ((whei - h) * sett.icue_area_yoff) / 100;
+		const w = (realWidth * sett.icue_area_width) / 100;
+		const h = (realHeight * sett.icue_area_height) / 100;
+		const l = ((realWidth - w) * sett.icue_area_xoff) / 100;
+		const t = ((realHeight - h) * sett.icue_area_yoff) / 100;
 		return {
 			width: w + (inPx ? "px" : ""),
 			height: h + (inPx ? "px" : ""),
