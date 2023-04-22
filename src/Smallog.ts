@@ -36,7 +36,7 @@ export enum LogLevel {
  * Small logging util, with name/time prefix & log levels
  */
 class Smalog {
-	logLevel: LogLevel = LogLevel.Debug; // @todo change default logging level
+	logLevel: LogLevel = LogLevel.Info; // @todo change default logging level
 	preFix = "[Smallog] ";
 	printTime = false;
 
@@ -105,7 +105,7 @@ class Smalog {
 	 * @param {string} hdr overwrite header
 	 * @return {void} nothing
 	 */
-	 warn(msg: string, hdr: string = this.preFix) {
+	warn(msg: string, hdr: string = this.preFix) {
 		if (this.logLevel >= 1) {
 			if (this.printTime) msg = "[" + new Date().toLocaleString() + "] " + msg;
 			if (this.logLevel >= 2) hdr = this.traceCall(hdr);

@@ -42,56 +42,93 @@ export function waitReady() {
 }
 
 /**
- * @todo check for rgba errors
- * Convert helper
- * @param {string} r_g_b format: "r g b" where each is float 0-1
+ * Color Convert helper
+ * Support following input formats:
+ * 	- RGB float notation: "r g b"
+ * 	- RGBA float notation: "r g b a"
+ * 	- RGB hex notation: "#RRGGBB"
+ * 	- RGBA hex notation: "#RRGGBBAA"
+ *  - RGB bracket notation: "rgb(r, g, b)"
+ *  - RGBA bracket notation: "rgba(r, g, b, a)"
+ * @param {string} input format: "r g b a" where each is float 0-1, or hex color notation "#RRGGBBAA", or "rgba(r, g, b, a)"
  * @param {number} mlt multiplier (default 255)
  * @return {Object} {r,g,b,a} with float 0-mlt
  */
 export function rgbToObj(
-	r_g_b: string,
+	input: string,
 	mlt = 255
 ): { r: number; g: number; b: number; a: number } {
-	// fix support for rgba strings
-	const brackI = r_g_b.indexOf("(");
-	if (brackI > -1) {
-		r_g_b = r_g_b.substring(brackI + 1, r_g_b.indexOf(")"));
+	const hexRegex = /^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
+
+	if (hexRegex.test(input)) {
+		const hexToDecimal = (hex: string) => parseInt(hex, 16);
+		const r = hexToDecimal(input.slice(1, 3));
+		const g = hexToDecimal(input.slice(3, 5));
+		const b = hexToDecimal(input.slice(5, 7));
+		const a = input.length === 9 ? hexToDecimal(input.slice(7, 9)) : mlt;
+
+		return { r, g, b, a };
 	}
-	// do splitting and multiplying
-	const spl = r_g_b.split(" ") as any[];
+
+	const brackI = input.indexOf("(");
+	if (brackI > -1) {
+		input = input.substring(brackI + 1, input.indexOf(")"));
+	}
+
+	const spl = input.split(/[\s,]+/).map(parseFloat);
 	for (let i = 0; i < spl.length; i++) {
 		spl[i] = isNaN(spl[i]) ? 0 : Math.min(mlt, Math.max(0, spl[i] * mlt));
 	}
+
+	if (spl.length < 4) {
+		spl[3] = mlt;
+	}
+
 	return {
 		r: spl[0] || 0,
 		g: spl[1] || 0,
 		b: spl[2] || 0,
-		a: spl[3] || 1 * mlt,
+		a: spl[3],
 	};
 }
 
 /**
- * Convert helper
- * @param {string} r_g_b format: "r g b" where each is float 0-1
+ * Color Convert helper
+ * Support following input formats:
+ * 	- RGB float notation: "r g b"
+ * 	- RGBA float notation: "r g b a"
+ * 	- RGB hex notation: "#RRGGBB"
+ * 	- RGBA hex notation: "#RRGGBBAA"
+ *  - RGB bracket notation: "rgb(r, g, b)"
+ *  - RGBA bracket notation: "rgba(r, g, b, a)"
+ * @param {string} input format: "r g b a" where each is float 0-1, or hex color notation "#RRGGBBAA", or "rgba(r, g, b, a)"
  * @return {Object} {h,s,l} with float 0-1
  */
-export function rgbToHSL(r_g_b: string): { h: number; s: number; l: number } {
-	const cO = rgbToObj(r_g_b, 1);
-	const ma = Math.max(cO.r, cO.g, cO.b);
-	const mi = Math.min(cO.r, cO.g, cO.b);
+export function rgbToHSL(input: string): { h: number; s: number; l: number } {
+	const colorObject = rgbToObj(input, 1);
+	const r = colorObject.r / 255;
+	const g = colorObject.g / 255;
+	const b = colorObject.b / 255;
+	const ma = Math.max(r, g, b);
+	const mi = Math.min(r, g, b);
 	const hsl = { h: 0, s: 0, l: (mi + ma) / 2 };
 	const t = ma - mi;
-	switch (((hsl.s = hsl.l <= 0.5 ? t / (ma + mi) : t / (2 - ma - mi)), ma)) {
-		case cO.r:
-			hsl.h = (cO.g - cO.b) / t + (cO.g < cO.b ? 6 : 0);
-			break;
-		case cO.g:
-			hsl.h = (cO.b - cO.r) / t + 2;
-			break;
-		case cO.b:
-			hsl.h = (cO.r - cO.g) / t + 4;
+
+	if (t !== 0) {
+		hsl.s = hsl.l <= 0.5 ? t / (ma + mi) : t / (2 - ma - mi);
+		switch (ma) {
+			case r:
+				hsl.h = (g - b) / t + (g < b ? 6 : 0);
+				break;
+			case g:
+				hsl.h = (b - r) / t + 2;
+				break;
+			case b:
+				hsl.h = (r - g) / t + 4;
+		}
+		hsl.h /= 6;
 	}
-	hsl.h /= 6;
+
 	return hsl;
 }
 
@@ -122,12 +159,15 @@ export function sharedWorker(
  */
 export function webglSupported() {
 	try {
-		const cvs = document.createElement('canvas');
-		return !!window.WebGLRenderingContext && (cvs.getContext('webgl') || cvs.getContext('experimental-webgl'));
+		const cvs = document.createElement("canvas");
+		return (
+			!!window.WebGLRenderingContext &&
+			(cvs.getContext("webgl") || cvs.getContext("experimental-webgl"))
+		);
 	} catch (e) {
 		return false;
 	}
-};
+}
 
 /**
  * Tries to get the correct inner Window Size (for mobile browser mainly).
@@ -135,7 +175,8 @@ export function webglSupported() {
  * @returns Tuple x,y
  */
 export function getRealWindowSize(): { x: number; y: number } {
-	const realHeight = document.documentElement.clientHeight ?? window.innerHeight;
+	const realHeight =
+		document.documentElement.clientHeight ?? window.innerHeight;
 	const realWidth = document.documentElement.clientWidth ?? window.innerWidth;
 	return { x: realWidth, y: realHeight };
 }

@@ -33,11 +33,11 @@ export class CComponent {
 	 * will also flag the module as needs-Update.
 	 *
 	 * @public
-	 * @param {Object} key
-	 * @param {Object} value
+	 * @param {Object} key key
+	 * @param {Object} value value
 	 * @return {boolean} found
 	 */
-	public applySetting(key: any, value: any): boolean {
+	public applySetting(key: string, value: any): boolean {
 		let found = this.settings.apply(key, value);
 		if (found) {
 			this.needsUpdate = true;
@@ -55,6 +55,7 @@ export class CComponent {
 	 * will recursively update all needed modules after settings changes
 	 *
 	 * @public
+	 * @return {void}
 	 */
 	public updateAll(): void {
 		this.children.forEach((c) => c.updateAll());
