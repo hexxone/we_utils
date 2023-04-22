@@ -357,7 +357,6 @@ export class WEAS extends CComponent {
 		`;
 		document.body.append(this.mainElm);
 
-
 		const { x: realWidth, y: realHeight } = getRealWindowSize();
 		// TODO should also apply Height ????
 
@@ -469,8 +468,7 @@ export class WEAS extends CComponent {
 	 */
 	private updateCanvas() {
 		// update "raw" canvas
-		if(!this.initialized)
-			return;
+		if (!this.initialized) return;
 
 		// clear the intersection
 		this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
