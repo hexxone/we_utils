@@ -126,7 +126,9 @@ export class XRHelper extends CComponent {
 								this.currentSession = sess;
 
 								const lstnr = (/* event*/) => {
-									this.currentSession?.removeEventListener("end", lstnr);
+									if (this.currentSession) {
+										this.currentSession.removeEventListener("end", lstnr);
+									}
 									this.currentSession = undefined;
 									this.button.textContent = "Enter VR";
 									sessionCallback(null);

@@ -13,7 +13,7 @@ import { waitReady } from "./Util";
 import { WascUtil } from "./wasc-worker/WascUtil";
 
 const LogHead = "[WEWWA] ";
-const DefLang = "de-de";
+const DefLang = "en-us";
 
 /**
  * WEWWA
@@ -82,18 +82,18 @@ export class WEWWA {
 	/**
 	 * Check if we are running in Web-Mode
 	 * if yes => iniitialize, else => do nothing
+	 * @param {Function} finished Callback for initializing the wallpaper
 	 * @param {string} audListener to register
 	 * @param {string} propListener to register
 	 * @param {string} projFile to register
 	 * @param {string} defLang default languague from project file
-	 * @param {Function} finished Callback for initializing the wallpaper
 	 */
 	constructor(
+		finished: () => void = undefined,
 		audListener = "wallpaperRegisterAudioListener",
 		propListener = "wallpaperPropertyListener",
 		projFile = "project.json",
-		defLang = "en-us",
-		finished?: () => void
+		defLang = DefLang
 	) {
 		this.audListener = audListener;
 		this.propListener = propListener;
