@@ -16,6 +16,7 @@ import { RenderPass } from "./pass/RenderPass";
 
 /**
  * render shader chain
+ * // TODO move to three.ts ??
  * @public
  */
 export class EffectComposer {
