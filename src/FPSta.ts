@@ -12,8 +12,8 @@ import { CSettings } from "./CSettings";
 import { waitReady } from "./Util";
 import { WEAS } from "./weas/WEAS";
 
-const Element_Id = "fpstats";
-const Mem_Update_Rate = 19;
+const ElementId = "fpstats";
+const MemUpdateRate = 19;
 
 
 /**
@@ -35,22 +35,27 @@ export class FPStats extends CComponent {
 	public settings: FPSettings = new FPSettings();
 
 	private container: HTMLElement;
+
 	// FPS
 	private fpsHolder: HTMLElement;
 	private lastUpdate: number = performance.now();
 	private frameCount = 1;
+
 	// usage
 	private useHolder: HTMLElement;
+
 	// cpu
 	private cpuHolder: HTMLElement;
 	private cpuBegin: number = performance.now();
 	private cpuEnd: number = performance.now();
 	private cpuMS = 1;
+
 	// gpu
 	private gpuHolder: HTMLElement;
 	private gpuBegin: number = performance.now();
 	private gpuEnd: number = performance.now();
 	private gpuMS = 1;
+
 	// audio
 	private auProvider: WEAS = null;
 	private audHolder: HTMLElement;
@@ -88,7 +93,7 @@ export class FPStats extends CComponent {
 	private injectCSS() {
 		const st = document.createElement("style");
 		st.innerHTML = `
-		#${Element_Id} {
+		#${ElementId} {
 			opacity: 0;
 			position: fixed;
 			top: 50vh;
@@ -99,7 +104,7 @@ export class FPStats extends CComponent {
 			text-align: left;
 			background: black;
 		}
-		#${Element_Id}.show {
+		#${ElementId}.show {
 			opacity: 0.8;
 		}
 		`;
@@ -113,17 +118,17 @@ export class FPStats extends CComponent {
 	private injectHTML() {
 		// root
 		this.container = document.createElement("div");
-		this.container.id = Element_Id;
+		this.container.id = ElementId;
 		document.body.append(this.container);
 		// fps
 		this.fpsHolder = document.createElement("div");
-		this.fpsHolder.innerText = "FPS: 0";
+		this.fpsHolder.innerText = "FPS: 0 / 60";
 		// cpu
 		this.cpuHolder = document.createElement("div");
-		this.cpuHolder.innerText = "CPU: 0.00 ms";
+		this.cpuHolder.innerText = "CPU: 0.00%";
 		// gpu
 		this.gpuHolder = document.createElement("div");
-		this.gpuHolder.innerText = "GPU: 0.00 ms";
+		this.gpuHolder.innerText = "GPU: 0.00%";
 		// usage
 		this.useHolder = document.createElement("div");
 		this.useHolder.innerText = "All: 0.00%";
@@ -231,7 +236,7 @@ export class FPStats extends CComponent {
 			this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
 		}
 
-		if (this.memUpdate++ > Mem_Update_Rate) {
+		if (this.memUpdate++ > MemUpdateRate) {
 			this.memUpdate = 0;
 			this.updateMemory();
 		}
