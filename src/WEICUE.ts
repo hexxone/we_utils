@@ -7,9 +7,9 @@
  * See LICENSE file in the project root for full license information.
  */
 
+import { ICUE } from "./@types/we-icue";
 import { CComponent } from "./CComponent";
 import { CSettings } from "./CSettings";
-import { ICUE } from "./ICUE";
 import { Smallog } from "./Smallog";
 import { getRealWindowSize, rgbToObj, waitReady } from "./Util";
 import { WEAS } from "./weas/WEAS";
@@ -54,17 +54,17 @@ export class WEICUE extends CComponent {
 	private cue: ICUE;
 	private weas: WEAS;
 
-	private holder: HTMLDivElement = null;
-	private texter: HTMLDivElement = null;
-	private preview: HTMLDivElement = null;
-	private helperCanvas: HTMLCanvasElement = null;
-	private helperContext: CanvasRenderingContext2D = null;
+	private holder?: HTMLDivElement = undefined;
+	private texter?: HTMLDivElement = undefined;
+	private preview?: HTMLDivElement = undefined;
+	private helperCanvas?: HTMLCanvasElement = undefined;
+	private helperContext?: CanvasRenderingContext2D = undefined;
 
 	private icueDevices = [];
-	private icueInterval = null;
+	private icueInterval = undefined;
 
 	// preview time out
-	private prevTimeout = null;
+	private prevTimeout?: NodeJS.Timeout = undefined;
 
 	// runtime values
 	public settings: CUESettings = new CUESettings();
@@ -319,7 +319,7 @@ export class WEICUE extends CComponent {
 		// reset timeout?
 		if (this.prevTimeout) {
 			clearTimeout(this.prevTimeout);
-			this.prevTimeout = null;
+			this.prevTimeout = undefined;
 		}
 		// update / show preview
 		if (this.isAvailable && this.preview && this.settings.icue_mode == 1) {

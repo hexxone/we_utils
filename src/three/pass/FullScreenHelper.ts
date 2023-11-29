@@ -18,11 +18,11 @@ import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
  * @public
  */
 export class FullScreenHelper {
-	private _mat = null;
+	private readonly _mat: Material;
 
-	public camera: Camera = null;
-	public geometry: BufferGeometry = null;
-	public mesh: Mesh = null;
+	public readonly camera: Camera;
+	public readonly geometry: BufferGeometry;
+	public readonly mesh: Mesh;
 
 	/**
 	 * instantiate

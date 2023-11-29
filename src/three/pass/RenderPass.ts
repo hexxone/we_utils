@@ -16,39 +16,37 @@ import { BasePass } from "./BasePass";
  * Shader Render Helper
  */
 export class RenderPass implements BasePass {
-	name = "RenderPass";
-	enabled = true;
-	needsSwap = true;
+	private readonly scene: Scene;
+	private readonly camera: Camera;
+	private readonly overMat?: Material;
 
-	clear = true;
+	public clearColor: Color = undefined;
+	public clearAlpha: number = undefined;
 
-	clearColor: Color = null;
+	public name = "RenderPass";
+	public enabled = true;
+	public needsSwap = true;
 
-	clearAlpha: number = null;
-	clearDepth = false;
-
-	scene: Scene = null;
-	camera: Camera = null;
-	overMat: Material = null;
+	public clear = true;
+	public clearDepth = false;
 
 	/**
 	 * Construct helper
 	 * @param {Scene} scene Scene
 	 * @param {Camera} camera Camera
-	 * @param {Material} overMat Override material
+	 * @param {Material} overMat optional Override material
 	 * @param {Color} clearColor Clear color
 	 * @param {number} clearAlpha Clear alpha
 	 */
 	constructor(
 		scene: Scene,
 		camera: Camera,
-		overMat: Material,
-		clearColor?,
+		overMat?: Material,
+		clearColor?: Color,
 		clearAlpha?: number
 	) {
 		this.scene = scene;
 		this.camera = camera;
-
 		this.overMat = overMat;
 
 		this.clearColor = clearColor;
