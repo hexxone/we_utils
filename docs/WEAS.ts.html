@@ -1,0 +1,540 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> WEAS.ts</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    API Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="BlendShader.html">BlendShader</a></li><li><a href="BlurShader.html">BlurShader</a></li><li><a href="CComponent.html">CComponent</a></li><li><a href="ChromaticShader.html">ChromaticShader</a></li><li><a href="CopyShader.html">CopyShader</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="EffectComposer.html">EffectComposer</a></li><li><a href="FPSettings.html">FPSettings</a></li><li><a href="FPStats.html">FPStats</a></li><li><a href="FractalMirrorShader.html">FractalMirrorShader</a></li><li><a href="FullScreenHelper.html">FullScreenHelper</a></li><li><a href="FXAAShader.html">FXAAShader</a></li><li><a href="LuminosityHighPassShader.html">LuminosityHighPassShader</a></li><li><a href="LUTShader.html">LUTShader</a></li><li><a href="LUTShaderNearest.html">LUTShaderNearest</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="RenamerPlugin.html">RenamerPlugin</a></li><li><a href="RenderPass.html">RenderPass</a></li><li><a href="ShaderPass.html">ShaderPass</a></li><li><a href="Smalog.html">Smalog</a></li><li><a href="UnrealBloomPass.html">UnrealBloomPass</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li><li><a href="XRHelper.html">XRHelper</a></li><li><a href="XRSettings.html">XRSettings</a></li></ul><h3>Interfaces</h3><ul><li><a href="BasePass.html">BasePass</a></li><li><a href="BaseShader.html">BaseShader</a></li><li><a href="ICUE.html">ICUE</a></li><li><a href="WEAudio.html">WEAudio</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#PropIDs">PropIDs</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#rgbToHSL">rgbToHSL</a></li><li><a href="global.html#rgbToObj">rgbToObj</a></li><li><a href="global.html#SettIDs">SettIDs</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>WEAS.ts</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* @author hexxone / https://hexx.one
+*
+* @license
+* Copyright (c) 2021 hexxone All rights reserved.
+* Licensed under the GNU GENERAL PUBLIC LICENSE.
+* See LICENSE file in the project root for full license information.
+*/
+
+import {CComponent} from './CComponent';
+import {CSettings} from './CSettings';
+import {waitReady} from './Util';
+import {Smallog} from './Smallog';
+
+import {wascWorker, WascInterface} from './wasc-worker';
+
+const DAT_LEN = 128;
+
+/**
+* Audio processing settings
+* @public
+* @extends {CSettings}
+*/
+export class WEASettings extends CSettings {
+	debugging: boolean = false;
+	/** do audio processing? */
+	audioprocessing: boolean = true;
+	// do pink-noise processing?
+	equalize: boolean = true;
+	// convert to mono?
+	mono_audio: boolean = true;
+	// invert low &amp; high freqs?
+	audio_direction: number = 0;
+	// peak filtering
+	peak_filter: number = 1;
+	// neighbour-smoothing value
+	value_smoothing: number = 2;
+	// time-value smoothing ratio
+	audio_increase: number = 75;
+	audio_decrease: number = 25;
+	// multipliers
+	treble_multiplier: number = 0.5;
+	mids_multiplier: number = 0.75;
+	bass_multiplier: number = 1.8;
+	// ignore value leveling for "silent" data
+	minimum_volume: number = 0.005;
+	// use low latency audio?
+	low_latency: boolean = false;
+	// show debug rendering?
+	show_canvas: boolean = true;
+}
+
+/**
+* Processed audio data representation
+* @public
+*/
+export interface WEAudio {
+	time: number;
+	ellapsed: number;
+	data: Float64Array;
+	bass: number;
+	mids: number;
+	highs: number;
+	sum: number;
+	min: number;
+	max: number;
+	average: number;
+	range: number;
+	silent: number;
+	intensity: number;
+}
+
+/**
+* @public
+*/
+const SettIDs = {
+	equalize: 0,
+	mono_audio: 1,
+	audio_direction: 2,
+	peak_filter: 3,
+	value_smoothing: 4,
+	audio_increase: 5,
+	audio_decrease: 6,
+	treble_multiplier: 7,
+	mids_multiplier: 8,
+	bass_multiplier: 9,
+	minimum_volume: 10,
+};
+
+/**
+* @public
+*/
+const PropIDs = {
+	bass: 0,
+	mids: 1,
+	highs: 2,
+	sum: 3,
+	min: 4,
+	max: 5,
+	average: 6,
+	range: 7,
+	silent: 8,
+	intensity: 9,
+};
+
+/**
+* WEAS
+* &lt;br/>
+* Wallpaper Engine Audio Supplier makes working with audio easier.
+* &lt;br/>
+* It will automatically start to receive and process the audio data
+* which can then be accessed on the global object.
+* &lt;br/>
+* DEPENDS ON:
+* &lt;br/>
+* - Wallpaper Engine Web Wallpaper environment
+* &lt;br/>
+* - audio-processing supported web wallpaper
+* @public
+* @extends {CComponent}
+*/
+export class WEAS extends CComponent {
+	/** @public last processed audio object */
+	public lastAudio: WEAudio = null;
+
+	/** @public settings object */
+	public settings: WEASettings = new WEASettings();
+
+	/** @public transfer buffer (last raw data) */
+	public inBuff = new Float64Array(DAT_LEN);
+
+	// web assembly functions
+	private weasModule: WascInterface = null;
+
+	// debug render elements
+	private mainElm: HTMLDivElement;
+	private canvas1: HTMLCanvasElement;
+	private context1: CanvasRenderingContext2D;
+	private canvas2: HTMLCanvasElement;
+	private context2: CanvasRenderingContext2D;
+	private display: HTMLElement;
+
+	/**
+	* delay audio initialization until page ready
+	*/
+	constructor() {
+		super();
+		waitReady().then(() => this.realInit());
+	}
+
+	/**
+	* initializes audio processing pipeline
+	* and starts listening on audio data
+	* @ignore
+	*/
+	private async realInit() {
+		// only listen if wallpaper engine context given
+		if (!window['wallpaperRegisterAudioListener']) {
+			Smallog.info('\'window.wallpaperRegisterAudioListener\' not given!');
+			return;
+		}
+
+		this.injectCSS();
+		this.injectHTML();
+
+		this.weasModule = await wascWorker('WEAS.wasm', 4096, {}, !this.settings.low_latency);
+
+		// assert
+		if (this.weasModule) Smallog.debug('Got Audio provider!');
+		else {
+			Smallog.error('Could not create WebAssembly Audio provider! [Null-Object]');
+			return;
+		}
+
+		// pass settings to module
+		await this.updateSettings();
+
+		const {run} = this.weasModule;
+		const self = this;
+
+		// register audio callback on module
+		window['wallpaperRegisterAudioListener']((audioArray) => {
+			// Smallog.debug('Get Audio Data!');
+			// check basic
+			if (!self.settings.audioprocessing || audioArray == null || audioArray.length != DAT_LEN) {
+				Smallog.error('audioListener: received invalid audio data array: ' + JSON.stringify([audioArray.length || null, audioArray]));
+				return;
+			}
+			// check nulls
+			let consecutiveNull = 0;
+			for (let i = 1; i &lt; 18; i++) {
+				const aA = audioArray[i * 2];
+				if (aA == 0.0) consecutiveNull++;
+				else consecutiveNull = 0;
+				if (consecutiveNull > 16) {
+					Smallog.debug('Skipping received Null data!: ' + JSON.stringify(audioArray));
+					return;
+				}
+			}
+
+			// prepare data
+			const start = performance.now();
+			self.inBuff.set(audioArray);
+
+			// WRAP IN isolated Function ran inside worker
+			run(({module, instance, exports, params}) => {
+				const ex = instance.exports as any;
+				const {data} = params[0];
+				const arrData = new Float64Array(data);
+
+				// set audio data directly in module memory
+				exports.__getFloat64ArrayView(ex.inputData).set(arrData);
+				// trigger processing processing
+				ex.update();
+				// get copy of updated Data &amp; Properties
+				const r = { // => result
+					data: new Float64Array(exports.__getFloat64ArrayView(ex.outputData)).buffer,
+					props: new Float64Array(exports.__getFloat64ArrayView(ex.audioProps)).buffer,
+				};
+				return r;
+			}, // params passed to worker
+			{
+				data: self.inBuff.buffer,
+			})
+			// worker result, back in main context
+				.then((result) => {
+					const {data, props} = result;
+					const arrData = new Float64Array(data);
+					const arrProps = new Float64Array(props);
+
+					const realProps = self.getProps(arrProps);
+					const teim = performance.now() - start;
+					// apply actual last Data from worker
+					self.lastAudio = {
+						time: start,
+						ellapsed: teim,
+						data: arrData,
+						...realProps,
+					} as any;
+				// print info
+				// Smallog.debug('Got Data from Worker! Time= ' + teim + ', Data= ' + JSON.stringify(realProps));
+				});
+		});
+	}
+
+	/**
+	* Inject preview CSS
+	* @ignore
+	*/
+	private injectCSS() {
+		const st = document.createElement('style');
+		st.innerHTML = `
+		#weas-preview {
+			opacity: 0;
+			position: absolute;
+			z-index: 2;
+			background: #000000aa;
+		}
+		#weas-preview canvas {
+			background: none;
+			border: white 2px dotted;
+		}
+		#weas-preview.show {
+			opacity: 1;
+		}
+		`;
+		document.head.append(st);
+	}
+
+	/**
+	* Inject preview canvas
+	* @ignore
+	*/
+	private injectHTML() {
+		this.mainElm = document.createElement('div');
+		this.mainElm.id = 'weas-preview';
+		this.mainElm.innerHTML = `
+		&lt;div style="font-size: 300%">
+		&lt;span>Raw Data:&lt;/span>
+		&lt;br />
+		&lt;span style="float:left">Left&lt;/span>
+		&lt;span style="float:right">Right&lt;/span>
+		&lt;canvas id="WEASCanvas1" style="height: 30vh; width: 95%;">&lt;/canvas>
+		&lt;span>Processed:&lt;/span>
+		&lt;/div>
+		&lt;span id="WEASDisplay">&lt;/span>
+		&lt;br />
+		&lt;canvas id="WEASCanvas2" style="height: 30vh; width: 95%;">&lt;/canvas>
+		`;
+		document.body.append(this.mainElm);
+
+		this.canvas1 = (document.getElementById('WEASCanvas1') as HTMLCanvasElement);
+		this.canvas1.width = window.innerWidth;
+		this.context1 = this.canvas1.getContext('2d');
+
+		this.canvas2 = (document.getElementById('WEASCanvas2') as HTMLCanvasElement);
+		this.canvas2.width = window.innerWidth;
+		this.context2 = this.canvas2.getContext('2d');
+
+		this.display = document.getElementById('WEASDisplay');
+	}
+
+	/**
+	* converts calculated output property number-array to string-associative-array
+	* @param {ArrayLike&lt;number>} dProps processed properties
+	* @return {Object}
+	* @ignore
+	*/
+	private getProps(dProps: ArrayLike&lt;number>) {
+		const keys = Object.keys(PropIDs);
+		const res = {};
+		for (let index = 0; index &lt; keys.length; index++) {
+			const key = keys[index];
+			res[key] = dProps[PropIDs[key]];
+		}
+		return res;
+	}
+
+	/**
+	* !! CAVEAT: only available after init and module load !!
+	* &lt;br/>
+	* Will send the processing settings to the WebAssembly module
+	* @public
+	* @return {Promise} finished event
+	*/
+	public updateSettings(): Promise&lt;void> {
+		if (!this.weasModule) return;
+
+		// show or hide debug info
+		if (this.settings.debugging) {
+			if (!this.mainElm.classList.contains('show')) {
+				this.mainElm.classList.add('show');
+			}
+		} else {
+			this.mainElm.classList.remove('show');
+		}
+
+		const {run} = this.weasModule;
+
+		return new Promise((resolve) => {
+			const keys = Object.keys(SettIDs);
+			const sett = new Float64Array(keys.length);
+			for (let index = 0; index &lt; keys.length; index++) {
+				const key = keys[index];
+				sett[SettIDs[key]] = this.settings[key] || 0;
+			}
+
+			// isolated Function running inside worker
+			run(({module, instance, exports, params}) => {
+				const ex = instance.exports as any;
+				const {data} = params[0];
+				const arrDat = new Float64Array(data);
+				exports.__getFloat64ArrayView(ex.audioSettings).set(arrDat);
+			},
+			// Data passed to worker
+			{
+				data: sett.buffer,
+			})
+			// Back to main context
+				.then(() => {
+					Smallog.debug('Sent Settings to WEAS: ' + JSON.stringify(sett));
+					resolve();
+				});
+		});
+	}
+
+	/**
+	* @return {boolean} false if:
+	* &lt;br/>
+	* - processing is disabled
+	* &lt;br/>
+	* - there is no data
+	* &lt;br/>
+	* - the data is silent
+	* &lt;br/>
+	* - data is too old (> 3s)
+	* @public
+	*/
+	public hasAudio() {
+		if (this.settings.show_canvas) this.updateCanvas();
+
+		return this.settings.audioprocessing &amp;&amp;
+		this.lastAudio &amp;&amp; this.lastAudio.silent == 0 &amp;&amp;
+		(performance.now() - this.lastAudio.time &lt; 3000);
+	}
+
+	/**
+	* Update the debug canvas
+	*/
+	private updateCanvas() {
+		// update "raw" canvas
+
+		// clear the intersection
+		this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
+		this.context1.fillStyle = 'rgb(255,0,0)';
+		const barWidth = Math.round(1.0 / this.inBuff.length * this.canvas1.width);
+		const halfCount = this.inBuff.length / 2;
+		for (let i = 0; i &lt; halfCount; ++i) {
+			const height = this.canvas1.height * this.inBuff[i] / 2;
+			this.context1.fillRect(barWidth * i, this.canvas1.height - height, barWidth, height);
+		}
+		this.context1.fillStyle = 'rgb(0,0,255)';
+		for (let i = halfCount; i &lt; this.inBuff.length; ++i) {
+			const height = this.canvas1.height * this.inBuff[191 - i] / 2;
+			this.context1.fillRect(barWidth * i, this.canvas1.height - height, barWidth, height);
+		}
+
+		// update "processed" data
+		const tmpData = Object.assign({}, this.lastAudio);
+		tmpData.data = null;
+		this.display.innerText = JSON.stringify(tmpData, null, '\t');
+
+		// update "processed" canvas
+		this.context2.clearRect(0, 0, this.canvas2.width, this.canvas2.height);
+
+		if (this.lastAudio &amp;&amp; this.lastAudio.data) {
+			this.context2.fillStyle = 'rgb(0,255,0)';
+			for (let index = 0; index &lt; this.lastAudio.data.length; index++) {
+				const height = this.canvas1.height * this.lastAudio.data[index] / 2;
+				this.context2.fillRect(barWidth * index, this.canvas1.height - height, barWidth, height);
+			}
+		}
+	}
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by 
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+</body>
+</html>

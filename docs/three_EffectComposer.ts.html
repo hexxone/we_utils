@@ -1,0 +1,430 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title> three/EffectComposer.ts</title>
+
+  <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="./build/entry.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:100,400,700|Inconsolata,700" rel="stylesheet">
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+  <link type="text/css" rel="stylesheet" href="https://jmblog.github.io/color-themes-for-google-code-prettify/themes/tomorrow-night.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/app.min.css">
+  <link type="text/css" rel="stylesheet" href="styles/iframe.css">
+  <link type="text/css" rel="stylesheet" href="">
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+  
+</head>
+
+
+
+<body class="layout small-header">
+    <div id="stickyNavbarOverlay"></div>
+    
+
+<div class="top-nav">
+    <div class="inner">
+        <a id="hamburger" role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+        <div class="logo">
+            
+            
+        </div>
+        <div class="menu">
+            
+            <div class="navigation">
+                <a
+                    href="index.html"
+                    class="link"
+                >
+                    API Documentation
+                </a>
+                
+                
+                
+            </div>
+        </div>
+    </div>
+</div>
+    <div id="main">
+        <div
+            class="sidebar "
+            id="sidebarNav"
+        >
+            
+            <nav>
+                
+                    <h2><a href="index.html">Documentation</a></h2><div class="category"><h3>Classes</h3><ul><li><a href="BlendShader.html">BlendShader</a></li><li><a href="BlurShader.html">BlurShader</a></li><li><a href="CComponent.html">CComponent</a></li><li><a href="ChromaticShader.html">ChromaticShader</a></li><li><a href="CopyShader.html">CopyShader</a></li><li><a href="CSettings.html">CSettings</a></li><li><a href="CUESettings.html">CUESettings</a></li><li><a href="EffectComposer.html">EffectComposer</a></li><li><a href="FPSettings.html">FPSettings</a></li><li><a href="FPStats.html">FPStats</a></li><li><a href="FractalMirrorShader.html">FractalMirrorShader</a></li><li><a href="FullScreenHelper.html">FullScreenHelper</a></li><li><a href="FXAAShader.html">FXAAShader</a></li><li><a href="LuminosityHighPassShader.html">LuminosityHighPassShader</a></li><li><a href="LUTShader.html">LUTShader</a></li><li><a href="LUTShaderNearest.html">LUTShaderNearest</a></li><li><a href="OfflinePlugin.html">OfflinePlugin</a></li><li><a href="ReloadHelper.html">ReloadHelper</a></li><li><a href="ReloadSettings.html">ReloadSettings</a></li><li><a href="RenamerPlugin.html">RenamerPlugin</a></li><li><a href="RenderPass.html">RenderPass</a></li><li><a href="ShaderPass.html">ShaderPass</a></li><li><a href="Smalog.html">Smalog</a></li><li><a href="UnrealBloomPass.html">UnrealBloomPass</a></li><li><a href="WarnHelper.html">WarnHelper</a></li><li><a href="WarnSettings.html">WarnSettings</a></li><li><a href="WEAS.html">WEAS</a></li><li><a href="WEASettings.html">WEASettings</a></li><li><a href="WEICUE.html">WEICUE</a></li><li><a href="WEWWA.html">WEWWA</a></li><li><a href="XRHelper.html">XRHelper</a></li><li><a href="XRSettings.html">XRSettings</a></li></ul><h3>Interfaces</h3><ul><li><a href="BasePass.html">BasePass</a></li><li><a href="BaseShader.html">BaseShader</a></li><li><a href="ICUE.html">ICUE</a></li><li><a href="WEAudio.html">WEAudio</a></li></ul><h3>Global</h3><ul><li><a href="global.html#getAllFiles">getAllFiles</a></li><li><a href="global.html#LogLevel">LogLevel</a></li><li><a href="global.html#LogLevel%255Bundefined%255D">LogLevel[undefined]</a></li><li><a href="global.html#offlineSchema">offlineSchema</a></li><li><a href="global.html#PropIDs">PropIDs</a></li><li><a href="global.html#register">register</a></li><li><a href="global.html#reset">reset</a></li><li><a href="global.html#rgbToHSL">rgbToHSL</a></li><li><a href="global.html#rgbToObj">rgbToObj</a></li><li><a href="global.html#SettIDs">SettIDs</a></li><li><a href="global.html#waitReady">waitReady</a></li></ul></div>
+                
+            </nav>
+        </div>
+        <div class="core" id="main-content-wrapper">
+            <div class="content">
+                <header class="page-title">
+                    <p>Source</p>
+                    <h1>three/EffectComposer.ts</h1>
+                </header>
+                
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+* @author alteredq / http://alteredqualia.com/
+*
+* @author hexxone / https://hexx.one
+*/
+
+import {LinearFilter, PerspectiveCamera, Quaternion, RGBAFormat, Scene, Vector2, WebGLRenderer, WebGLRenderTarget, XRFrame} from 'three';
+import {BasePass} from './pass/BasePass';
+import {RenderPass} from './pass/RenderPass';
+import {ShaderPass} from './pass/ShaderPass';
+
+const defaultParams = {
+	minFilter: LinearFilter,
+	magFilter: LinearFilter,
+	format: RGBAFormat,
+	stencilBuffer: false,
+};
+
+/**
+* render shader chain
+* @public
+*/
+export class EffectComposer {
+	// given on construct
+	private scene: Scene;
+	private camera: PerspectiveCamera;
+	private renderer: WebGLRenderer;
+	private globalPrecision: string;
+
+	// runtime
+	private viewSize: Vector2;
+	private previousFrame = Date.now();
+
+	// target &amp; origin buffers
+	private defaultTarget: WebGLRenderTarget;
+
+	private renderWrite: WebGLRenderTarget;
+	private writeBuffer: WebGLRenderTarget;
+
+	private renderRead: WebGLRenderTarget;
+	private readBuffer: WebGLRenderTarget;
+
+	// render passes
+	private normPass: RenderPass;
+	private xrPass: RenderPass;
+	private xrCam = new PerspectiveCamera();
+
+	// public
+	public passes: BasePass[] = [];
+
+
+	/**
+	* Instantiate
+	* @param {Scene} scene
+	* @param {PerspectiveCamera} camera
+	* @param {WebGLRenderer} renderer
+	* @param {string} globalPrec
+	* @param {Color} clearCol
+	* @param {WebGLRenderTarget} renderTarget
+	*/
+	constructor(scene: Scene, camera: PerspectiveCamera, renderer: WebGLRenderer, globalPrec: string = 'mediump', clearCol?: any, renderTarget?: WebGLRenderTarget) {
+		this.scene = scene;
+		this.camera = camera;
+		this.renderer = renderer;
+		this.viewSize = renderer.getSize(new Vector2());
+
+		this.xrCam = new PerspectiveCamera(camera.fov, camera.aspect, camera.near, camera.far);
+
+		// use a new default render target if none is given
+		this.defaultTarget = new WebGLRenderTarget(this.viewSize.width, this.viewSize.height, defaultParams);
+		this.defaultTarget.texture.name = 'EffectComposer.dt';
+
+		if (renderTarget === undefined) {
+			renderTarget = this.defaultTarget.clone();
+			renderTarget.texture.name = 'EffectComposer.rt';
+		}
+
+		// set write buffer for shader pass rendering
+		this.renderWrite = renderTarget;
+		this.writeBuffer = this.renderWrite;
+
+		// set input buffer for shader pass rendering
+		this.renderRead = renderTarget.clone();
+		this.renderRead.texture.name = 'EffectComposer.rr';
+		this.readBuffer = this.renderRead;
+
+		this.passes = [];
+		this.previousFrame = Date.now();
+		this.globalPrecision = globalPrec;
+
+		this.normPass = new RenderPass(scene, camera, null, clearCol, 1);
+		this.xrPass = new RenderPass(scene, this.xrCam, null, clearCol, 1);
+	}
+
+	/**
+	 * Precompile all shaders...
+	 */
+	public precompile(): void {
+		this.renderer.compile(this.scene, this.camera);
+		this.passes.forEach((pass) => pass.prepare(this.renderer));
+	}
+
+	/**
+	* Append a shader to the chain
+	* @public
+	* @param {BasePass} pass Shader to add
+	*/
+	public addPass(pass: BasePass) {
+		const p = this.wrapPrecision(pass);
+		p.setSize(this.viewSize.width, this.viewSize.height);
+		this.passes.push(p);
+	}
+
+	/**
+	* Insert a shader in the chain
+	* @public
+	* @param {BasePass} pass Shader to add
+	* @param {number} index position
+	*/
+	public insertPass(pass: BasePass, index: number) {
+		const p = this.wrapPrecision(pass);
+		p.setSize(this.viewSize.width, this.viewSize.height);
+		this.passes.splice(index, 0, p);
+	}
+
+	/**
+	* Checks if the given shader should be rendererd to screen
+	* @param {number} passIndex position
+	* @return {boolean}
+	*/
+	private isLastEnabledPass(passIndex: number) {
+		for (let i = passIndex + 1; i &lt; this.passes.length; i++) {
+			if (this.passes[i].enabled) return false;
+		}
+		return true;
+	}
+
+	/**
+	* Render the shader-chain for 1 frame
+	* @public
+	* @param {number} deltaTime if not given, will calculate its own
+	* @param {XRFrame} frame Currently rendering XR frame?
+	*/
+	public render(deltaTime?: number, frame?: XRFrame) {
+		// deltaTime value is in seconds
+		const dn = performance.now();
+		if (deltaTime === undefined) {
+			deltaTime = (dn - this.previousFrame) * 0.001;
+		}
+		this.previousFrame = dn;
+		const size = new Vector2();
+		this.renderer.getSize( size );
+		const currentRenderTarget = this.renderer.getRenderTarget();
+		// has enabled passes?
+		const hasTargets = this.passes.filter((p) => p.enabled).length > 0;
+
+		// clear surface ?
+		if ( this.renderer.autoClear ) this.renderer.clear();
+
+		// do spilt rendering
+		if (this.renderer.xr.isPresenting &amp;&amp; frame !== null) {
+			this.scene.updateMatrixWorld();
+			if ( this.camera.parent === null ) this.camera.updateMatrixWorld();
+
+			// update cameras
+			const pose = frame.getViewerPose(this.renderer.xr.getReferenceSpace());
+			const views = pose.views;
+			const viewSize = size.width / views.length;
+
+			// base position
+			const camPos = this.camera.position.clone();
+
+			// dont use native XR features now
+			this.renderer.xr.enabled = false;
+			this.renderer.setScissorTest( true );
+
+			// render
+			for (let i = 0; i &lt; views.length; i++) {
+				const view = views[i];
+
+				// position
+				const varPos = view.transform.position;
+				this.xrCam.position.set(camPos.x + varPos.x,
+					camPos.y + (varPos.y - 1.6),
+					camPos.z + varPos.z);
+
+				// orientation
+				const vo = view.transform.orientation;
+				this.xrCam.setRotationFromQuaternion(new Quaternion(vo.x, vo.y, vo.z, vo.w));
+
+				// matrix
+				this.xrCam.projectionMatrix.fromArray(view.projectionMatrix);
+				this.xrCam.near = this.camera.near;
+				this.xrCam.far = this.camera.far;
+				this.xrCam.updateProjectionMatrix();
+
+				// render
+				const offX = viewSize * i;
+				this.renderer.setScissor( offX, 0, viewSize, size.height );
+				this.renderer.setViewport( offX, 0, viewSize, size.height );
+
+				// pass buffers flipped to avoid swap
+				this.xrPass.render(this.renderer, this.readBuffer, this.writeBuffer, false, !hasTargets);
+				this.passes.forEach((pass, i) => {
+					if (!pass.enabled) return;
+					pass.setSize(viewSize, size.height);
+					pass.render(this.renderer, this.writeBuffer, this.readBuffer, false, this.isLastEnabledPass(i));
+					if (pass.needsSwap) this.swapBuffers();
+				});
+			}
+
+			// reset features
+			this.renderer.setScissorTest( false );
+			this.renderer.xr.enabled = true;
+		} else {
+			// render default
+			this.camera.rotation.set(0, 0, 0);
+			this.renderer.setScissor( 0, 0, size.width, size.height );
+			this.renderer.setViewport( 0, 0, size.width, size.height );
+			// pass buffers flipped to avoid swap
+			this.normPass.render(this.renderer, this.readBuffer, this.writeBuffer, false, !hasTargets);
+			this.passes.forEach((pass, i) => {
+				if (!pass.enabled) return;
+				pass.setSize(size.width, size.height);
+				pass.render(this.renderer, this.writeBuffer, this.readBuffer, false, this.isLastEnabledPass(i));
+				if (pass.needsSwap) this.swapBuffers();
+			});
+		}
+
+		this.renderer.setRenderTarget(currentRenderTarget);
+	}
+
+	/**
+	* Destroy the current shader-chain
+	* @public
+	* @param {WebGLRenderTarget} renderTarget target to Reset (optional)
+	*/
+	public reset(renderTarget?: WebGLRenderTarget) {
+		if (renderTarget === undefined) {
+			renderTarget = this.defaultTarget.clone();
+			renderTarget.texture.name = 'EffectComposer.wt';
+		}
+
+		this.renderWrite.dispose();
+		this.renderRead.dispose();
+
+		this.renderWrite = renderTarget;
+		this.writeBuffer = this.renderWrite;
+
+		this.renderRead = renderTarget.clone();
+		this.renderRead.texture.name = 'EffectComposer.rt';
+		this.readBuffer = this.renderRead;
+
+		this.passes = [];
+
+		this.setSize(this.viewSize.width, this.viewSize.height);
+	}
+
+	/**
+	* Updated buffer size
+	* @public
+	* @param {number} width X
+	* @param {number} height Y
+	*/
+	public setSize(width: number, height: number) {
+		this.renderWrite.setSize(width, height);
+		this.renderRead.setSize(width, height);
+		this.passes.forEach((pass) => pass.setSize(width, height));
+		this.viewSize.set(width, height);
+	}
+
+	/* UTILS */
+
+	/**
+	* Prefixes custom WebGL-precision to shaders
+	*
+	* @param {BasePass} pass Shader to Wrap
+	* @return {BasePass}
+	* @ignore
+	*/
+	private wrapPrecision(pass: BasePass): BasePass {
+		if (pass instanceof ShaderPass) {
+			const copy = pass as ShaderPass;
+			// get prefix
+			let pre = 'precision ' + this.globalPrecision + ' float;\r\n    ' +
+			'precision ' + this.globalPrecision + ' int;\r\n    ';
+			// "medium" sampler precision should always be available for "high" float precision.
+			if (this.globalPrecision == 'highp') {
+				pre += 'precision mediump sampler2D;\r\n    ' +
+				'precision mediump samplerCube;\r\n    ';
+			}
+			// apply it
+			if (copy.material.vertexShader) {
+				copy.material.vertexShader = pre + copy.material.vertexShader;
+			}
+			if (copy.material.fragmentShader) {
+				copy.material.fragmentShader = pre + copy.material.fragmentShader;
+			}
+		}
+		return pass;
+	}
+
+	/**
+	* Some shaders write to Input rather than Output...
+	*
+	* This is a workaround to pass their data further down the render-chain
+	* @ignore
+	*/
+	private swapBuffers() {
+		const tmp = this.readBuffer;
+		this.readBuffer = this.writeBuffer;
+		this.writeBuffer = tmp;
+	}
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+            </div>
+            
+            <footer class="footer">
+                <div class="content has-text-centered">
+                    <p>Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.6.6</a></p>
+                    <p class="sidebar-created-by">
+                        <a href="https://github.com/SoftwareBrothers/better-docs" target="_blank">BetterDocs theme</a> provided with <i class="fas fa-heart"></i> by 
+                        <a href="http://softwarebrothers.co" target="_blank">SoftwareBrothers - JavaScript Development Agency</a>
+                    </p>
+                </div>
+            </footer>
+            
+        </div>
+        <div id="side-nav" class="side-nav">
+        </div>
+    </div>
+<script src="scripts/app.min.js"></script>
+<script>PR.prettyPrint();</script>
+<script src="scripts/linenumber.js"> </script>
+
+</body>
+</html>
