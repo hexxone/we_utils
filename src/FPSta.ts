@@ -57,7 +57,7 @@ export class FPStats extends CComponent {
 	private gpuMS = 1;
 
 	// audio
-	private auProvider: WEAS = null;
+	private auProvider: WEAS = undefined;
 	private audHolder: HTMLElement;
 	private audioMS = 1;
 	private bpmHolder: HTMLDivElement;
@@ -270,7 +270,7 @@ export class FPStats extends CComponent {
 					}
 
 					const getDetail = (type: string) =>
-						result.breakdown.find(bd => !!bd && !!bd.types && !!bd.types.includes && bd.types.includes(type)) ?? null
+						result.breakdown.find(bd => !!bd && !!bd.types && !!bd.types.includes && bd.types.includes(type)) ?? undefined
 
 					const addDetail = (gotDetail: any, text: string, gotElement: HTMLElement, insertAfter: HTMLElement) => {
 						if (!!gotDetail && !isNaN(gotDetail.bytes)) {

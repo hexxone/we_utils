@@ -25,7 +25,7 @@ export class CComponent {
 	 *  main Settings, need to be overwritten with Specific settings
 	 * @public
 	 */
-	public settings: CSettings = null;
+	public settings: CSettings = undefined;
 
 	/**
 	 * will recursively try to set a setting with type and return success

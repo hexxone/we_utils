@@ -16,11 +16,11 @@ const LogHead = "[WEWWA] ";
 const DefLang = "en-us";
 
 /**
- * WEWWA
+ * WEWA
  *
- * Wallpaper Engine Web Wallpaper Adapter
+ * Wallpaper Engine Web Adapter
  *
- * This is an aditional TS class to be included in your Typescript/Webpack Wallpaper Engine
+ * This is an aditional class to be included in your Typescript/Webpack Wallpaper Engine
  * Web-Wallpaper project - so you can test, run & configure it from a normal web browser.
  *
  * REQUIREMENTS:
@@ -56,25 +56,26 @@ const DefLang = "en-us";
  *
  * @public
  */
-export class WEWWA {
-	private audListener: string;
+export class WEWA {
+	private audioListener: string;
 	private propListener: string;
 
 	private projectFile: string;
 	private defLang: string;
 
-	private projectData: any = null;
+	private projectData?: any = undefined; // TODO type WE project.json
 
-	private htmlMenu: Element = null;
-	private htmlIcon: Element = null;
+	private htmlMenu?: Element = undefined;
+	private htmlIcon?: Element = undefined;
 
-	private audio: HTMLAudioElement = null;
-	private ctx: AudioContext = null;
-	private source: any = null;
-	private analyser: any = null;
+	private audio?: HTMLAudioElement = undefined;
+	private ctx?: AudioContext = undefined;
 
-	private audioInterval: any = null;
-	private audioCallback: any = null;
+	private source?: MediaStreamAudioSourceNode | MediaElementAudioSourceNode = undefined;
+	private analyser?: AnalyserNode = undefined;
+
+	private audioInterval?: NodeJS.Timeout = undefined;
+	private audioCallback?: (data: number[]) => void = undefined;
 
 	private pauseOnUnfocus = true;
 	private isPaused = false;
@@ -83,24 +84,24 @@ export class WEWWA {
 	 * Check if we are running in Web-Mode
 	 * if yes => iniitialize, else => do nothing
 	 * @param {Function} finished Callback for initializing the wallpaper
-	 * @param {string} audListener to register
+	 * @param {string} audioListener to register
 	 * @param {string} propListener to register
 	 * @param {string} projFile to register
 	 * @param {string} defLang default languague from project file
 	 */
 	constructor(
 		finished: () => void = undefined,
-		audListener = "wallpaperRegisterAudioListener",
+		audioListener = "wallpaperRegisterAudioListener",
 		propListener = "wallpaperPropertyListener",
 		projFile = "project.json",
 		defLang = DefLang
 	) {
-		this.audListener = audListener;
+		this.audioListener = audioListener;
 		this.propListener = propListener;
 		this.projectFile = projFile;
 		this.defLang = defLang;
 
-		if (window[audListener]) {
+		if (window[audioListener]) {
 			Smallog.info("detected wallpaper engine => Standby.", LogHead);
 			if (finished !== undefined) finished();
 			return;
@@ -109,7 +110,7 @@ export class WEWWA {
 		Smallog.info("wallpaper engine not detected => Init!", LogHead);
 
 		// define audio listener first, so we dont miss when it gets registered.
-		window[audListener] = (callback) => {
+		window[audioListener] = (callback) => {
 			// set callback to be called later with analysed audio data
 			this.audioCallback = callback;
 			Smallog.info("Registered wallpaper AudioListener.", LogHead);
@@ -318,7 +319,7 @@ export class WEWWA {
 		if (this.htmlMenu) {
 			document.body.removeChild(this.htmlMenu);
 			document.body.removeChild(this.htmlIcon);
-			this.htmlMenu = null;
+			this.htmlMenu = undefined;
 		}
 
 		// quick wrapper, we need this a lot
@@ -326,7 +327,7 @@ export class WEWWA {
 
 		// local vars faster
 		const proj = this.projectData;
-		const props = proj.general.properties;
+		const props = proj.general.properties; // TODO Type
 
 		// create root menu
 		this.htmlMenu = ce("div");
@@ -739,8 +740,10 @@ export class WEWWA {
 		// Input
 		const column2 = ce("td");
 		column2.classList.add("right");
-		// optional NumericUpDown Column
+		
+		// optional NumericUpDown Column for sliders
 		let column3 = null;
+
 		// div or label text element
 		let txt = null;
 		// main input element
@@ -1196,7 +1199,7 @@ export class WEWWA {
 	private startAudioInterval() {
 		const data = new Uint8Array(128);
 		// 33ms ~~ 30fps
-		this.audioInterval = window.setInterval(() => {
+		this.audioInterval = setInterval(() => {
 			if (this.audioCallback == null) {
 				this.stopAudioInterval();
 				Smallog.error("no AudioCallback!", LogHead);
@@ -1219,7 +1222,7 @@ export class WEWWA {
 	 * @param {Uint8Array} data input
 	 * @returns {number[]} result
 	 */
-	private convertAudio(data: Uint8Array) {
+	private convertAudio(data: Uint8Array): number[] {
 		const stereo = [];
 		let sIdx = 0;
 		for (let i = 0; i < 64; i++) {

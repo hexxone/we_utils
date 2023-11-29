@@ -193,9 +193,9 @@ export class EffectComposer {
 		if (this.renderer.autoClear) this.renderer.clear();
 
 		// do spilt rendering
-		if (this.renderer.xr.isPresenting && frame !== null) {
+		if (this.renderer.xr.isPresenting && frame !== undefined) {
 			this.scene.updateMatrixWorld();
-			if (this.camera.parent === null) this.camera.updateMatrixWorld();
+			if (this.camera.parent === undefined) this.camera.updateMatrixWorld();
 
 			// update cameras
 			const pose = frame.getViewerPose(this.renderer.xr.getReferenceSpace());
