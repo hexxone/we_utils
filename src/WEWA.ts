@@ -71,7 +71,9 @@ export class WEWA {
 	private audio?: HTMLAudioElement = undefined;
 	private ctx?: AudioContext = undefined;
 
-	private source?: MediaStreamAudioSourceNode | MediaElementAudioSourceNode = undefined;
+	private source?: MediaStreamAudioSourceNode | MediaElementAudioSourceNode =
+		undefined;
+
 	private analyser?: AnalyserNode = undefined;
 
 	private audioInterval?: NodeJS.Timeout = undefined;
@@ -740,7 +742,7 @@ export class WEWA {
 		// Input
 		const column2 = ce("td");
 		column2.classList.add("right");
-		
+
 		// optional NumericUpDown Column for sliders
 		let column3 = null;
 
