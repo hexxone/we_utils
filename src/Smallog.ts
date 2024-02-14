@@ -44,7 +44,7 @@ class Smalog {
 	 * trace exception calls
 	 * @param {string} def error message
 	 * @param {number} depth which call to pick
-	 * @return {string} error message
+	 * @returns {string} error message
 	 * @ignore
 	 */
 	traceCall(def: string, depth = 3): string {
@@ -64,7 +64,7 @@ class Smalog {
 
 	/**
 	 * get logging output level
-	 * @return {LogLevel} current
+	 * @returns {LogLevel} current
 	 */
 	getLevel() {
 		return this.logLevel;
@@ -73,7 +73,7 @@ class Smalog {
 	/**
 	 * set logging prefix
 	 * @param {string} pre new prefix
-	 * @return {void} nothing
+	 * @returns {void}
 	 */
 	setPrefix(pre: string) {
 		this.preFix = pre;
@@ -82,7 +82,7 @@ class Smalog {
 	/**
 	 * set time prefix
 	 * @param {boolean} print true to print time
-	 * @return {void} nothing
+	 * @returns {void}
 	 */
 	setPrintTime(print: boolean) {
 		this.printTime = print;
@@ -92,7 +92,7 @@ class Smalog {
 	 * print error message
 	 * @param {string} msg log
 	 * @param {string} hdr overwrite header
-	 * @return {void} nothing
+	 * @returns {void}
 	 */
 	error(msg: string, hdr: string = this.preFix) {
 		if (this.printTime) msg = "[" + new Date().toLocaleString() + "] " + msg;
@@ -103,7 +103,7 @@ class Smalog {
 	 * print info message
 	 * @param {string} msg log
 	 * @param {string} hdr overwrite header
-	 * @return {void} nothing
+	 * @returns {void}
 	 */
 	warn(msg: string, hdr: string = this.preFix) {
 		if (this.logLevel >= 1) {
@@ -116,7 +116,7 @@ class Smalog {
 	 * print info message
 	 * @param {string} msg log
 	 * @param {string} hdr overwrite header
-	 * @return {void} nothing
+	 * @returns {void}
 	 */
 	info(msg: string, hdr: string = this.preFix) {
 		if (this.logLevel >= 1) {
@@ -130,7 +130,7 @@ class Smalog {
 	 * print debug message
 	 * @param {string} msg log
 	 * @param {string} hdr overwrite header
-	 * @return {void} nothing
+	 * @returns {void}
 	 */
 	debug(msg: string, hdr: string = this.preFix) {
 		if (this.logLevel >= 2) {

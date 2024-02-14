@@ -35,7 +35,7 @@ export class CComponent {
 	 * @public
 	 * @param {Object} key key
 	 * @param {Object} value value
-	 * @return {boolean} found
+	 * @returns {boolean} found
 	 */
 	public applySetting(key: string, value: any): boolean {
 		let found = this.settings.apply(key, value);
@@ -55,7 +55,7 @@ export class CComponent {
 	 * will recursively update all needed modules after settings changes
 	 *
 	 * @public
-	 * @return {void}
+	 * @returns {void}
 	 */
 	public updateAll(): void {
 		this.children.forEach((c) => c.updateAll());
@@ -69,7 +69,7 @@ export class CComponent {
 	 * should usually get called automatically when needed.. no need for extra calling
 	 *
 	 * @public
-	 * @return {Promise} async commpletion event
+	 * @returns {Promise} async commpletion event
 	 */
 	public updateSettings(): Promise<void> {
 		console.error(

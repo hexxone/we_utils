@@ -140,7 +140,7 @@ export class ReloadHelper extends CComponent {
 	/**
 	 * dont print IMPL error
 	 * @public
-	 * @return {Promise} finished
+	 * @returns {Promise} finished
 	 */
 	public updateSettings(): Promise<void> {
 		return Promise.resolve();

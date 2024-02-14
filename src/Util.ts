@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", workQueue, false);
 /**
  * Shorthand Document ready wrapper
  * @public
- * @return {Promise} resolves when html document is ready
+ * @returns {Promise} resolves when html document is ready
  */
 export function waitReady() {
 	return new Promise((resolve) => {
@@ -52,7 +52,7 @@ export function waitReady() {
  *  - RGBA bracket notation: "rgba(r, g, b, a)"
  * @param {string} input format: "r g b a" where each is float 0-1, or hex color notation "#RRGGBBAA", or "rgba(r, g, b, a)"
  * @param {number} mlt multiplier (default 255)
- * @return {Object} {r,g,b,a} with float 0-mlt
+ * @returns {Object} {r,g,b,a} with float 0-mlt
  */
 export function rgbToObj(
 	input: string,
@@ -102,7 +102,7 @@ export function rgbToObj(
  *  - RGB bracket notation: "rgb(r, g, b)"
  *  - RGBA bracket notation: "rgba(r, g, b, a)"
  * @param {string} input format: "r g b a" where each is float 0-1, or hex color notation "#RRGGBBAA", or "rgba(r, g, b, a)"
- * @return {Object} {h,s,l} with float 0-1
+ * @returns {Object} {h,s,l} with float 0-1
  */
 export function rgbToHSL(input: string): { h: number; s: number; l: number } {
 	const colorObject = rgbToObj(input, 1);

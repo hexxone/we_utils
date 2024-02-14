@@ -154,7 +154,7 @@ export class FPStats extends CComponent {
 	/**
 	 * update visible
 	 * @public
-	 * @return {Promise}
+	 * @returns {Promise}
 	 */
 	public updateSettings(): Promise<void> {
 		// show or hide debug info

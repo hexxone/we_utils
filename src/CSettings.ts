@@ -28,7 +28,7 @@ export class CSettings {
 	 * @public
 	 * @param {string} key
 	 * @param {Object} castedValue
-	 * @return {boolean} value was found & changed
+	 * @returns {boolean} value was found & changed
 	 */
 	public apply(key: string, castedValue: any): boolean {
 		if (this[key] !== undefined) {

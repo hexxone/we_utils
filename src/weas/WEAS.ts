@@ -19,8 +19,8 @@ const LISTENAME = "wallpaperRegisterAudioListener";
 
 /**
  * Audio processing settings
- * @public
  * @extends {CSettings}
+ * @public
  */
 export class WEASettings extends CSettings {
 	debugging = false;
@@ -69,12 +69,12 @@ export type WEAudio = {
 	range: number;
 	silent: number;
 	intensity: number;
-	bpm?: [
-		{
-			value: number;
-			weight: number;
-		}
-	];
+	bpm?: BpmDataWip[];
+};
+
+export type BpmDataWip = {
+	value: number;
+	weight: number;
 };
 
 /**
@@ -123,8 +123,8 @@ const PropIDs = {
  * - Wallpaper Engine Web Wallpaper environment
  * <br/>
  * - audio-processing supported web wallpaper
- * @public
  * @extends {CComponent}
+ * @public
  */
 export class WEAS extends CComponent {
 	/** @public last processed audio object */
@@ -156,7 +156,8 @@ export class WEAS extends CComponent {
 	public init?: () => Promise<void>;
 
 	/**
-	 * delay audio initialization until page ready
+	 * Constructs a new Wallpaper Engine Audio Supplier.
+	 * @param {boolean} autoInit start listening automatically after page is ready?
 	 * @param {boolean} detectBpm (optional)
 	 */
 	constructor(autoInit = false, detectBpm = false) {
@@ -169,7 +170,7 @@ export class WEAS extends CComponent {
 	/**
 	 * convert float based audio to int
 	 * @param {Array<number>} data as
-	 * @return {Array<number>} asd
+	 * @returns {Array<number>} asd
 	 */
 	private convertAudio(data) {
 		const stereo = [];
@@ -220,8 +221,8 @@ export class WEAS extends CComponent {
 
 	/**
 	 * Registers the wallpaper engine audio listener
-	 * @ignore
 	 * @returns {void}
+	 * @ignore
 	 */
 	private registerListener() {
 		// register audio callback on module
@@ -307,8 +308,8 @@ export class WEAS extends CComponent {
 
 	/**
 	 * Inject preview CSS
-	 * @ignore
 	 * @returns {void}
+	 * @ignore
 	 */
 	private injectCSS() {
 		const st = document.createElement("style");
@@ -336,8 +337,8 @@ export class WEAS extends CComponent {
 
 	/**
 	 * Inject preview canvas
-	 * @ignore
 	 * @returns {void}
+	 * @ignore
 	 */
 	private injectHTML() {
 		this.mainElm = document.createElement("div");
@@ -374,9 +375,8 @@ export class WEAS extends CComponent {
 	/**
 	 * converts calculated output property number-array to string-associative-array
 	 * @param {ArrayLike<number>} dProps processed properties
-	 * @return {any}
-	 * @ignore
 	 * @returns {void}
+	 * @ignore
 	 */
 	private getProps(dProps: ArrayLike<number>) {
 		const keys = Object.keys(PropIDs);
@@ -392,8 +392,8 @@ export class WEAS extends CComponent {
 	 * !! CAVEAT: only available after init and module load !!
 	 * <br/>
 	 * Will send the processing settings to the WebAssembly module
+	 * @returns {Promise} finished event
 	 * @public
-	 * @return {Promise} finished event
 	 */
 	public updateSettings(): Promise<void> {
 		if (!this.weasModule) return;
@@ -439,7 +439,7 @@ export class WEAS extends CComponent {
 	}
 
 	/**
-	 * @return {boolean} false if:
+	 * @returns {boolean} false if:
 	 * <br/>
 	 * - processing is disabled
 	 * <br/>
@@ -527,11 +527,11 @@ export class WEAS extends CComponent {
 
 	/**
 	 * Draww Context2 line
-	 * @param {string} style
-	 * @param {number} y
+	 * @param {string} style Canvas fill style
+	 * @param {number} y Height of line
 	 * @returns {void}
 	 */
-	private drawHorizontLine(style, y) {
+	private drawHorizontalLine(style, y) {
 		const ctx = this.context2;
 		const cvs = this.canvas2;
 		ctx.fillStyle = style;

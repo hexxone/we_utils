@@ -89,7 +89,7 @@ export class WarnHelper extends CComponent {
 	/**
 	 * Show the warning
 	 * @public
-	 * @return {Promise} hidden again
+	 * @returns {Promise} hidden again
 	 */
 	public show(): Promise<void> {
 		return new Promise((resolve) => {
@@ -112,7 +112,7 @@ export class WarnHelper extends CComponent {
 	/**
 	 * Hide warning
 	 * @public
-	 * @return {Promise} hidden
+	 * @returns {Promise} hidden
 	 */
 	public hide(): Promise<void> {
 		return new Promise((resolve) => {
@@ -127,7 +127,7 @@ export class WarnHelper extends CComponent {
 	/**
 	 * Settings have been changed
 	 * @public
-	 * @return {Promise} finished
+	 * @returns {Promise} finished
 	 */
 	public updateSettings(): Promise<void> {
 		// fix for instantly removing the warning while it shows

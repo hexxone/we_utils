@@ -17,7 +17,6 @@ import OfflineWorker from "worker-loader!./Offline.worker";
 const oh = "[OfflineHelper] ";
 
 /**
- * @ignore
  * Helper class for loading and registering the ServiceWorker
  * <br/>
  * the workerPath is the path to the compiled OfflineWorker js file, relative from the calling html file...
@@ -30,6 +29,7 @@ const oh = "[OfflineHelper] ";
  * <br/>
  * ServiceWorker is a progressive technology. Some browsers will be unsupported...
  * @public
+ * @ignore
  */
 
 // function helper, so OfflineWorker is actually processed
@@ -50,11 +50,11 @@ function DontRemove() {
  * obviously with webpack, this causes a problem, when you are not outputting directly into the root dir...
  * eslint-disable-next-line require-jsdoc
  *
- * @public
  * @param {string} name - the name of the worker
  * @param {string} worker - the Url to instanitate
  * @param {string} oFile - the path to the offline json file
- * @return {Promise<boolean>} finished
+ * @returns {Promise<boolean>} finished
+ * @public
  */
 function register(
 	name: string,
@@ -82,7 +82,7 @@ function register(
 
 /**
  * unregister all service workers
- * @return {Promise<boolean>} finished
+ * @returns {Promise<boolean>} finished
  * @public
  */
 async function reset(): Promise<boolean> {

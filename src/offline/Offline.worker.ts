@@ -89,7 +89,7 @@ wrk.addEventListener("fetch", function (event: any) {
 			/**
 			 * We copy the response before replying to the network request.
 			 * @param {Response} response This will be stored on the ServiceWorker cache.
-			 * @return {Response} cached
+			 * @returns {Response} cached
 			 */
 			function fetchedFromNetwork(response: Response) {
 				const cacheCopy = response.clone();
@@ -122,7 +122,7 @@ wrk.addEventListener("fetch", function (event: any) {
 			 * for requests against your origins than for requests against a third party,
 			 * such as an ad provider.
 			 * - Generate a Response programmaticaly, as shown below, and return that.
-			 * @return {Response} fallback
+			 * @returns {Response} fallback
 			 */
 			function unableToResolve() {
 				console.info(
