@@ -330,7 +330,7 @@ export class UnrealBloomPass implements BasePass {
 	/**
 	 * Make seperable material
 	 * @param {number} kernelRadius size
-	 * @return {ShaderMaterial} material
+	 * @returns {ShaderMaterial} material
 	 */
 	private getSeperableBlurMaterial(kernelRadius) {
 		const sm = new ShaderMaterial();
@@ -388,7 +388,7 @@ export class UnrealBloomPass implements BasePass {
 	/**
 	 * Make helper material
 	 * @param {number} nMips MipMaps
-	 * @return {ShaderMaterial} material
+	 * @returns {ShaderMaterial} material
 	 */
 	private getCompositeMaterial(nMips) {
 		const sm = new ShaderMaterial();

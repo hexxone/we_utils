@@ -922,15 +922,15 @@ export class WEWA {
 	}
 
 	/**
+	 * @ignore
 	 * will load the given file and return it as dataURL.
 	 * this way we can easily store whole files in the configuration & localStorage.
 	 * its not safe that this works with something else than image files.
 	 * @param {string} url file
-	 * @param {function (data: (string | ArrayBuffer)): void} resCall finished-call
-	 * @ignore
+	 * @param {function} resCall finished-call
 	 * @returns {void}
 	 */
-	private loadXHRSaveLocal(url, resCall) {
+	private loadXHRSaveLocal(url, resCall: (data: string | ArrayBuffer) => void) {
 		WascUtil.myFetch(url, "blob").then((resp) => {
 			// Read out file contents as a Data URL
 			const fReader = new FileReader();

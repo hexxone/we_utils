@@ -206,7 +206,7 @@ export class WEICUE extends CComponent {
 	/**
 	 * helper
 	 * @param {boolean} inPx suffix "px" string to number (allows direct css use)
-	 * @return {Object} area
+	 * @returns {Object} area
 	 * @ignore
 	 */
 	private getArea(inPx = false) {
@@ -227,7 +227,7 @@ export class WEICUE extends CComponent {
 	/**
 	 * convert data for icue
 	 * @param {ImageData} imageData source
-	 * @return {string} encoded image
+	 * @returns {string} encoded image
 	 * @ignore
 	 */
 	private getEncodedCanvasImageData(imageData: ImageData) {
@@ -313,7 +313,7 @@ export class WEICUE extends CComponent {
 	/**
 	 * show or hide preview
 	 * @public
-	 * @return {Promise} finished
+	 * @returns {Promise} finished
 	 */
 	public updateSettings(): Promise<void> {
 		// reset timeout?

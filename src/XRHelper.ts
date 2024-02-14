@@ -76,7 +76,7 @@ export class XRHelper extends CComponent {
 	}
 
 	/**
-	 * @return {boolean} whether XR is supported and available or not
+	 * @returns {boolean} whether XR is supported and available or not
 	 */
 	private async isSupported() {
 		if ("xr" in this.nav) {
@@ -89,7 +89,7 @@ export class XRHelper extends CComponent {
 	 * Trys to start a Web-XR session.
 	 * if successfull, will provide functionality for leaving web-XR again.
 	 * @param {function (params:XRSession): void} sessionCallback callback to start XR
-	 * @return {Promise<boolean>} success if VR is available
+	 * @returns {Promise<boolean>} success if VR is available
 	 */
 	public async enableSession(
 		sessionCallback: (xrs: XRSession | null) => void

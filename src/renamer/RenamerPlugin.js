@@ -53,7 +53,7 @@ class RenamerPlugin {
 	/**
 	 * Get a random variable name, which does not exist in src and mappings
 	 * @param {string} src - source code
-	 * @return {string} random variable name
+	 * @returns {string} random variable name
 	 */
 	getRandomName(src) {
 		const gen =
@@ -72,7 +72,7 @@ class RenamerPlugin {
 	 * Regex replace "match" function
 	 * @param {string} source - source code
 	 * @param {string} match - regex match
-	 * @return {string} replaced string
+	 * @returns {string} replaced string
 	 */
 	replaceMatch(source, match) {
 		let fnd = null;
@@ -90,7 +90,7 @@ class RenamerPlugin {
 	/**
 	 * randomize array
 	 * @param {Array} array - array to randomize
-	 * @return {Array} randomized array
+	 * @returns {Array} randomized array
 	 */
 	shuffle(array) {
 		let currentIndex = array.length;
@@ -112,7 +112,7 @@ class RenamerPlugin {
 	/**
 	 * Illegal JS accessor shortening
 	 * @param {string} pd src
-	 * @return {string} res
+	 * @returns {string} res
 	 */
 	shortenAccessors(pd) {
 		if (typeof pd !== "string") {
@@ -397,7 +397,7 @@ class RenamerPlugin {
 	/**
 	 * process via regex
 	 * @param {string} source - source code
-	 * @return {string} processed source
+	 * @returns {string} processed source
 	 */
 	processString(source) {
 		if (typeof source !== "string") {
@@ -419,7 +419,7 @@ class RenamerPlugin {
 	 * @param {Webpack.Compilation} compilation - webpack compilation
 	 * @param {string} name - source file name
 	 * @param {any} child - source file object
-	 * @return {void}
+	 * @returns {void}
 	 */
 	processSource(compilation, name, child) {
 		if (child._valueIsBuffer || !child.source) {
@@ -442,7 +442,7 @@ class RenamerPlugin {
 	 * Hook into the compilation process,
 	 * Replace regex matches with random strings
 	 * @param {Webpack.compiler} compiler object from webpack
-	 * @return {void}
+	 * @returns {void}
 	 */
 	apply(compiler) {
 		compiler.hooks.emit.tap(pluginName, (compilation) => {

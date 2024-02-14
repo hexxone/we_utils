@@ -118,3 +118,4 @@ dist
 *.wasm
 *.wasm.map
 *.asm.js
+docs/

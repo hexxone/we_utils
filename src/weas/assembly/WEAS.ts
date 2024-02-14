@@ -70,25 +70,25 @@ pinkNoise.set(pNoise);
 
 const tempArr = new Float64Array(DAT_LEN);
 
-var i: i32 = 0;
-var indx: i32 = 0;
-var tmpI: i32 = 0;
+let i: i32 = 0;
+let indx: i32 = 0;
+let tmpI: i32 = 0;
 
-var tmpF: f64 = 0;
-var oldMax: f64 = 0;
-var newMax: f64 = 0;
-var sum: f64 = 0;
-var min: f64 = 1;
-var max: f64 = 0;
-var bass: f64 = 0;
-var mids: f64 = 0;
-var peaks: f64 = 0;
-var diff: f64 = 0;
-var mlt: f64 = 0;
-var average: f64 = 0;
-var silent: f64 = 1;
-var intensity: f64 = 0;
-var range: f64 = 0;
+let tmpF: f64 = 0;
+let oldMax: f64 = 0;
+let newMax: f64 = 0;
+let sum: f64 = 0;
+let min: f64 = 1;
+let max: f64 = 0;
+let bass: f64 = 0;
+let mids: f64 = 0;
+let peaks: f64 = 0;
+let diff: f64 = 0;
+let mlt: f64 = 0;
+let average: f64 = 0;
+let silent: f64 = 1;
+let intensity: f64 = 0;
+let range: f64 = 0;
 
 // correct pink noise for first and second half
 function correctPinkNoise(data: Float64Array): void {
@@ -136,7 +136,7 @@ function invertAll(data: Float64Array): void {
     }
 }
 
-var emult: f64;
+let emult: f64;
 
 // function for processing actual change 
 function equalizePeaks(array: Float64Array): void {
@@ -211,8 +211,8 @@ function smoothArray(array: Float64Array, steps: i32): void {
     // make smoothed array
     for (i = 0; i < DAT_LEN; i++) {
         tmpF = 0.001; 
-        for (var inner = i - steps; inner <= i + steps; inner++) {
-            var idx = inner;
+        for (let inner = i - steps; inner <= i + steps; inner++) {
+            let idx = inner;
             if (idx < 0) idx = 0;
             if (idx >= DAT_LEN) idx = DAT_LEN - 1;
             tmpF += array[idx];

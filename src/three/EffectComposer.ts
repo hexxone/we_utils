@@ -157,7 +157,7 @@ export class EffectComposer {
 	/**
 	 * Checks if the given shader should be rendererd to screen
 	 * @param {number} passIndex position
-	 * @return {boolean}
+	 * @returns {boolean}
 	 * @returns {void}
 	 */
 	private isLastEnabledPass(passIndex: number) {

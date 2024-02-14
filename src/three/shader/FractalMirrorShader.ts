@@ -7,6 +7,8 @@
  * See LICENSE file in the project root for full license information.
  *
  * @description
+ * Customized Kaleidoscope shader
+ * Inspired by ackleyrc: https://www.shadertoy.com/view/llXcRl
  */
 
 import { Vector2 } from "three.ts/src/math/Vector2";
@@ -17,11 +19,9 @@ import vertex from "./vertex/Basic.glsl";
 import fragment from "./fragment/FractalMirror.glsl";
 
 /**
- * Customized Kaleidoscope shader
- * Inspired by ackleyrc: https://www.shadertoy.com/view/llXcRl
- *
- * @public
+ * Kaleidoscope Shader for three.ts
  * @implements {BaseShader}
+ * @public
  */
 export class FractalMirrorShader implements BaseShader {
 	defines = null;

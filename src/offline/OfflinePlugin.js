@@ -42,7 +42,7 @@ const offlineSchema = {
  * @param {strring} baseDir start directory
  * @param {string} subDir sub directory
  * @param {array} arrayOfFiles result files
- * @return {array} arrayOfFiles
+ * @returns {array} arrayOfFiles
  */
 function getAllFiles(baseDir, subDir, arrayOfFiles) {
 	const sub = baseDir + "/" + subDir;

@@ -71,7 +71,7 @@ export class Bea_ts {
 	 * Bpm-Process current data
 	 * @param {number} time timestamp as float
 	 * @param {Array<number>} data fftData
-	 * @return {Array<Object>}
+	 * @returns {Array<Object>}
 	 * @public
 	 */
 	public process(time, data) {
@@ -506,7 +506,7 @@ class BeatsDetektor {
 	 * Process BPM for fft Data Frame
 	 * @param {number} timer_seconds
 	 * @param {Array<number>} fft_data
-	 * @return {number} win_bpm_int
+	 * @returns {number} win_bpm_int
 	 * @public
 	 */
 	public process(timer_seconds, fft_data): number {
@@ -943,14 +943,14 @@ class BeatsDetektor {
 // 	/**
 // 	* Post-Process current Detektor frame and check for kick
 // 	* @param {BeatsDetektor} det
-// 	* @return {boolean}
+// 	* @returns {boolean}
 // 	*/
 // 	process(det: BeatsDetektor) {
 // 		return this.is_kick = ((det.detection[0] && det.detection[1]) || (det.ma_freq_range[0]/det.maa_freq_range[0])>1.4);
 // 	}
 
 // 	/**
-// 	* @return {boolean} last kick status
+// 	* @returns {boolean} last kick status
 // 	*/
 // 	isKick() {
 // 		return this.is_kick;
@@ -1003,7 +1003,7 @@ class BeatsDetektor {
 // 	/**
 // 	* returns vu level for BD_DETECTION_RANGES range[x]
 // 	* @param {number} x
-// 	* @return {number}
+// 	* @returns {number}
 // 	*/
 // 	getLevel(x) {
 // 		return this.vu_levels[x];

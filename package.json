@@ -1,0 +1,15 @@
+{
+  "name": "we_utils",
+  "version": "1.0.0",
+  "description": "A collection of utilities, mostly usefull when creating Wallpaper-Engine Web-Wallpapers with TypeScript & Webpack",
+  "repository": "https://github.com/hexxone/we_utils.git",
+  "author": "hexx.one",
+  "license": "GPLv3",
+  "scripts": {
+    "docs": "jsdoc -c jsdoc.json"
+  },
+  "devDependencies": {
+    "better-docs": "^2.7.2",
+    "jsdoc": "^4.0.2"
+  }
+}
