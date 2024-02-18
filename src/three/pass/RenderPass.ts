@@ -4,129 +4,137 @@
  * @author hexxone / https://hexx.one
  */
 
-import { Camera } from "three.ts/src/cameras/Camera";
-import { Material } from "three.ts/src/materials/Material";
-import { Color } from "three.ts/src/math/Color";
-import { WebGLRenderer } from "three.ts/src/renderers/WebGLRenderer";
-import { WebGLRenderTarget } from "three.ts/src/renderers/WebGLRenderTarget";
-import { Scene } from "three.ts/src/scenes/Scene";
-import { BasePass } from "./BasePass";
+import { Camera } from 'three.ts/src/cameras/Camera';
+import { Material } from 'three.ts/src/materials/Material';
+import { Color } from 'three.ts/src/math/Color';
+import { WebGLRenderer } from 'three.ts/src/renderers/WebGLRenderer';
+import { WebGLRenderTarget } from 'three.ts/src/renderers/WebGLRenderTarget';
+import { Scene } from 'three.ts/src/scenes/Scene';
+import { BasePass } from './BasePass';
 
 /**
  * Shader Render Helper
  */
 export class RenderPass implements BasePass {
-	private readonly scene: Scene;
-	private readonly camera: Camera;
-	private readonly overMat?: Material;
 
-	public clearColor: Color = undefined;
-	public clearAlpha: number = undefined;
+    private readonly scene: Scene;
+    private readonly camera: Camera;
+    private readonly overMat?: Material;
 
-	public name = "RenderPass";
-	public enabled = true;
-	public needsSwap = true;
+    public clearColor: Color = undefined;
+    public clearAlpha: number = undefined;
 
-	public clear = true;
-	public clearDepth = false;
+    public name = 'RenderPass';
+    public enabled = true;
+    public needsSwap = true;
 
-	/**
-	 * Construct helper
-	 * @param {Scene} scene Scene
-	 * @param {Camera} camera Camera
-	 * @param {Material} overMat optional Override material
-	 * @param {Color} clearColor Clear color
-	 * @param {number} clearAlpha Clear alpha
-	 */
-	constructor(
-		scene: Scene,
-		camera: Camera,
-		overMat?: Material,
-		clearColor?: Color,
-		clearAlpha?: number
-	) {
-		this.scene = scene;
-		this.camera = camera;
-		this.overMat = overMat;
+    public clear = true;
+    public clearDepth = false;
 
-		this.clearColor = clearColor;
-		this.clearAlpha = clearAlpha !== undefined ? clearAlpha : 0;
-	}
+    /**
+     * Construct helper
+     * @param {Scene} scene Scene
+     * @param {Camera} camera Camera
+     * @param {Material} overMat optional Override material
+     * @param {Color} clearColor Clear color
+     * @param {number} clearAlpha Clear alpha
+     */
+    constructor(
+        scene: Scene,
+        camera: Camera,
+        overMat?: Material,
+        clearColor?: Color,
+        clearAlpha?: number
+    ) {
+        this.scene = scene;
+        this.camera = camera;
+        this.overMat = overMat;
 
-	/**
-	 * precompile shader
-	 * @param {WebGLRenderer} renderer Context
-	 */
-	public prepare(renderer: WebGLRenderer) {
-		renderer.compile(this.scene, this.camera);
-	}
+        this.clearColor = clearColor;
+        this.clearAlpha = clearAlpha !== undefined ? clearAlpha : 0;
+    }
 
-	/**
-	 * Destroy shader
-	 */
-	public dispose() {
-		throw new Error("Method not implemented.");
-	}
+    /**
+     * precompile shader
+     * @param {WebGLRenderer} renderer Context
+     * @returns {void}
+     */
+    public prepare(renderer: WebGLRenderer) {
+        renderer.compile(this.scene, this.camera);
+    }
 
-	/**
-	 * Updated screen size
-	 * @param {number} width X
-	 * @param {number} height Y
-	 */
-	public setSize(width: number, height: number) {
-		return;
-	}
+    /**
+     * Destroy shader
+     * @returns {void}
+     */
+    public dispose() {
+        throw new Error('Method not implemented.');
+    }
 
-	/**
-	 * Render Frame
-	 * @param {WebGLRenderer} renderer Context
-	 * @param {WebGLRenderTarget} writeBuffer Output
-	 * @param {WebGLRenderTarget} readBuffer Input
-	 * @param {boolean} maskActive filter
-	 * @param {boolean} renderToScreen render to canvas OR buffer
-	 * @param {Camera} camera (optional)
-	 * @public
-	 */
-	public render(
-		renderer: WebGLRenderer,
-		writeBuffer: WebGLRenderTarget,
-		readBuffer: WebGLRenderTarget,
-		maskActive: boolean,
-		renderToScreen: boolean
-	) {
-		const oldAutoClear = renderer.autoClear;
-		renderer.autoClear = false;
+    /**
+     * Updated screen size
+     * @param {number} _width X
+     * @param {number} _height Y
+     * @returns {void}
+     */
+    public setSize(_width: number, _height: number) {}
 
-		this.scene.overrideMaterial = this.overMat;
+    /**
+     * Render Frame
+     * @param {WebGLRenderer} renderer Context
+     * @param {WebGLRenderTarget} writeBuffer Output
+     * @param {WebGLRenderTarget} readBuffer Input
+     * @param {boolean} maskActive filter
+     * @param {boolean} renderToScreen render to canvas OR buffer
+     * @param {Camera} camera (optional)
+     * @returns {void}
+     * @public
+     */
+    public render(
+        renderer: WebGLRenderer,
+        writeBuffer: WebGLRenderTarget,
+        readBuffer: WebGLRenderTarget,
+        maskActive: boolean,
+        renderToScreen: boolean
+    ) {
+        const oldAutoClear = renderer.autoClear;
 
-		let oldClearColor: Color;
-		let oldClearAlpha: number;
+        renderer.autoClear = false;
 
-		if (this.clearColor) {
-			renderer.getClearColor(oldClearColor);
-			oldClearAlpha = renderer.getClearAlpha();
-			renderer.setClearColor(this.clearColor, this.clearAlpha);
-		}
+        this.scene.overrideMaterial = this.overMat;
 
-		if (this.clearDepth) {
-			renderer.clearDepth();
-		}
+        let oldClearColor: Color;
+        let oldClearAlpha: number;
 
-		renderer.setRenderTarget(renderToScreen ? null : writeBuffer);
+        if (this.clearColor) {
+            renderer.getClearColor(oldClearColor);
+            oldClearAlpha = renderer.getClearAlpha();
+            renderer.setClearColor(this.clearColor, this.clearAlpha);
+        }
 
-		// TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
-		if (this.clear)
-			renderer.clear(
-				renderer.autoClearColor,
-				renderer.autoClearDepth,
-				renderer.autoClearStencil
-			);
+        if (this.clearDepth) {
+            renderer.clearDepth();
+        }
 
-		renderer.render(this.scene, this.camera);
+        renderer.setRenderTarget(renderToScreen ? null : writeBuffer);
 
-		if (this.clearColor) renderer.setClearColor(oldClearColor, oldClearAlpha);
+        // TODO: Avoid using autoClear properties, see https://github.com/mrdoob/three.js/pull/15571#issuecomment-465669600
+        if (this.clear) {
+            renderer.clear(
+                renderer.autoClearColor,
+                renderer.autoClearDepth,
+                renderer.autoClearStencil
+            );
+        }
 
-		this.scene.overrideMaterial = null;
-		renderer.autoClear = oldAutoClear;
-	}
+        renderer.render(this.scene, this.camera);
+
+        if (this.clearColor) {
+            renderer.setClearColor(oldClearColor, oldClearAlpha);
+        }
+
+        this.scene.overrideMaterial = null;
+        renderer.autoClear = oldAutoClear;
+    }
+
 }

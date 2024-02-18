@@ -1,9 +1,9 @@
 /**
-* @author alteredq / http://alteredqualia.com/
-* @author hexxone / https://hexx.one
-*
-* @ignore
-*/
+ * @author alteredq / http://alteredqualia.com/
+ * @author hexxone / https://hexx.one
+ *
+ * @ignore
+ */
 
 export * from './EffectComposer';
 

@@ -4,12 +4,12 @@
  * @author hexxone  / https://hexx.one
  */
 
-import { Vector2 } from "three.ts/src/math/Vector2";
+import { Vector2 } from 'three.ts/src/math/Vector2';
 
-import { BaseShader } from "./BaseShader";
+import { BaseShader } from './BaseShader';
 
-import vertex from "./vertex/Basic.glsl";
-import fragment from "./fragment/FXAA.glsl";
+import vertex from './vertex/Basic.glsl';
+import fragment from './fragment/FXAA.glsl';
 
 /**
  * NVIDIA FXAA by Timothy Lottes
@@ -21,16 +21,22 @@ import fragment from "./fragment/FXAA.glsl";
  * @implements {BaseShader}
  */
 export class FXAAShader implements BaseShader {
-	defines = null;
 
-	shaderID = "fxaaShader";
+    defines = null;
 
-	uniforms = {
-		tDiffuse: { value: null },
-		resolution: { value: new Vector2(1 / 1024, 1 / 512) },
-	};
+    shaderID = 'fxaaShader';
 
-	vertexShader = vertex;
+    uniforms = {
+        tDiffuse: {
+            value: null
+        },
+        resolution: {
+            value: new Vector2(1 / 1024, 1 / 512)
+        }
+    };
 
-	fragmentShader = fragment;
+    vertexShader = vertex;
+
+    fragmentShader = fragment;
+
 }

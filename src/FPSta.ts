@@ -2,19 +2,20 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2023 hexxone All rights reserved.
+ * Copyright (c) 2024 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
 
-import { CComponent } from "./CComponent";
-import { CSettings } from "./CSettings";
-import { waitReady } from "./Util";
-import { WEAS } from "./weas/WEAS";
+/* eslint-env browser */
 
-const ElementId = "fpstats";
+import { CComponent } from './CComponent';
+import { CSettings } from './CSettings';
+import { waitReady } from './Util';
+import { WEAS } from './weas/WEAS';
+
+const ElementId = 'fpstats';
 const MemUpdateRate = 19;
-
 
 /**
  * Custom Stats settings
@@ -22,298 +23,378 @@ const MemUpdateRate = 19;
  * @extends {CSettings}
  */
 export class FPSettings extends CSettings {
-	debugging = false;
+
+    debugging = false;
+
 }
 
 /**
  * Custom FPS Stats module
- * 
+ *
  * @public
  * @extends {CComponent}
  */
 export class FPStats extends CComponent {
-	public settings: FPSettings = new FPSettings();
 
-	private container: HTMLElement;
+    public settings: FPSettings = new FPSettings();
 
-	// FPS
-	private fpsHolder: HTMLElement;
-	private lastUpdate: number = performance.now();
-	private frameCount = 1;
+    private container: HTMLElement;
 
-	// usage
-	private useHolder: HTMLElement;
+    // FPS
+    private fpsHolder: HTMLElement;
+    private lastUpdate: number = performance.now();
+    private frameCount = 1;
 
-	// cpu
-	private cpuHolder: HTMLElement;
-	private cpuBegin: number = performance.now();
-	private cpuEnd: number = performance.now();
-	private cpuMS = 1;
+    // usage
+    private useHolder: HTMLElement;
 
-	// gpu
-	private gpuHolder: HTMLElement;
-	private gpuBegin: number = performance.now();
-	private gpuEnd: number = performance.now();
-	private gpuMS = 1;
+    // cpu
+    private cpuHolder: HTMLElement;
+    private cpuBegin: number = performance.now();
+    private cpuEnd: number = performance.now();
+    private cpuMS = 1;
 
-	// audio
-	private auProvider: WEAS = undefined;
-	private audHolder: HTMLElement;
-	private audioMS = 1;
-	private bpmHolder: HTMLDivElement;
+    // gpu
+    private gpuHolder: HTMLElement;
+    private gpuBegin: number = performance.now();
+    private gpuEnd: number = performance.now();
+    private gpuMS = 1;
 
-	// memory
-	private memUpdate = 0;
-	private perfMemHolder?: HTMLElement;
-	private gpuMemHolder?: HTMLElement;
-	private domMemHolder?: HTMLElement;
-	private wrkMemHolder?: HTMLElement; // TODO
+    // audio
+    private auProvider: WEAS = undefined;
+    private audHolder: HTMLElement;
+    private audioMS = 1;
+    private bpmHolder: HTMLDivElement;
 
-	// TODO benchmark mode
+    // memory
+    private memUpdate = 0;
+    private perfMemHolder?: HTMLElement;
+    private gpuMemHolder?: HTMLElement;
+    private domMemHolder?: HTMLElement;
+    private wrkMemHolder?: HTMLElement; // TODO
 
-	/**
-	 * Create hidden element
-	 * @param {WEAS} audio (optional)
-	 * @param {WEICUE} cue (optional)
-	 */
-	constructor(audio?: WEAS) {
-		super();
-		this.auProvider = audio;
+    // TODO benchmark mode
 
-		waitReady().then(() => {
-			this.injectCSS();
-			this.injectHTML();
-		});
-	}
+    /**
+     * Create hidden element
+     * @param {WEAS} audio (optional)
+     * @param {WEICUE} cue (optional)
+     */
+    constructor(audio?: WEAS) {
+        super();
+        this.auProvider = audio;
 
-	/**
-	 * Make style
-	 * @ignore
-	 */
-	private injectCSS() {
-		const st = document.createElement("style");
-		st.innerHTML = `
-		#${ElementId} {
-			opacity: 0;
-			position: fixed;
-			top: 50vh;
-			left: 10px;
-			padding: 10px;
-			z-index: 90000;
-			font-size: 1.5em;
-			text-align: left;
-			background: black;
-		}
-		#${ElementId}.show {
-			opacity: 0.8;
-		}
-		`;
-		document.head.append(st);
-	}
+        waitReady().then(() => {
+            this.injectCSS();
+            this.injectHTML();
+        });
+    }
 
-	/**
-	 * Make dom
-	 * @ignore
-	 */
-	private injectHTML() {
-		// root
-		this.container = document.createElement("div");
-		this.container.id = ElementId;
-		document.body.append(this.container);
-		// fps
-		this.fpsHolder = document.createElement("div");
-		this.fpsHolder.innerText = "FPS: 0 / 60";
-		// cpu
-		this.cpuHolder = document.createElement("div");
-		this.cpuHolder.innerText = "CPU: 0.00%";
-		// gpu
-		this.gpuHolder = document.createElement("div");
-		this.gpuHolder.innerText = "GPU: 0.00%";
-		// usage
-		this.useHolder = document.createElement("div");
-		this.useHolder.innerText = "All: 0.00%";
-		// append
-		this.container.append(
-			this.fpsHolder,
-			this.cpuHolder,
-			this.gpuHolder,
-			this.useHolder
-		);
-		// audio
-		if (this.auProvider) {
-			this.bpmHolder = document.createElement("div");
-			this.bpmHolder.innerText = "BPM: 0 ~ ";
+    /**
+     * Make style
+     * @ignore
+     * @returns {void}
+     */
+    private injectCSS() {
+        const st = document.createElement('style');
 
-			this.audHolder = document.createElement("div");
-			this.audHolder.innerText = "Audio: 0 ms";
+        st.innerHTML = `
+        #${ElementId} {
+            opacity: 0;
+            position: fixed;
+            top: 50vh;
+            left: 10px;
+            padding: 10px;
+            z-index: 90000;
+            font-size: 1.5em;
+            text-align: left;
+            background: black;
+        }
+        #${ElementId}.show {
+            opacity: 0.8;
+        }
+        `;
+        document.head.append(st);
+    }
 
-			this.container.append(this.bpmHolder, this.audHolder);
-		}
-	}
+    /**
+     * Make dom
+     * @ignore
+     * @returns {void}
+     */
+    private injectHTML() {
+        // root
+        this.container = document.createElement('div');
+        this.container.id = ElementId;
+        document.body.append(this.container);
+        // fps
+        this.fpsHolder = document.createElement('div');
+        this.fpsHolder.innerText = 'FPS: 0 / 60';
+        // cpu
+        this.cpuHolder = document.createElement('div');
+        this.cpuHolder.innerText = 'CPU: 0.00%';
+        // gpu
+        this.gpuHolder = document.createElement('div');
+        this.gpuHolder.innerText = 'GPU: 0.00%';
+        // usage
+        this.useHolder = document.createElement('div');
+        this.useHolder.innerText = 'All: 0.00%';
+        // append
+        this.container.append(
+            this.fpsHolder,
+            this.cpuHolder,
+            this.gpuHolder,
+            this.useHolder
+        );
+        // audio
+        if (this.auProvider) {
+            this.bpmHolder = document.createElement('div');
+            this.bpmHolder.innerText = 'BPM: 0 ~ ';
 
-	/**
-	 * update visible
-	 * @public
-	 * @returns {Promise}
-	 */
-	public updateSettings(): Promise<void> {
-		// show or hide debug info
-		return waitReady().then(() => {
-			if (this.settings.debugging) this.container.classList.add("show");
-			else this.container.classList.remove("show");
-		});
-	}
+            this.audHolder = document.createElement('div');
+            this.audHolder.innerText = 'Audio: 0 ms';
 
+            this.container.append(this.bpmHolder, this.audHolder);
+        }
+    }
 
-	/**
-	 * Start measuring interval
-	 * @public
-	 * @param {boolean} cpu True if Cpu, false if GPU
-	 */
-	public begin(cpu: boolean) {
-		if (!this.settings.debugging) return;
+    /**
+     * update visible
+     * @public
+     * @returns {Promise}
+     * @returns {void}
+     */
+    public updateSettings(): Promise<void> {
+        // show or hide debug info
+        return waitReady().then(() => {
+            if (this.settings.debugging) {
+                this.container.classList.add('show');
+            } else {
+                this.container.classList.remove('show');
+            }
+        });
+    }
 
-		if (cpu) this.cpuBegin = performance.now();
-		else this.gpuBegin = performance.now();
-	}
+    /**
+     * Start measuring interval
+     * @public
+     * @param {boolean} cpu True if Cpu, false if GPU
+     * @returns {void}
+     */
+    public begin(cpu: boolean) {
+        if (!this.settings.debugging) {
+            return;
+        }
 
-	/**
-	 * End measuring interval
-	 * @public
-	 * @param {boolean} cpu True if Cpu, false if GPU
-	 */
-	public end(cpu: boolean) {
-		if (!this.settings.debugging) return;
+        if (cpu) {
+            this.cpuBegin = performance.now();
+        } else {
+            this.gpuBegin = performance.now();
+        }
+    }
 
-		if (cpu) this.cpuEnd = performance.now();
-		else this.gpuEnd = performance.now();
-	}
+    /**
+     * End measuring interval
+     * @public
+     * @param {boolean} cpu True if Cpu, false if GPU
+     * @returns {void}
+     */
+    public end(cpu: boolean) {
+        if (!this.settings.debugging) {
+            return;
+        }
 
-	/**
-	 * update the html representation
-	 * @public
-	 */
-	public update() {
-		this.frameCount++;
-		this.cpuMS += this.cpuEnd - this.cpuBegin;
-		this.gpuMS += this.gpuEnd - this.gpuBegin;
+        if (cpu) {
+            this.cpuEnd = performance.now();
+        } else {
+            this.gpuEnd = performance.now();
+        }
+    }
 
-		if (this.auProvider && this.auProvider.lastAudio) {
-			this.audioMS = (this.audioMS + this.auProvider.lastAudio.ellapsed) / 2;
-		}
+    /**
+     * update the html representation
+     * @public
+     * @returns {void}
+     */
+    public update() {
+        this.frameCount++;
+        this.cpuMS += this.cpuEnd - this.cpuBegin;
+        this.gpuMS += this.gpuEnd - this.gpuBegin;
 
-		// only update text ~every second
-		const now = performance.now();
-		if (now < this.lastUpdate + 1000) return;
+        if (this.auProvider && this.auProvider.lastAudio) {
+            this.audioMS
+                = (this.audioMS + this.auProvider.lastAudio.ellapsed) / 2;
+        }
 
-		// calculate
-		const elapsd = (now - this.lastUpdate) / 1000;
-		const efpies = this.frameCount / elapsd;
+        // only update text ~every second
+        const now = performance.now();
 
-		const target = this.getFpsTarget(efpies);
-		const msPerFps = (1000 / target);
-		const cepeyu = this.cpuMS / this.frameCount / msPerFps * 100;
-		const gepeyu = this.gpuMS / this.frameCount / msPerFps * 100;
-		const alluse = (target / efpies) * (cepeyu + gepeyu);
+        if (now < this.lastUpdate + 1000) {
+            return;
+        }
 
-		// apply
-		this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)} / ${target}`;
-		this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} %`;
-		this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} %`;
-		this.useHolder.innerText = `All: ${alluse.toFixed(2)} %`;
+        // calculate
+        const elapsd = (now - this.lastUpdate) / 1000;
+        const efpies = this.frameCount / elapsd;
 
-		if (this.audHolder)
-			this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
-		if (
-			this.bpmHolder &&
-			this.auProvider.lastAudio &&
-			this.auProvider.lastAudio.bpm instanceof Array
-		) {
-			let bts = 0;
-			const bp = this.auProvider.lastAudio.bpm;
-			bp.forEach((b) => (bts += b.value));
-			bts /= bp.length;
-			this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
-		}
+        const target = this.getFpsTarget(efpies);
+        const msPerFps = 1000 / target;
+        const cepeyu = (this.cpuMS / this.frameCount / msPerFps) * 100;
+        const gepeyu = (this.gpuMS / this.frameCount / msPerFps) * 100;
+        const alluse = (target / efpies) * (cepeyu + gepeyu);
 
-		if (this.memUpdate++ > MemUpdateRate) {
-			this.memUpdate = 0;
-			this.updateMemory();
-		}
+        // apply
+        this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)} / ${target}`;
+        this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} %`;
+        this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} %`;
+        this.useHolder.innerText = `All: ${alluse.toFixed(2)} %`;
 
-		this.lastUpdate = now;
-		this.reset();
-	}
+        if (this.audHolder) {
+            this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
+        }
+        if (
+            this.bpmHolder
+            && this.auProvider.lastAudio
+            && this.auProvider.lastAudio.bpm instanceof Array
+        ) {
+            let bts = 0;
+            const bp = this.auProvider.lastAudio.bpm;
 
-	/**
-	 * All back to 0
-	 * @public
-	 */
-	public reset() {
-		this.frameCount = this.cpuMS = this.gpuMS = this.audioMS = 1;
-	}
+            bp.forEach((b) => {
+                return (bts += b.value);
+            });
+            bts /= bp.length;
+            this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
+        }
 
+        if (this.memUpdate++ > MemUpdateRate) {
+            this.memUpdate = 0;
+            this.updateMemory();
+        }
 
-	private updateMemory() {
-		if (window.crossOriginIsolated && performance["measureUserAgentSpecificMemory"] !== undefined) {
-			performance["measureUserAgentSpecificMemory"]().then(result => {
-				if (result && result.breakdown && result.bytes) {
-					let sum = result.bytes;
-					if (isNaN(sum) || sum <= 0) {
-						console.warn("Invalid performance result: ", result);
-						return;
-					}
+        this.lastUpdate = now;
+        this.reset();
+    }
 
-					if (!this.perfMemHolder) {
-						this.perfMemHolder = document.createElement("div");
-						this.useHolder.insertAdjacentElement("afterend", this.perfMemHolder);
-					}
+    /**
+     * All back to 0
+     * @public
+     * @returns {void}
+     */
+    public reset() {
+        this.frameCount = this.cpuMS = this.gpuMS = this.audioMS = 1;
+    }
 
-					const getDetail = (type: string) =>
-						result.breakdown.find(bd => !!bd && !!bd.types && !!bd.types.includes && bd.types.includes(type)) ?? undefined
+    private updateMemory() {
+        // eslint-disable-next-line dot-notation
+        if (
+            window.crossOriginIsolated
+            && performance.measureUserAgentSpecificMemory !== undefined
+        ) {
+            // eslint-disable-next-line dot-notation
+            performance['measureUserAgentSpecificMemory']()
+                .then((result) => {
+                    if (result && result.breakdown && result.bytes) {
+                        let sum = result.bytes;
 
-					const addDetail = (gotDetail: any, text: string, gotElement: HTMLElement, insertAfter: HTMLElement) => {
-						if (!!gotDetail && !isNaN(gotDetail.bytes)) {
-							if (!gotElement) {
-								gotElement = document.createElement("div");
-								insertAfter.insertAdjacentElement("afterend", gotElement);
-							}
-							const domMem = gotDetail.bytes;
-							sum -= domMem;
-							gotElement.innerText = `${text}: ${this.formatBytes(domMem)}`;
-						}
-						return gotElement;
-					} 
+                        if (isNaN(sum) || sum <= 0) {
+                            console.warn(
+                                'Invalid performance result: ',
+                                result
+                            );
 
-					this.domMemHolder = addDetail(getDetail("DOM"), "DOM", this.domMemHolder, this.perfMemHolder);
+                            return;
+                        }
 
-					this.gpuMemHolder = addDetail(getDetail("Canvas"), "VRAM", this.gpuMemHolder, this.perfMemHolder);
+                        if (!this.perfMemHolder) {
+                            this.perfMemHolder = document.createElement('div');
+                            this.useHolder.insertAdjacentElement(
+                                'afterend',
+                                this.perfMemHolder
+                            );
+                        }
 
+                        const getDetail = (type: string) => {
+                            return (
+                                result.breakdown.find((bd) => {
+                                    return (
+                                        !!bd
+                                        && !!bd.types
+                                        && !!bd.types.includes
+                                        && bd.types.includes(type)
+                                    );
+                                }) ?? undefined
+                            );
+                        };
 
-					this.perfMemHolder.innerText = `RAM: ${this.formatBytes(sum)}`;
-				}
-			}).catch(err => console.error);
-		}
-	}
+                        const addDetail = (
+                            gotDetail: any,
+                            text: string,
+                            gotElement: HTMLElement,
+                            insertAfter: HTMLElement
+                        ) => {
+                            if (!!gotDetail && !isNaN(gotDetail.bytes)) {
+                                if (!gotElement) {
+                                    gotElement = document.createElement('div');
+                                    insertAfter.insertAdjacentElement(
+                                        'afterend',
+                                        gotElement
+                                    );
+                                }
+                                const domMem = gotDetail.bytes;
 
-	private getFpsTarget(current: number) {
-		const margin = current * 0.1;
-		const targets = [600, 480, 360, 240, 144, 120, 90, 75, 60, 30];
-		for (let i = 1; i < targets.length; i++) {
-			if(current > targets[i] + margin)
-				return targets[i - 1];
-		}
-		return 30;
-	}
+                                sum -= domMem;
+                                gotElement.innerText = `${text}: ${this.formatBytes(domMem)}`;
+                            }
 
-	private formatBytes(n: number) {
-		const units = ['b', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-		let l = 0;
-		while (n >= 1024 && ++l) {
-			n = n / 1024;
-		}
-		return (n.toFixed(l > 0 ? 2 : 0) + ' ' + units[l]);
-	}
+                            return gotElement;
+                        };
 
+                        this.domMemHolder = addDetail(
+                            getDetail('DOM'),
+                            'DOM',
+                            this.domMemHolder,
+                            this.perfMemHolder
+                        );
+
+                        this.gpuMemHolder = addDetail(
+                            getDetail('Canvas'),
+                            'VRAM',
+                            this.gpuMemHolder,
+                            this.perfMemHolder
+                        );
+
+                        this.perfMemHolder.innerText = `RAM: ${this.formatBytes(sum)}`;
+                    }
+                })
+                .catch(() => {
+                    return console.error;
+                });
+        }
+    }
+
+    private getFpsTarget(current: number) {
+        const margin = current * 0.1;
+        const targets = [600, 480, 360, 240, 144, 120, 90, 75, 60, 30];
+
+        for (let i = 1; i < targets.length; i++) {
+            if (current > targets[i] + margin) {
+                return targets[i - 1];
+            }
+        }
+
+        return 30;
+    }
+
+    private formatBytes(n: number) {
+        const units = ['b', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        let l = 0;
+
+        while (n >= 1024 && ++l) {
+            n /= 1024;
+        }
+
+        return `${n.toFixed(l > 0 ? 2 : 0)} ${units[l]}`;
+    }
 
 }
