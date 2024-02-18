@@ -1,34 +1,40 @@
 /**
-* @author alteredq / http://alteredqualia.com/
-* @author hexxone / https://hexx.one
-*
-* @license
-* Copyright (c) 2023 hexxone All rights reserved.
-* Licensed under the GNU GENERAL PUBLIC LICENSE.
-* See LICENSE file in the project root for full license information.
-*/
+ * @author alteredq / http://alteredqualia.com/
+ * @author hexxone / https://hexx.one
+ *
+ * @license
+ * Copyright (c) 2024 hexxone All rights reserved.
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.
+ */
 
-import {BaseShader} from './BaseShader';
+import { BaseShader } from './BaseShader';
 
 import vertex from './vertex/Basic.glsl';
 import fragment from './fragment/Copy.glsl';
 
 /**
-* Siimple I/O shader
-* @public
-* @implements {BaseShader}
-*/
+ * Siimple I/O shader
+ * @public
+ * @implements {BaseShader}
+ */
 export class CopyShader implements BaseShader {
-	defines = null;
 
-	shaderID = 'copyShader';
+    defines = null;
 
-	uniforms = {
-		"tDiffuse": {value: null},
-		"opacity": {value: 1.0},
-	};
+    shaderID = 'copyShader';
 
-	vertexShader = vertex;
+    uniforms = {
+        tDiffuse: {
+            value: null
+        },
+        opacity: {
+            value: 1.0
+        }
+    };
 
-	fragmentShader = fragment;
+    vertexShader = vertex;
+
+    fragmentShader = fragment;
+
 }

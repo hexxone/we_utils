@@ -2,19 +2,19 @@
  * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2023 hexxone All rights reserved.
+ * Copyright (c) 2024 hexxone All rights reserved.
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.
  */
 
-import { Smallog } from "../Smallog";
+import { Smallog } from '../Smallog';
 
 // this should pack the serviceworker like a webwoker.
 
-import OfflineWorker from "worker-loader!./Offline.worker";
+import OfflineWorker from 'worker-loader!./Offline.worker';
 // const OfflineWorker = () => new Worker(new URL(, import.meta.url));
 
-const oh = "[OfflineHelper] ";
+const oh = '[OfflineHelper] ';
 
 /**
  * Helper class for loading and registering the ServiceWorker
@@ -36,7 +36,7 @@ const oh = "[OfflineHelper] ";
 // eslint-disable-next-line require-jsdoc
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DontRemove() {
-	return new OfflineWorker();
+    return new OfflineWorker();
 }
 
 // TODO check if offlinefiles exist before registering
@@ -57,27 +57,41 @@ function DontRemove() {
  * @public
  */
 function register(
-	name: string,
-	worker = "Offline.worker.js",
-	oFile = "offlinefiles.json"
+    name: string,
+    worker = 'Offline.worker.js',
+    oFile = 'offlinefiles.json'
 ): Promise<boolean> {
-	return new Promise((resolve) => {
-		if ("serviceWorker" in navigator) {
-			const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
-			navigator.serviceWorker
-				.register(workerPath, { scope: "/" })
-				.then(
-					() => Smallog.info("service-worker registration complete.", oh),
-					(reason) =>
-						Smallog.error("service-worker registration failure: " + reason, oh)
-				)
-				.then(() => resolve(true));
-			return true;
-		} else {
-			Smallog.error("not supported!", oh);
-			resolve(false);
-		}
-	});
+    return new Promise((resolve) => {
+        if ('serviceWorker' in navigator) {
+            const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
+
+            navigator.serviceWorker
+                .register(workerPath, {
+                    scope: '/'
+                })
+                .then(
+                    () => {
+                        return Smallog.info(
+                            'service-worker registration complete.',
+                            oh
+                        );
+                    },
+                    (reason) => {
+                        return Smallog.error(
+                            `service-worker registration failure: ${reason}`,
+                            oh
+                        );
+                    }
+                )
+                .then(() => {
+                    return resolve(true);
+                });
+
+            return true;
+        }
+        Smallog.error('not supported!', oh);
+        resolve(false);
+    });
 }
 
 /**
@@ -86,19 +100,24 @@ function register(
  * @public
  */
 async function reset(): Promise<boolean> {
-	return new Promise((resolve) => {
-		if ("serviceWorker" in navigator) {
-			navigator.serviceWorker.getRegistrations().then(async (registrations) => {
-				for (const registration of registrations) {
-					await registration.unregister();
-				}
-				resolve(true);
-			});
-		} else {
-			Smallog.error("not supported!", oh);
-			resolve(false);
-		}
-	});
+    return new Promise((resolve) => {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker
+                .getRegistrations()
+                .then(async (registrations) => {
+                    for (const registration of registrations) {
+                        await registration.unregister();
+                    }
+                    resolve(true);
+                });
+        } else {
+            Smallog.error('not supported!', oh);
+            resolve(false);
+        }
+    });
 }
 
-export const OfflineHelper = { register, reset };
+export const OfflineHelper = {
+    register,
+    reset
+};

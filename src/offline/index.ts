@@ -1,1 +1,1 @@
-export * from "./OfflineHelper";
+export * from './OfflineHelper';

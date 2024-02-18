@@ -1,9 +1,9 @@
 {
-  "extends": "assemblyscript/std/assembly.json",
-  "include": [
-    "./**/*.ts"
-  ],
-  "compilerOptions": {
-    "strictBindCallApply": false
-  }
+    "extends": "assemblyscript/std/assembly.json",
+    "include": [
+        "./**/*.ts"
+    ],
+    "compilerOptions": {
+        "strictBindCallApply": false
+    }
 }
