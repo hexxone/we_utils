@@ -384,7 +384,7 @@ export class WEAS extends CComponent {
         `;
         document.body.append(this.mainElm);
 
-        const { x: realWidth, y: realHeight } = getRealWindowSize();
+        const { x: realWidth } = getRealWindowSize();
         // TODO should also apply Height ????
 
         this.canvas1 = document.getElementById(
