@@ -33,7 +33,7 @@
 /**
  * @public
  */
-export class Bea_ts {
+export class BeaTs {
 
     private bd_low: BeatsDetektor = new BeatsDetektor(55, 109);
     private bd_med: BeatsDetektor = new BeatsDetektor(85, 169);
