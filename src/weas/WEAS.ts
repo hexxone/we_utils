@@ -12,7 +12,7 @@ import { CSettings } from '../CSettings';
 import { Smallog } from '../Smallog';
 import { getRealWindowSize, sharedWorker, waitReady } from '../Util';
 import { WascInterface } from '../wasc-worker/WascInterface';
-import { Bea_ts } from './Bea';
+import { BeaTs } from './Bea';
 
 const DAT_LEN = 128;
 const LISTENAME = 'wallpaperRegisterAudioListener';
@@ -148,7 +148,7 @@ export class WEAS extends CComponent {
     weasModule: WascInterface = null;
 
     // bpm detektor
-    bpModule: Bea_ts;
+    bpModule: BeaTs;
 
     // debug render elements
     mainElm: HTMLDivElement;
@@ -168,7 +168,7 @@ export class WEAS extends CComponent {
     constructor(autoInit = false, detectBpm = false) {
         super();
         if (detectBpm) {
-            this.bpModule = new Bea_ts();
+            this.bpModule = new BeaTs();
         }
         if (autoInit) {
             waitReady().then(() => {
