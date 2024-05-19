@@ -32,7 +32,7 @@ Keeping track of this stuff manually is annoying...
 - Smallog Logging & Filtering
 - WarnHelper for Seizure warnings
 - Wallpaper Engine iCUE Library (WEICUE)
-- Wallpaper Engine Wallpaper Adapter (WEWWA)
+- Wallpaper Engine Web Adapter (WEWA)
 - Stats.js definition file
 
 ### Used by

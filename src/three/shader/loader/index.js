@@ -3,7 +3,7 @@
 // eslint-disable-next-line no-undef
 const { readFile } = require('fs');
 // eslint-disable-next-line no-undef
-const { dirname } = require('path');
+const { dirname, relative } = require('path');
 const {
     minifyGLSL
     // eslint-disable-next-line no-undef
@@ -46,7 +46,7 @@ function parse(loader, source, context, cb) {
 function processImports(loader, source, context, imports, cb, lvl = 0) {
     // if no imports left, resolve
     if (lvl > 0) {
-        console.log(`[GLSLoader] Walking on lvl: ${lvl}`);
+        console.info(`[GLSLoader] Walking on lvl: ${lvl}`);
     }
     if (imports.length === 0) {
         return cb(null, source);
@@ -92,6 +92,8 @@ exports.default = function(source) {
     this.cacheable();
     const cb = this.async();
 
+    const file = relative('./', this._module.resource);
+
     parse(this, source, this.context, (err, bld) => {
         if (err) {
             return cb(err);
@@ -100,10 +102,8 @@ exports.default = function(source) {
         // do minifying
         const repl = optimize(bld);
 
-        console.log(
-            `[GLSLoader] Shortened program by: ${
-                bld.length - repl.length
-            } chars`
+        console.info(
+            `[GLSLoader] Shortened program by ${bld.length - repl.length} chars: '${file}'`
         );
 
         cb(null, `export default ${JSON.stringify(repl)}`);

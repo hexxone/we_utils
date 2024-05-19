@@ -44,6 +44,7 @@ class Smalog {
     logLevel: LogLevel = LogLevel.Info; // @todo change default logging level
     preFix = '[Smallog] ';
     printTime = false;
+    printTrace = false;
 
     /**
      * trace exception calls
@@ -109,6 +110,7 @@ class Smalog {
         if (this.printTime) {
             msg = `[${new Date().toLocaleString()}] ${msg}`;
         }
+        // should print the trace as a browser feature by default.
         console.error(hdr + msg);
     }
 
@@ -123,7 +125,7 @@ class Smalog {
             if (this.printTime) {
                 msg = `[${new Date().toLocaleString()}] ${msg}`;
             }
-            if (this.logLevel >= 2) {
+            if (this.printTrace) {
                 hdr = this.traceCall(hdr);
             }
             console.warn(hdr + msg);
@@ -141,7 +143,7 @@ class Smalog {
             if (this.printTime) {
                 msg = `[${new Date().toLocaleString()}] ${msg}`;
             }
-            if (this.logLevel >= 2) {
+            if (this.printTrace) {
                 hdr = this.traceCall(hdr);
             }
             console.info(hdr + msg);
@@ -158,6 +160,9 @@ class Smalog {
         if (this.logLevel >= 2) {
             if (this.printTime) {
                 msg = `[${new Date().toLocaleString()}] ${msg}`;
+            }
+            if (this.printTrace) {
+                hdr = this.traceCall(hdr);
             }
             console.debug(hdr + msg);
         }

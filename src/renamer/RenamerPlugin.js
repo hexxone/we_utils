@@ -42,8 +42,8 @@ class RenamerPlugin {
 
     options = {};
 
-    // mapped name list: {key,value}
-    nameMap = [];
+    // mapped name list: {key=value}
+    nameMap = {};
 
     /**
      * Intializes the plugin in the webpack build process
@@ -64,15 +64,13 @@ class RenamerPlugin {
             .toString(20)
             .substr(2, 2 + Math.random() * 4)}`;
 
-        let exist = (src || '').indexOf(gen) >= 0;
+        const existInSource = (src || '').indexOf(gen) >= 0;
 
-        this.nameMap.forEach((mping) => {
-            if (mping.key === gen) {
-                exist = true;
-            }
+        const mapContainsString = Object.entries(this.nameMap).some(([key, value]) => {
+            return key.includes(gen) || value.includes(gen);
         });
 
-        return exist ? this.getRandomName() : gen;
+        return (existInSource || mapContainsString) ? this.getRandomName() : gen;
     }
 
     /**
@@ -82,23 +80,14 @@ class RenamerPlugin {
      * @returns {string} replaced string
      */
     replaceMatch(source, match) {
-        let fnd = null;
-
         // check if this exact name is already mapped
-        this.nameMap.forEach((mping) => {
-            if (mping.key === match) {
-                fnd = mping.val;
-            }
-        });
-        if (fnd) {
-            return fnd;
+        if (this.nameMap[match] !== undefined) {
+            return this.nameMap[match];
         }
-        // get & add a new random variable name
-        fnd = this.getRandomName(source);
-        this.nameMap.push({
-            key: match,
-            val: fnd
-        });
+        // get & map a new random variable name
+        const fnd = this.getRandomName(source);
+
+        this.nameMap[match] = fnd;
 
         return fnd;
     }
@@ -282,15 +271,16 @@ class RenamerPlugin {
                     : 0;
         });
 
-        // console.log(JSON.stringify(filtered, null, '\t'));
-        console.log(`Potentially saving: ${sum} chars.`);
+        // console.info(JSON.stringify(filtered, null, '\t'));
+        console.info(`${pluginName} Potentially saving: ${sum} chars. Processing...`);
 
         const oldPd = pd;
+        let skipped = 0;
 
         // replace all occurences
         for (let index = 0; index < filtered.length; index++) {
             const element = filtered[index];
-            // console.log(
+            // console.debug(
             //     "Replacing " +
             //         element.k +
             //         " => " +
@@ -300,7 +290,6 @@ class RenamerPlugin {
             //         " usages)"
             // );
 
-            let skipped = 0;
             let newPd = pd;
 
             // check & queue every potential replacement one-by-one
@@ -323,12 +312,12 @@ class RenamerPlugin {
                 let match;
 
                 while ((match = patt.exec(newPd)) !== null && !isInvalid) {
-                    // console.log(match.index + ' ' + patt.lastIndex);
+                    // console.info(match.index + ' ' + patt.lastIndex);
                     if (rIdx >= match.index && rIdx <= patt.lastIndex) {
                         isInvalid = true;
-                        // console.log(`'${element.k}' Is in String between [${pIdx}:${pIdx + pLen}] at [${rIdx}:${rIdx + rLen}] ==> ${newPd.substring(rIdx - rLen -5, rIdx + 5)}`);
+                        // console.info(`'${element.k}' Is in String between [${pIdx}:${pIdx + pLen}] at [${rIdx}:${rIdx + rLen}] ==> ${newPd.substring(rIdx - rLen -5, rIdx + 5)}`);
                     }
-                    // else console.log(`${element.k} not in ${match[0]}`);
+                    // else console.info(`${element.k} not in ${match[0]}`);
                 }
 
                 if (!isInvalid) {
@@ -349,7 +338,7 @@ class RenamerPlugin {
                 const to = operation.end;
                 const re = operation.repl;
 
-                // console.log(`Replace '${newPd.substring(from, to)}' at ${from} with '${re}'  ==>  ${newPd.substring(from -5, to + 5)}`);
+                // console.info(`Replace '${newPd.substring(from, to)}' at ${from} with '${re}'  ==>  ${newPd.substring(from -5, to + 5)}`);
                 newPd = newPd.substring(0, from) + re + newPd.substring(to);
 
                 // calculate new offset for following pending operations
@@ -370,18 +359,19 @@ class RenamerPlugin {
             // sanity check
             // @todo bruh
             if (newPd.match(/\]\][a-zA-Z0-9_]{1,}/)) {
-                console.log(
+                console.error(
                     `${pluginName} Error double bracket, missing delimiter? `
                 );
-                console.log(element);
+                console.error(element);
             } else {
-                if (skipped > 0) {
-                    console.log(
-                        `${pluginName} Skipped ${skipped} invalid replacements.`
-                    );
-                }
                 pd = newPd;
             }
+        }
+
+        if (skipped > 0) {
+            console.info(
+                `${pluginName} Skipped ${skipped} invalid replacements.`
+            );
         }
 
         // prepend all global Maps
@@ -453,14 +443,13 @@ class RenamerPlugin {
             newStrict += `${k}=${val}`;
         });
 
-        console.log(pluginName + newStrict);
+        console.info(`${pluginName} Processed header length: ${newStrict.length}`);
 
         pd = `${newStrict};${pd}`;
 
         const lengDiff = oldPd.length - pd.length;
         const expDiff = lengDiff - sum;
 
-        console.log(`${pluginName} Replacement complete!`);
         let m = `Actually saved: ${lengDiff} chars. `;
 
         if (expDiff > 0) {
@@ -469,10 +458,11 @@ class RenamerPlugin {
         if (expDiff < 0) {
             m += ` (${Math.abs(expDiff)} less than expected)`;
         }
-        console.log(m);
+        console.info(`${pluginName} Replacement complete! -> ${m}`);
+
         if (lengDiff < 0) {
-            console.log(
-                `${pluginName} Did not save any chars! rolling back...`
+            console.info(
+                `${pluginName} Did not save any chars (${lengDiff})! Reverting changes...`
             );
             pd = oldPd;
         }
@@ -510,7 +500,7 @@ class RenamerPlugin {
      */
     processSource(compilation, name, child) {
         if (child._valueIsBuffer || !child.source) {
-            console.log(`${pluginName} Value is Buffer!`);
+            console.error(`${pluginName} Value is Buffer!`);
 
             return;
         }
@@ -520,10 +510,6 @@ class RenamerPlugin {
         // if anything changed, update the processed asset
         if (typeof processed === 'string' && source !== processed) {
             compilation.updateAsset(name, new RawSource(processed));
-            // calculate saved memory
-            const savedChars = source.length - processed.length;
-
-            console.info(`${pluginName} Saved: ${savedChars} chars`);
         }
     }
 
@@ -545,7 +531,7 @@ class RenamerPlugin {
                     if (!assetFile || !assetFile.endsWith('.js')) {
                         continue;
                     }
-                    console.info(`${pluginName} Processing: ${assetFile}`);
+                    console.info(`${pluginName} Processing file: ${assetFile}`);
 
                     // get the processed asset object / source
                     const asset = compilation.getAsset(assetFile);
@@ -560,7 +546,7 @@ class RenamerPlugin {
                 }
 
                 // finish up
-                console.info(`${pluginName} Replaced: `, this.nameMap);
+                console.info(`${pluginName} Replaced: ${JSON.stringify(this.nameMap)}`);
             } catch (error) {
                 console.info(`${pluginName} Replace error: `, error);
             }
