@@ -12,7 +12,7 @@ import { Smallog } from './Smallog';
 import { waitReady } from './Util';
 import { WascUtil } from './wasc-worker/WascUtil';
 
-const LogHead = '[WEWWA] ';
+const LogHead = '[WEWA] ';
 const DefLang = 'en-us';
 
 /**
@@ -164,7 +164,7 @@ export class WEWA {
             this.projectData = json;
             this.loadStorage();
             this.addStyle();
-            this.addMenu(localStorage.getItem('wewwaLang'));
+            this.addMenu(localStorage.getItem('wewaLang'));
             this.evaluateSettings();
             this.applyProp(json.general.properties);
         });
@@ -177,7 +177,7 @@ export class WEWA {
      */
     private loadStorage() {
         const props = this.projectData.general.properties;
-        const last = localStorage.getItem('wewwaLastProps');
+        const last = localStorage.getItem('wewaLastProps');
 
         if (last !== null) {
             const merged = Object.assign(props, JSON.parse(last));
@@ -204,7 +204,7 @@ export class WEWA {
         const pwShort = `${percentageWidth}vw`;
 
         st.innerHTML = `
-        #wewwaMenu, #wewwaIcon {
+        #wewaMenu, #wewaIcon {
             transform: none;
             transition: transform 500ms ease;
             position:absolute;
@@ -212,7 +212,7 @@ export class WEWA {
             padding:15px;
             z-index:9999;
         }
-        #wewwaMenu {
+        #wewaMenu {
             top:10px;
             border: solid 2px #444;
             width:${pwShort};
@@ -227,10 +227,10 @@ export class WEWA {
             font-family: Helvetica, Verdana, Arial;
             font-size: larger;
         }
-        #wewwaMenu hr {
+        #wewaMenu hr {
             margin: 20px 0px;
         }
-        #wewwaMenu a {
+        #wewaMenu a {
             color: white;
             border: 2px solid #4CAF50;
             padding: 5px 10px;
@@ -238,48 +238,48 @@ export class WEWA {
             text-decoration: none;
             display: block;
         }
-        #wewwaMenu a:hover {
+        #wewaMenu a:hover {
             background: #4CAF50;
         }
-        #wewwaMenu .red {
+        #wewaMenu .red {
             border-color: #FF7F50;
         }
-        #wewwaMenu .red:hover {
+        #wewaMenu .red:hover {
             background-color: #FF7F50;
         }
-        #wewwaMenu .audio {
+        #wewaMenu .audio {
             border-color: #00a1ff;
         }
-        #wewwaMenu .audio:hover {
+        #wewaMenu .audio:hover {
             background-color: #00a1ff;
         }
-        #wewwaMenu audio, #wewwaMenu select {
+        #wewaMenu audio, #wewaMenu select {
             width: 100%;
         }
-        #wewwaMenu table {
+        #wewaMenu table {
             width:100%;
             table-layout: fixed;
         }
-        #wewwaMenu tr.hide {
+        #wewaMenu tr.hide {
             display: none;
         }
-        #wewwaMenu td {
+        #wewaMenu td {
             width: 50%;
             padding: 5px;
         }
-        #wewwaMenu .left {
+        #wewaMenu .left {
             text-align: left;
         }
-        #wewwaMenu .right {
+        #wewaMenu .right {
             text-align: right;
         }
-        #wewwaMenu img {
+        #wewaMenu img {
             width: ${percentageWidth / 2}vw;
             min-width: ${Math.floor(minWidthPx / 2)}px;
             max-width: 90%;
             heigth: auto;
         }
-        #wewwaMenu .droparea {
+        #wewaMenu .droparea {
             border: 2px dashed #bbb;
             -webkit-border-radius: 5px;
             border-radius: 5px;
@@ -289,18 +289,18 @@ export class WEWA {
             color: #bbb;
         }
         /* Icon */
-        #wewwaIcon {
+        #wewaIcon {
             right:0px;
             cursor:pointer;
         }
-        #wewwaIcon div {
+        #wewaIcon div {
             width:35px;
             height:5px;
             background-color:#888888;
             margin:6px 0;
         }
 
-        #wewwaMenu.open, #wewwaIcon.open {
+        #wewaMenu.open, #wewaIcon.open {
             transform: translateX(min(-${percentageWidth * 1.1}vw, -${Math.floor(
     minWidthPx * 1.1
 )}px));
@@ -309,14 +309,14 @@ export class WEWA {
 
         /* Smartphone format */
         @media all and (max-width: 1000px) {
-            #wewwaMenu {
+            #wewaMenu {
                 width:90vw;
             }
-            #wewwaMenu.open {
+            #wewaMenu.open {
                 transform: translateX(-95vw);
                 transition: transform 500ms ease;
             }
-            #wewwaIcon.open {
+            #wewaIcon.open {
                 transform: translateX(calc(-100vw + 60px));
                 transition: transform 500ms ease;
             }
@@ -349,7 +349,7 @@ export class WEWA {
 
         // create root menu
         this.htmlMenu = ce('div');
-        this.htmlMenu.id = 'wewwaMenu';
+        this.htmlMenu.id = 'wewaMenu';
 
         // create preview img wrap
         this.addMenuHeader(ce, proj);
@@ -373,7 +373,7 @@ export class WEWA {
     private addMenuIcon(ce: (e: any) => any) {
         const icon = (this.htmlIcon = ce('div'));
 
-        icon.id = 'wewwaIcon';
+        icon.id = 'wewaIcon';
         icon.addEventListener('click', () => {
             if (this.htmlMenu.classList.contains('open')) {
                 this.htmlMenu.classList.remove('open');
@@ -633,7 +633,7 @@ export class WEWA {
 
         lan.addEventListener('change', function() {
             // eslint-disable-next-line no-invalid-this
-            localStorage.setItem('wewwaLang', this.value);
+            localStorage.setItem('wewaLang', this.value);
             // eslint-disable-next-line no-invalid-this
             ref.addMenu(this.value);
             ref.evaluateSettings();
@@ -695,7 +695,7 @@ export class WEWA {
         // System file input
         const aBtn4 = ce('input');
 
-        aBtn4.id = 'wewwaAudioInput';
+        aBtn4.id = 'wewaAudioInput';
         aBtn4.innerHTML = 'Select File';
         aBtn4.setAttribute('type', 'file');
         aBtn4.addEventListener('change', (e) => {
@@ -817,7 +817,7 @@ export class WEWA {
         // table structure
         const row = ce('tr');
 
-        row.setAttribute('id', `wewwa_${prop}`);
+        row.setAttribute('id', `wewa_${prop}`);
 
         // Text
         const column1 = ce('td');
@@ -880,7 +880,7 @@ export class WEWA {
                 // create numeric-up-down
                 const sliderVal = ce(canEdit ? 'input' : 'output');
 
-                sliderVal.name = `wewwa_out_${prop}`;
+                sliderVal.name = `wewa_out_${prop}`;
                 sliderVal.setAttribute('id', sliderVal.name);
                 sliderVal.setAttribute('type', 'number');
                 sliderVal.style.width = '75%';
@@ -921,7 +921,7 @@ export class WEWA {
                 break;
         }
 
-        const eid = `wewwa_prop_${prop}`;
+        const eid = `wewa_prop_${prop}`;
 
         // make input label if not text
         if (!txt) {
@@ -1001,7 +1001,7 @@ export class WEWA {
                 break;
             case 'slider':
                 if (elm.name.includes('_out_')) {
-                    const inpt: any = document.querySelector(`#wewwa_${prop}`);
+                    const inpt: any = document.querySelector(`#wewa_${prop}`);
 
                     if (inpt) {
                         inpt.value = elm.value;
@@ -1010,7 +1010,7 @@ export class WEWA {
                     }
                 } else {
                     const slide: any = document.querySelector(
-                        `#wewwa_out_${prop}`
+                        `#wewa_out_${prop}`
                     );
 
                     if (slide) {
@@ -1063,15 +1063,15 @@ export class WEWA {
      */
     public evaluateSettings() {
         // dynamic prefix for evaluation
-        const pre = 'wewwaProps';
-        const wewwaProps = this.projectData.general.properties;
+        const pre = 'wewaProps';
+        const wewaProps = this.projectData.general.properties;
 
-        localStorage.setItem('wewwaLastProps', JSON.stringify(wewwaProps));
-        for (const p in wewwaProps) {
+        localStorage.setItem('wewaLastProps', JSON.stringify(wewaProps));
+        for (const p in wewaProps) {
             if (!p) {
                 continue;
             }
-            const prop = wewwaProps[p];
+            const prop = wewaProps[p];
 
             // some ev(a|i)l magic
             let visible = true;
@@ -1105,7 +1105,7 @@ export class WEWA {
                 }
                 try {
                     visible
-                        = new Function(pre, `return (${cprop})`)(wewwaProps)
+                        = new Function(pre, `return (${cprop})`)(wewaProps)
                         === true;
                 } catch (e) {
                     Smallog.error(
@@ -1116,7 +1116,7 @@ export class WEWA {
             }
 
             // get input dom element
-            const htElm = document.getElementById(`wewwa_${p}`);
+            const htElm = document.getElementById(`wewa_${p}`);
 
             if (!htElm || htElm.childNodes.length < 2) {
                 continue;
@@ -1403,7 +1403,7 @@ export class WEWA {
     public stopAudioInterval() {
         // eslint-disable-next-line dot-notation
         window['persistAudioStream'] = null;
-        document.getElementById('wewwaAudioInput').setAttribute('value', '');
+        document.getElementById('wewaAudioInput').setAttribute('value', '');
         if (this.audio) {
             this.audio.remove();
         }
