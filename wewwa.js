@@ -54,6 +54,9 @@ wewwApp.Init = () => {
     });
 }
 
+wewwApp.IsInit = () => {
+    return (wewwApp.project != null);
+}
 
 // load json via ajax request
 wewwApp.LoadProjectJSON = (complete) => {
@@ -71,7 +74,7 @@ wewwApp.LoadStorage = () => {
     if (last != null) {
         var merged = Object.assign(props, JSON.parse(last));
         wewwApp.project.general.properties = merged;
-        console.log("Loaded & merged settings.")
+        console.log("Loaded & merged settings.");
     }
 }
 
@@ -401,6 +404,7 @@ wewwApp.CreateItem = (prop, itm) => {
         // add combo select options
         case "combo":
             inp = ce("select");
+            inp.setAttribute("id", "wewwa_inp_" + prop);
             // set options
             for (var o of itm.options) {
                 var opt = ce("option");
@@ -447,7 +451,14 @@ wewwApp.CreateItem = (prop, itm) => {
             inp.style.width = "100%";
             inp.max = itm.max;
             inp.min = itm.min;
-            inp.step = 0.1;
+            if (itm.step == undefined) inp.step = 0.1;
+            else {
+                //enforce range values if step was included
+                sliderVal.setAttribute("max", itm.max);
+                sliderVal.setAttribute("min", itm.min);
+                sliderVal.setAttribute("step", itm.step);
+                inp.step = itm.step;
+            }
             break;
         case "textinput":
             inp.setAttribute("type", "text");
@@ -474,6 +485,43 @@ wewwApp.CreateItem = (prop, itm) => {
         row.append(td1, td2);
     }
     return row;
+}
+
+wewwApp.UpdateUiProperty = (propStr, val) => {
+    var props = wewwApp.project.general.properties;
+    var prop = props[propStr];
+    // check for legit setting...
+    if (!prop) {
+        console.error(propStr + " property not found!");
+        return;
+    }
+    // Update the property's value
+    prop.value = val;
+
+    // Now process the DOM element (update the UI)
+    var elm = document.querySelector("#wewwa_inp_" + propStr);
+    if (!elm) return;
+     switch (prop.type) {
+        case "bool":
+            elm.checked = val;
+            break;
+        case "slider":
+            var elmSlide = document.querySelector("#wewwa_out_" + propStr);
+            elmSlide.value = val;
+            elm.value = val;
+            break;
+        case "combo":
+        case "textinput":
+            elm.value = val;
+            break;
+        default:
+            console.log("prop " + propStr + " with type " + prop.type + " not supported in UpdateUiProperty()");
+            break;
+    }
+}
+
+wewwApp.GetProperties = () => {
+    return wewwApp.project.general.properties;
 }
 
 // apply html value/setting to object
@@ -519,6 +567,8 @@ wewwApp.SetProperty = (prop, elm) => {
                 else console.error("Numericupdown not found: " + prop);
             }
         case "combo":
+            applyCall(Number(elm.value));
+            break;
         case "textinput":
             applyCall(elm.value);
             break;
