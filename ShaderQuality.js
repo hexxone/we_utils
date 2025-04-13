@@ -1,8 +1,8 @@
 /**
- * @author D.Thiele @https://hexx.one
+ * @author hexxone / https://hexx.one
  *
  * @license
- * Copyright (c) 2020 D.Thiele All rights reserved.  
+ * Copyright (c) 2025 hexxone All rights reserved.  
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.  
  * 
@@ -20,7 +20,7 @@ ShaderQuality = {
     Inject: function (precision, shaders) {
 
         for (var shade in shaders) {
-        
+
             var shader = shaders[shade];
 
             console.log("Injecting shader: " + shader.shaderID);
@@ -28,7 +28,7 @@ ShaderQuality = {
             if (shader.vertexShader) {
                 shader.vertexShader = this.InjectShader(precision, shader.vertexShader);
             }
-            if(shader.fragmentShader) {
+            if (shader.fragmentShader) {
                 shader.fragmentShader = this.InjectShader(precision, shader.fragmentShader);
             }
         }
@@ -45,7 +45,7 @@ ShaderQuality = {
             case "high":
                 str0 = str0.split("{bprec}").join("high");
                 str0 += "precision mediump sampler2D;\r\n    "
-                      + "precision mediump samplerCube;\r\n    ";
+                    + "precision mediump samplerCube;\r\n    ";
                 break;
             case "low":
                 str0 = str0.split("{bprec}").join("low");
@@ -59,7 +59,7 @@ ShaderQuality = {
 
         // remove old quality code
         var ito = shader.indexOf("//shaderquality");
-        if(ito >= 0) shader = shader.substring(ito);
+        if (ito >= 0) shader = shader.substring(ito);
 
         // inject new quality code
         shader = shader.replace("//shaderquality", str0);

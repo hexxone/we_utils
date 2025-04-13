@@ -1,5 +1,11 @@
 /**
- * @author D.Thiele @https://hexx.one
+ * @author hexxone / https://hexx.one
+ * 
+ * @license
+ * Copyright (c) 2025 hexxone All rights reserved.  
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.  
+ * 
  */
 
 var WarnHelper = {
@@ -8,7 +14,7 @@ var WarnHelper = {
     waitSeconds: 10,
     injected: false,
 
-    injectCSS: function() {
+    injectCSS: function () {
         var st = document.createElement("style");
         st.innerHTML = `
         #triggerwarn {
@@ -25,7 +31,7 @@ var WarnHelper = {
         document.head.append(st);
     },
 
-    injectHTML: function() {
+    injectHTML: function () {
         var outer = document.createElement("img");
         outer.id = "triggerwarn";
         outer.setAttribute("src", `
@@ -561,10 +567,10 @@ B/x9OcNpH2VDkjgAAAABJRU5ErkJggg==
         document.body.append(outer);
     },
 
-    Show: function(callback) {
+    Show: function (callback) {
         // prepare it
         var self = WarnHelper;
-        if(!self.injected) {
+        if (!self.injected) {
             self.injected = true;
             self.injectCSS();
             self.injectHTML();

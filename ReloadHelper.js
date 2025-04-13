@@ -1,5 +1,11 @@
 /**
- * @author D.Thiele @https://hexx.one
+ * @author hexxone / https://hexx.one
+ * 
+ * @license
+ * Copyright (c) 2025 hexxone All rights reserved.  
+ * Licensed under the GNU GENERAL PUBLIC LICENSE.
+ * See LICENSE file in the project root for full license information.  
+ * 
  */
 
 var ReloadHelper = {
@@ -7,7 +13,7 @@ var ReloadHelper = {
     waitSeconds: 3,
     injected: false,
 
-    injectCSS: function() {
+    injectCSS: function () {
         var st = document.createElement("style");
         st.innerHTML = `
         #reload-bar {
@@ -52,7 +58,7 @@ var ReloadHelper = {
         document.head.append(st);
     },
 
-    injectHTML: function() {
+    injectHTML: function () {
         var outer = document.createElement("div");
         outer.id = "reloader";
         var bar = document.createElement("div");
@@ -64,9 +70,9 @@ var ReloadHelper = {
         document.body.append(outer);
     },
 
-    Show: function() {
+    Show: function () {
         var self = ReloadHelper;
-        if(!self.injected) {
+        if (!self.injected) {
             self.injected = true;
             self.injectCSS();
             self.injectHTML();
@@ -74,7 +80,7 @@ var ReloadHelper = {
         $("#reload-bar, #reload-text").removeClass("done").addClass("show");
     },
 
-    Hide: function() {
+    Hide: function () {
         $("#reload-bar, #reload-text").removeClass("show").addClass("done");
     }
 };
