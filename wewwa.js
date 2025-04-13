@@ -1,8 +1,8 @@
 /**
- * @author D.Thiele @https://hexx.one
+ * @author hexxone / https://hexx.one
  * 
  * @license
- * Copyright (c) 2020 D.Thiele All rights reserved.  
+ * Copyright (c) 2025 hexxone All rights reserved.  
  * Licensed under the GNU GENERAL PUBLIC LICENSE.
  * See LICENSE file in the project root for full license information.  
  * 
@@ -33,8 +33,7 @@
  * - react to changes made in the ui and update them in the wallpaper
  * - save changes made in the ui to localStorage
  * 
- * @todo
- * - check for correct audio data
+ * Thanks to ssaenger / https://github.com/ssaenger for contributing some improvements!
 */
 
 var wewwApp = wewwApp || {};
@@ -54,6 +53,9 @@ wewwApp.Init = () => {
     });
 }
 
+wewwApp.IsInit = () => {
+    return (wewwApp.project != null);
+}
 
 // load json via ajax request
 wewwApp.LoadProjectJSON = (complete) => {
@@ -71,7 +73,7 @@ wewwApp.LoadStorage = () => {
     if (last != null) {
         var merged = Object.assign(props, JSON.parse(last));
         wewwApp.project.general.properties = merged;
-        console.log("Loaded & merged settings.")
+        console.log("Loaded & merged settings.");
     }
 }
 
@@ -401,6 +403,7 @@ wewwApp.CreateItem = (prop, itm) => {
         // add combo select options
         case "combo":
             inp = ce("select");
+            inp.setAttribute("id", "wewwa_inp_" + prop);
             // set options
             for (var o of itm.options) {
                 var opt = ce("option");
@@ -432,7 +435,7 @@ wewwApp.CreateItem = (prop, itm) => {
             sliderVal.setAttribute("id", sliderVal.name);
             sliderVal.setAttribute("type", "number");
             sliderVal.style.width = "75%";
-            if(canEdit) {
+            if (canEdit) {
                 sliderVal.setAttribute("value", itm.value);
                 sliderVal.addEventListener("change", function (e) { wewwApp.SetProperty(prop, this); });
             }
@@ -447,7 +450,14 @@ wewwApp.CreateItem = (prop, itm) => {
             inp.style.width = "100%";
             inp.max = itm.max;
             inp.min = itm.min;
-            inp.step = 0.1;
+            if (itm.step == undefined) inp.step = 0.1;
+            else {
+                //enforce range values if if step was included
+                sliderVal.setAttribute("max", itm.max);
+                sliderVal.setAttribute("min", itm.min);
+                sliderVal.setAttribute("step", itm.step);
+                inp.step = itm.step;
+            }
             break;
         case "textinput":
             inp.setAttribute("type", "text");
@@ -466,7 +476,7 @@ wewwApp.CreateItem = (prop, itm) => {
         td2.prepend(inp);
     }
     // append td3 or stretch td2?
-    if(td3) {
+    if (td3) {
         row.append(td1, td2, td3)
     }
     else {
@@ -474,6 +484,10 @@ wewwApp.CreateItem = (prop, itm) => {
         row.append(td1, td2);
     }
     return row;
+}
+
+wewwApp.GetProperties = () => {
+    return wewwApp.project.general.properties;
 }
 
 // apply html value/setting to object
@@ -510,7 +524,7 @@ wewwApp.SetProperty = (prop, elm) => {
         case "slider":
             if (elm.name.includes("_out_")) {
                 var inpt = document.querySelector("#wewwa_" + prop);
-                if(inpt) inpt.value = elm.value;
+                if (inpt) inpt.value = elm.value;
                 else console.error("Slider not found: " + prop);
             }
             else {
@@ -519,6 +533,8 @@ wewwApp.SetProperty = (prop, elm) => {
                 else console.error("Numericupdown not found: " + prop);
             }
         case "combo":
+            applyCall(Number(elm.value));
+            break;
         case "textinput":
             applyCall(elm.value);
             break;
