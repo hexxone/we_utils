@@ -53,7 +53,7 @@ export class EffectComposer {
      * @param {Scene} scene Scene
      * @param {PerspectiveCamera} camera camera
      * @param {WebGLRenderer} renderer renderer
-     * @param {string} globalPrec global precision
+     * @param {string} globalPrecision global precision
      * @param {Color} clearCol Color
      * @param {WebGLRenderTarget} renderTarget target to Reset (optional)
      */
@@ -61,7 +61,7 @@ export class EffectComposer {
         scene: Scene,
         camera: PerspectiveCamera,
         renderer: WebGLRenderer,
-        globalPrec = 'mediump',
+        globalPrecision: string = 'mediump',
         clearCol?: any,
         renderTarget?: WebGLRenderTarget
     ) {
@@ -107,7 +107,7 @@ export class EffectComposer {
 
         this.passes = [];
         this.previousFrame = Date.now();
-        this.globalPrecision = globalPrec;
+        this.globalPrecision = globalPrecision;
 
         this.normPass = new RenderPass(scene, camera, null, clearCol);
         this.xrPass = new RenderPass(scene, this.xrCam, null, clearCol); // @TODO == 1

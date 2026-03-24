@@ -15,8 +15,6 @@ import { waitReady } from './Util';
  */
 export class XRSettings extends CSettings {
 
-    private xr_mode = false;
-
 }
 
 /**
@@ -38,8 +36,8 @@ export class XRHelper extends CComponent {
      */
     constructor() {
         super();
+        this.nav = navigator as Navigator;
         waitReady().then(() => {
-            this.nav = navigator as Navigator;
             this.createBtn();
         });
     }
@@ -48,7 +46,7 @@ export class XRHelper extends CComponent {
      * Create the "Exit" Button
      * @returns {void}
      */
-    private createBtn() {
+    private createBtn(): void {
         const btn = (this.button = document.createElement('button'));
 
         btn.disabled = true;
@@ -82,7 +80,7 @@ export class XRHelper extends CComponent {
     /**
      * @returns {boolean} whether XR is supported and available or not
      */
-    private async isSupported() {
+    private async isSupported(): Promise<boolean> {
         if ('xr' in this.nav) {
             return await this.nav.xr?.isSessionSupported('immersive-vr');
         }
