@@ -405,7 +405,7 @@ export class WEAS extends CComponent {
     /**
      * converts calculated output property number-array to string-associative-array
      * @param {ArrayLike<number>} dProps processed properties
-     * @returns {any}
+     * @returns {any} props
      * @ignore
      */
     private getProps(dProps: ArrayLike<number>): any {

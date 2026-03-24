@@ -503,9 +503,7 @@ class RenamerPlugin {
             return this.replaceMatch(source, match);
         }); // .replaceAll('const ', 'var ');
 
-        const sa = this.shortenAccessors(pd);
-
-        return sa;
+        return this.shortenAccessors(pd);
     }
 
     /**
