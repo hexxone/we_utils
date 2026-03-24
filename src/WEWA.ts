@@ -72,15 +72,15 @@ export class WEWA {
     private audio?: HTMLAudioElement = undefined;
     private ctx?: AudioContext = undefined;
 
-    private source?: MediaStreamAudioSourceNode | MediaElementAudioSourceNode
-        = undefined;
+    private source?: MediaStreamAudioSourceNode | MediaElementAudioSourceNode = undefined;
 
     private analyser?: AnalyserNode = undefined;
 
-    private audioInterval?: NodeJS.Timeout = undefined;
+    private audioInterval?: number = undefined;
     private audioCallback?: (data: number[]) => void = undefined;
 
-    private pauseOnUnfocus = true;
+    private pauseOnUnfocus
+        = localStorage.getItem('wewaPauseOnUnfocus') !== 'false';
     private isPaused = false;
 
     /**
@@ -94,10 +94,10 @@ export class WEWA {
      */
     constructor(
         finished: () => void = undefined,
-        audioListener = 'wallpaperRegisterAudioListener',
-        propListener = 'wallpaperPropertyListener',
-        projFile = 'project.json',
-        defLang = DefLang
+        audioListener: string = 'wallpaperRegisterAudioListener',
+        propListener: string = 'wallpaperPropertyListener',
+        projFile: string = 'project.json',
+        defLang: string = DefLang
     ) {
         this.audioListener = audioListener;
         this.propListener = propListener;
@@ -112,6 +112,7 @@ export class WEWA {
 
             return;
         }
+
 
         Smallog.info('wallpaper engine not detected => Init!', LogHead);
 
@@ -165,6 +166,7 @@ export class WEWA {
             this.loadStorage();
             this.addStyle();
             this.addMenu(localStorage.getItem('wewaLang'));
+            this.applyAudioProcessingSettings();
             this.evaluateSettings();
             this.applyProp(json.general.properties);
         });
@@ -180,15 +182,21 @@ export class WEWA {
         const last = localStorage.getItem('wewaLastProps');
 
         if (last !== null) {
-            const merged = Object.assign(props, JSON.parse(last));
-
-            merged.audioprocessing = {
-                value: this.projectData.general.supportsaudioprocessing,
-                type: 'hidden'
-            };
-            this.projectData.general.properties = merged;
+            this.projectData.general.properties = Object.assign(props, JSON.parse(last));
             Smallog.debug('Loaded & merged settings.', LogHead);
         }
+    }
+
+    /**
+     * apply Audio Processing Settings
+     * @ignore
+     * @returns {void}
+     */
+    private applyAudioProcessingSettings() {
+        this.projectData.general.properties.audioprocessing = {
+            value: this.projectData.general.supportsaudioprocessing,
+            type: 'hidden'
+        };
     }
 
     /**
@@ -441,10 +449,11 @@ export class WEWA {
         const pauseBox = ce('input');
 
         pauseBox.setAttribute('type', 'checkbox');
-        pauseBox.setAttribute('checked', this.pauseOnUnfocus);
+        pauseBox.checked = this.pauseOnUnfocus;
         pauseBox.addEventListener('change', function() {
             // eslint-disable-next-line no-invalid-this
             self.pauseOnUnfocus = this.checked;
+            localStorage.setItem('wewaPauseOnUnfocus', String(self.pauseOnUnfocus));
             // unpause if paused
             if (!self.pauseOnUnfocus && self.isPaused) {
                 self.setPaused(false);
@@ -550,7 +559,7 @@ export class WEWA {
             OfflineHelper.reset().then(() => {
                 localStorage.clear();
                 // eslint-disable-next-line no-self-assign
-                location = location;
+                location.reload();
             });
         });
         preFoot.append(rst);
@@ -636,6 +645,7 @@ export class WEWA {
             localStorage.setItem('wewaLang', this.value);
             // eslint-disable-next-line no-invalid-this
             ref.addMenu(this.value);
+            ref.applyAudioProcessingSettings();
             ref.evaluateSettings();
             (ref.htmlIcon as any).click();
         });
@@ -979,6 +989,7 @@ export class WEWA {
             // save the updated value to storage
             props[prop].value = val;
             // update
+            this.applyAudioProcessingSettings();
             this.evaluateSettings();
             const obj = {};
 
@@ -1076,7 +1087,7 @@ export class WEWA {
             // some ev(a|i)l magic
             let visible = true;
 
-            if (prop.condition !== null) {
+            if (prop.condition?.length > 0) {
                 // copy our condition string to modify
                 let cprop = String(prop.condition).split(' ')
                     .join('');
@@ -1096,7 +1107,7 @@ export class WEWA {
                         let replW = onlyVal;
 
                         if (replW.startsWith('!')) {
-                            replW = replW.substr(1);
+                            replW = replW.substring(1);
                             prefix = `!${prefix}`;
                         }
                         // Smallog.Debug("replace: " + onlyVal + " >> " + prefix + replW);
@@ -1196,6 +1207,7 @@ export class WEWA {
 
             return h.length === 1 ? `0${h}` : h;
         }
+
         const spl = rgb.split(' ');
 
         return `#${cth(spl[0])}${cth(spl[1])}${cth(spl[2])}`;

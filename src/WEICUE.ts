@@ -67,7 +67,7 @@ export class WEICUE extends CComponent {
     private icueInterval = undefined;
 
     // preview time out
-    private prevTimeout?: NodeJS.Timeout = undefined;
+    private prevTimeout?: number = undefined;
 
     // runtime values
     public settings: CUESettings = new CUESettings();
@@ -84,12 +84,12 @@ export class WEICUE extends CComponent {
         this.weas = weas;
 
         // Plugin handler
-        window.wallpaperPluginListener = {
+        (window as any).wallpaperPluginListener = {
             onPluginLoaded: (name: string, version: string) => {
                 const lower = name.toLocaleLowerCase();
 
                 if (lower === 'cue' || lower === 'led') {
-                    this.cue = window.cue;
+                    this.cue = (window as any).cue;
                     this.isAvailable = true;
                     Smallog.debug(
                         `Plugin loaded: ${name}, v${version}`,
@@ -453,7 +453,7 @@ export class WEICUE extends CComponent {
     /**
      * copy main canvas portion to our helper
      * @public
-     * @param {HTMLCanvasElementq} mainCanvas target
+     * @param {HTMLCanvasElement} mainCanvas target
      * @returns {void}
      */
     public updateCanvas(mainCanvas: HTMLCanvasElement) {

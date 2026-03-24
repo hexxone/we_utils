@@ -18,7 +18,8 @@ const DAT_LEN = 128;
 const LISTENAME = 'wallpaperRegisterAudioListener';
 
 /**
- * Audio processing settings
+ * Audio processing settings.
+ * Even though some may appear unused, they are all required for the WebAssembly module.
  * @extends {CSettings}
  * @public
  */
@@ -165,7 +166,7 @@ export class WEAS extends CComponent {
      * @param {boolean} autoInit start listening automatically after page is ready?
      * @param {boolean} detectBpm (optional)
      */
-    constructor(autoInit = false, detectBpm = false) {
+    constructor(autoInit: boolean = false, detectBpm: boolean = false) {
         super();
         if (detectBpm) {
             this.bpModule = new BeaTs();
@@ -240,7 +241,7 @@ export class WEAS extends CComponent {
      * @returns {void}
      * @ignore
      */
-    private registerListener() {
+    private registerListener(): void {
         // register audio callback on module
         window[LISTENAME]((audioArray) => {
             // Smallog.debug('Get Audio Data!');
@@ -251,7 +252,7 @@ export class WEAS extends CComponent {
                 || audioArray.length !== DAT_LEN
             ) {
                 Smallog.error(
-                    `received invalid audio data: ${JSON.stringify([audioArray.length || null, audioArray])}`
+                    `received invalid audio data: ${JSON.stringify([audioArray?.length || null, audioArray])}`
                 );
 
                 return;
@@ -276,8 +277,9 @@ export class WEAS extends CComponent {
                             .set(arrData);
                         // trigger processing
                         ex.update();
-                        // get copy of webassembly data
-                        const r = {
+
+                        // get a copy of webassembly data
+                        return {
                             // ptr: {data: ex.outputData, props: ex.audioProps},
                             data: new Float64Array(
                                 exports.__getFloat64ArrayView(ex.outputData)
@@ -286,8 +288,6 @@ export class WEAS extends CComponent {
                                 exports.__getFloat64ArrayView(ex.audioProps)
                             ).buffer
                         };
-
-                        return r;
                     },
                     {
                         data: this.inBuff.buffer
@@ -307,7 +307,7 @@ export class WEAS extends CComponent {
                         && !this.lastAudio.silent
                         && realProps.silent
                     ) {
-                        console.log(audioArray, arrData, arrProps);
+                        console.debug(audioArray, arrData, arrProps);
                     }
 
                     let bpmObj = {};
@@ -336,7 +336,7 @@ export class WEAS extends CComponent {
      * @returns {void}
      * @ignore
      */
-    private injectCSS() {
+    private injectCSS(): void {
         const st = document.createElement('style');
 
         st.innerHTML = `
@@ -405,10 +405,10 @@ export class WEAS extends CComponent {
     /**
      * converts calculated output property number-array to string-associative-array
      * @param {ArrayLike<number>} dProps processed properties
-     * @returns {void}
+     * @returns {any}
      * @ignore
      */
-    private getProps(dProps: ArrayLike<number>) {
+    private getProps(dProps: ArrayLike<number>): any {
         const keys = Object.keys(PropIDs);
         const res = {};
 
@@ -418,7 +418,7 @@ export class WEAS extends CComponent {
             res[key] = dProps[PropIDs[key]];
         }
 
-        return res as any;
+        return res;
     }
 
     /**
@@ -487,7 +487,7 @@ export class WEAS extends CComponent {
      * - data is too old (> 3s)
      * @public
      */
-    public hasAudio() {
+    public hasAudio(): boolean {
         if (this.settings.show_canvas) {
             this.updateCanvas();
         }
@@ -505,7 +505,7 @@ export class WEAS extends CComponent {
      * Update the debug canvas
      * @returns {void}
      */
-    private updateCanvas() {
+    private updateCanvas(): void {
         // update "raw" canvas
         if (!this.initialized) {
             return;

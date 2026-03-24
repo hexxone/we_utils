@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 /**
  * @author hexxone / https://hexx.one
  *
@@ -18,20 +19,20 @@
 
 'use strict';
 
-const wrk: ServiceWorker = self as any;
+const wrk = self as unknown as ServiceWorkerGlobalScope;
 
 // A version number is useful when updating the worker logic,
 // allowing you to remove outdated cache entries during the update.
 const wName = '[OfflineWorker]';
 const version = '::2.4';
 
-console.info(`${wName} executing..`);
+console.debug(`${wName} executing..`);
 
 // The install event fires when the service worker is first installed.
 // You can use this event to prepare the service worker to be able to serve
 // files while visitors are offline.
-wrk.addEventListener('install', (event: any) => {
-    console.info(`${wName} install event in progress.`);
+self.addEventListener('install', (event: any) => {
+    console.debug(`${wName} install event in progress.`);
 
     // get the path for the .json file which contains the files to-be-cached
     // These resources will be downloaded and cached by the service worker
@@ -62,7 +63,7 @@ wrk.addEventListener('install', (event: any) => {
             })
             // log success
             .then(() => {
-                return console.info(`${wName} install completed`);
+                return console.info(`${wName} install completed successfully.`);
             })
     );
 });
@@ -71,11 +72,11 @@ wrk.addEventListener('install', (event: any) => {
 // a resource. This isn't limited to `fetch` or even XMLHttpRequest. Instead, it
 // comprehends even the request for the HTML page on first load, as well as JS and
 // CSS resources, fonts, any images, etc.
-wrk.addEventListener('fetch', (event: any) => {
+self.addEventListener('fetch', (event: any) => {
     // console.info(wName + 'fetch event in progress.');
 
     if (event.request.method !== 'GET') {
-        console.info(
+        console.debug(
             `${wName} fetch event ignored.`,
             event.request.method,
             event.request.url
@@ -91,7 +92,7 @@ wrk.addEventListener('fetch', (event: any) => {
         caches.match(event.request).then(async (cached) => {
             // return immediately if cache successfull
             if (cached) {
-                console.info(
+                console.debug(
                     `${wName} fetch event(cached): `,
                     event.request.url
                 );
@@ -114,7 +115,7 @@ wrk.addEventListener('fetch', (event: any) => {
             function fetchedFromNetwork(response: Response) {
                 const cacheCopy = response.clone();
 
-                console.info(
+                console.debug(
                     `${wName} fetch response from network.`,
                     event.request.url
                 );
@@ -125,7 +126,7 @@ wrk.addEventListener('fetch', (event: any) => {
                         return cache.put(event.request, cacheCopy);
                     })
                     .then(() => {
-                        return console.info(
+                        return console.debug(
                             `${wName} fetch response stored in cache.`,
                             event.request.url
                         );
@@ -149,7 +150,7 @@ wrk.addEventListener('fetch', (event: any) => {
              * @returns {Response} fallback
              */
             function unableToResolve() {
-                console.info(
+                console.error(
                     `${wName} fetch request failed in both cache and network.`
                 );
 
@@ -169,7 +170,7 @@ wrk.addEventListener('fetch', (event: any) => {
                     .then(fetchedFromNetwork, unableToResolve)
                     // we are done
                     .then(() => {
-                        return console.info(
+                        return console.debug(
                             `${wName} fetch event(networked): `,
                             event.request.url
                         );
@@ -188,12 +189,12 @@ wrk.addEventListener('fetch', (event: any) => {
  * we delete old caches that don't match the version in the worker we just finished
  * installing.
  */
-wrk.addEventListener('activate', (event: any) => {
-    console.info(`${wName} activate event in progress.`);
+self.addEventListener('activate', (event: any) => {
+    console.info(`${wName} activate event triggered.`);
     event.waitUntil(async () => {
         // Feature-detect navigation preloads!
-        if (self.registration && self.registration.navigationPreload) {
-            await self.registration.navigationPreload.enable();
+        if (wrk.registration?.navigationPreload) {
+            await wrk.registration.navigationPreload.enable();
         }
 
         // This method will resolve an array of available cache keys.
@@ -215,12 +216,10 @@ wrk.addEventListener('activate', (event: any) => {
             })
             // completed
             .then(() => {
-                return console.info(`${wName} activate completed.`);
+                console.info(`${wName} activated.`);
             });
     });
 
     // Tell the active service worker to take control of the page immediately.
-    if (wrk.clients) {
-        wrk.clients.claim();
-    }
+    wrk.clients.claim();
 });

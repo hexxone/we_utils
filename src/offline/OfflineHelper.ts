@@ -58,39 +58,33 @@ function DontRemove() {
  */
 function register(
     name: string,
-    worker = 'Offline.worker.js',
-    oFile = 'offlinefiles.json'
+    worker: string = 'Offline.worker.js',
+    oFile: string = 'offlinefiles.json'
 ): Promise<boolean> {
     return new Promise((resolve) => {
-        if ('serviceWorker' in navigator) {
-            const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
+        if (!('serviceWorker' in navigator)) {
+            Smallog.error('not supported!', oh);
+            resolve(false);
 
-            navigator.serviceWorker
-                .register(workerPath, {
-                    scope: '/'
-                })
-                .then(
-                    () => {
-                        return Smallog.info(
-                            'service-worker registration complete.',
-                            oh
-                        );
-                    },
-                    (reason) => {
-                        return Smallog.error(
-                            `service-worker registration failure: ${reason}`,
-                            oh
-                        );
-                    }
-                )
-                .then(() => {
-                    return resolve(true);
-                });
-
-            return true;
+            return;
         }
-        Smallog.error('not supported!', oh);
-        resolve(false);
+
+        const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
+
+        navigator.serviceWorker
+            .register(workerPath, {
+                scope: '/'
+            })
+            .then(
+                () => {
+                    Smallog.info('service-worker registration complete.', oh);
+                    resolve(true);
+                },
+                (reason) => {
+                    Smallog.error(`service-worker registration failure: ${reason}`, oh);
+                    resolve(false);
+                }
+            );
     });
 }
 

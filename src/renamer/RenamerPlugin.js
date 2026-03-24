@@ -66,11 +66,13 @@ class RenamerPlugin {
 
         const existInSource = (src || '').indexOf(gen) >= 0;
 
-        const mapContainsString = Object.entries(this.nameMap).some(([key, value]) => {
-            return key.includes(gen) || value.includes(gen);
-        });
+        const mapContainsString = Object.entries(this.nameMap).some(
+            ([key, value]) => {
+                return key.includes(gen) || value.includes(gen);
+            }
+        );
 
-        return (existInSource || mapContainsString) ? this.getRandomName() : gen;
+        return existInSource || mapContainsString ? this.getRandomName() : gen;
     }
 
     /**
@@ -155,7 +157,7 @@ class RenamerPlugin {
         ];
 
         // used runtime string delimiter
-        const delim = '.';
+        const delim = '§';
 
         // count all accessor usages, which could gain an advantage by shortening
         const processed = {};
@@ -187,13 +189,18 @@ class RenamerPlugin {
         pd.match(strPatt).forEach((element) => {
             const match = element;
 
-            if (match.indexOf('.') >= 0) {
-                return;
-            } // no dots allowed
-            if (match.indexOf(delim) >= 0) {
-                return;
-            } // skip delim operator
             if (blackList.includes(match)) {
+                return;
+            }
+            const matchInBlackList = blackList.find((bl) => {
+                return match.indexOf(bl) >= 0;
+            });
+
+            if (matchInBlackList) {
+                return;
+            }
+            if (match.indexOf(delim) >= 0) {
+                // skip delim operator
                 return;
             }
 
@@ -272,7 +279,9 @@ class RenamerPlugin {
         });
 
         // console.info(JSON.stringify(filtered, null, '\t'));
-        console.info(`${pluginName} Potentially saving: ${sum} chars. Processing...`);
+        console.info(
+            `${pluginName} Potentially saving: ${sum} chars. Processing...`
+        );
 
         const oldPd = pd;
         let skipped = 0;
@@ -320,11 +329,17 @@ class RenamerPlugin {
                     // else console.info(`${element.k} not in ${match[0]}`);
                 }
 
+
                 if (!isInvalid) {
+                    // If preceded by '?', the dot is consumed by the match but we need
+                    // to emit '?.[arr[i]]' (not '?[arr[i]]') for valid optional chaining.
+                    const precChar = newPd[rIdx - 1];
+                    const repl = precChar === '?' ? `.${element.r}` : element.r;
+
                     operations.push({
                         start: rIdx,
                         end: rgx.lastIndex,
-                        repl: element.r
+                        repl
                     });
                 } else {
                     skipped++;
@@ -443,7 +458,9 @@ class RenamerPlugin {
             newStrict += `${k}=${val}`;
         });
 
-        console.info(`${pluginName} Processed header length: ${newStrict.length}`);
+        console.info(
+            `${pluginName} Processed header length: ${newStrict.length}`
+        );
 
         pd = `${newStrict};${pd}`;
 
@@ -546,7 +563,9 @@ class RenamerPlugin {
                 }
 
                 // finish up
-                console.info(`${pluginName} Replaced: ${JSON.stringify(this.nameMap)}`);
+                console.info(
+                    `${pluginName} Replaced: ${JSON.stringify(this.nameMap)}`
+                );
             } catch (error) {
                 console.info(`${pluginName} Replace error: `, error);
             }

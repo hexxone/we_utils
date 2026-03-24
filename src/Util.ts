@@ -13,7 +13,8 @@ import { wascWorker } from './wasc-worker/Wasc';
 import { WascInterface } from './wasc-worker/WascInterface';
 
 // promise resolve queue
-const promQueue: ((val) => void)[] = [];
+const promQueue: ((params: any) => void)[] = [];
+
 const workQueue = () => {
     while (promQueue.length > 0) {
         const call = promQueue.shift();
@@ -31,14 +32,16 @@ document.addEventListener('DOMContentLoaded', workQueue, false);
  */
 export function waitReady() {
     return new Promise((resolve) => {
-        // If document is already loaded, run method
+        // If the document is already loaded, run method
         if (
             document.readyState === 'interactive'
             || document.readyState === 'complete'
         ) {
             resolve(true);
+
+            return;
         }
-        // Otherwise, wait until document is loaded
+        // Otherwise, wait until the document is loaded
         promQueue.push(resolve);
     });
 }
@@ -58,7 +61,7 @@ export function waitReady() {
  */
 export function rgbToObj(
     input: string,
-    mlt = 255
+    mlt: number = 255
 ): { r: number; g: number; b: number; a: number } {
     if (input.startsWith('#')) {
         let hex = input.replace('#', '');

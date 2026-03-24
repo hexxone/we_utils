@@ -270,7 +270,7 @@ export class BeaTs {
             }
 
             if (Math.random() < 0.01) {
-                console.log(results, candidates);
+                console.debug(results, candidates);
             }
         }
 
@@ -527,8 +527,8 @@ class BeatsDetektor {
         this.reset();
 
         if (console) {
-            console.log(
-                `BeatsDetektor(${this.BPM_MIN},${this.BPM_MAX}) created.`
+            console.debug(
+                `BeatDetektor(${this.BPM_MIN},${this.BPM_MAX}) created.`
             );
         }
     }
