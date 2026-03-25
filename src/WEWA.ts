@@ -113,7 +113,6 @@ export class WEWA {
             return;
         }
 
-
         Smallog.info('wallpaper engine not detected => Init!', LogHead);
 
         // define audio listener first, so we dont miss when it gets registered.
@@ -123,10 +122,11 @@ export class WEWA {
             Smallog.info('Registered wallpaper AudioListener.', LogHead);
         };
 
-        // intialize when ready
-        waitReady().then(() => {
+        // initialize when ready
+        waitReady()
             // make the website available offline using service worker
-            OfflineHelper.register(document.title.replace(' ', '')).then(() => {
+            .then(() => { return OfflineHelper.register(document.title.replace(' ', '')); })
+            .then(() => {
                 // continue initializing
                 if (finished !== undefined) {
                     finished();
@@ -141,7 +141,6 @@ export class WEWA {
                     return this.setPaused(false);
                 };
             });
-        });
     }
 
     /**

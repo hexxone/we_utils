@@ -56,36 +56,35 @@ function DontRemove() {
  * @returns {Promise<boolean>} finished
  * @public
  */
-function register(
+async function register(
     name: string,
     worker: string = 'Offline.worker.js',
     oFile: string = 'offlinefiles.json'
 ): Promise<boolean> {
-    return new Promise((resolve) => {
-        if (!('serviceWorker' in navigator)) {
-            Smallog.error('not supported!', oh);
-            resolve(false);
+    if (!('serviceWorker' in navigator)) {
+        Smallog.error('not supported!', oh);
 
-            return;
+        return false;
+    }
+
+    const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
+
+    try {
+        const result = await navigator.serviceWorker.register(workerPath, {
+            scope: '/'
+        });
+
+        if (result.active) {
+            Smallog.info('service-worker registration complete.', oh);
+
+            return true;
         }
+        Smallog.error('service-worker not registered!', oh);
+    } catch (e) {
+        Smallog.error(`service-worker registration failure: ${JSON.stringify(e)}`, oh);
+    }
 
-        const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
-
-        navigator.serviceWorker
-            .register(workerPath, {
-                scope: '/'
-            })
-            .then(
-                () => {
-                    Smallog.info('service-worker registration complete.', oh);
-                    resolve(true);
-                },
-                (reason) => {
-                    Smallog.error(`service-worker registration failure: ${reason}`, oh);
-                    resolve(false);
-                }
-            );
-    });
+    return false;
 }
 
 /**
@@ -94,21 +93,18 @@ function register(
  * @public
  */
 async function reset(): Promise<boolean> {
-    return new Promise((resolve) => {
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker
-                .getRegistrations()
-                .then(async (registrations) => {
-                    for (const registration of registrations) {
-                        await registration.unregister();
-                    }
-                    resolve(true);
-                });
-        } else {
-            Smallog.error('not supported!', oh);
-            resolve(false);
+    if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+
+        for (const registration of registrations) {
+            await registration.unregister();
         }
-    });
+
+        return true;
+    }
+    Smallog.error('not supported!', oh);
+
+    return false;
 }
 
 export const OfflineHelper = {

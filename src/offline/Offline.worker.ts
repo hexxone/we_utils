@@ -31,7 +31,7 @@ console.debug(`${wName} executing..`);
 // The install event fires when the service worker is first installed.
 // You can use this event to prepare the service worker to be able to serve
 // files while visitors are offline.
-self.addEventListener('install', (event: any) => {
+wrk.addEventListener('install', (event) => {
     console.debug(`${wName} install event in progress.`);
 
     // get the path for the .json file which contains the files to-be-cached
@@ -40,11 +40,11 @@ self.addEventListener('install', (event: any) => {
     const sp = new URL(location.href).searchParams;
     const jsonPath = sp.get('jsonPath');
 
-    // Using event.waitUntil(p) blocks the installation process on the provided
-    // promise. If the promise is rejected, the service worker won't be installed.
-    event.waitUntil(
+    const promise = async () => {
+        await wrk.skipWaiting();
+
         // let's request the files to store in cache
-        fetch(jsonPath)
+        return fetch(jsonPath)
             .then((response) => {
                 return response.json();
             })
@@ -60,21 +60,35 @@ self.addEventListener('install', (event: any) => {
                             });
                         })
                 );
-            })
-            // log success
-            .then(() => {
-                return console.info(`${wName} install completed successfully.`);
-            })
-    );
+            });
+    };
+
+    // Using event.waitUntil(p) blocks the installation process on the provided
+    // promise. If the promise is rejected, the service worker won't be installed.
+    event.waitUntil(promise());
 });
 
-// The fetch event fires whenever a page controlled by this service worker requests
-// a resource. This isn't limited to `fetch` or even XMLHttpRequest. Instead, it
-// comprehends even the request for the HTML page on first load, as well as JS and
-// CSS resources, fonts, any images, etc.
-self.addEventListener('fetch', (event: any) => {
-    // console.info(wName + 'fetch event in progress.');
+const ISOLATION_HEADERS: Record<string, string> = {
+    'Cross-Origin-Opener-Policy': 'same-origin',
+    'Cross-Origin-Embedder-Policy': 'require-corp',
+    'Cross-Origin-Resource-Policy': 'cross-origin'
+};
 
+function injectIsolationHeaders(response: Response): Response {
+    const headers = new Headers(response.headers);
+
+    for (const [k, v] of Object.entries(ISOLATION_HEADERS)) {
+        headers.set(k, v);
+    }
+
+    return new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers
+    });
+}
+
+self.addEventListener('fetch', (event: any) => {
     if (event.request.method !== 'GET') {
         console.debug(
             `${wName} fetch event ignored.`,
@@ -85,46 +99,33 @@ self.addEventListener('fetch', (event: any) => {
         return;
     }
 
-    // This method returns a promise that resolves to a cache entry matching
-    // the request. Once the promise is settled, we can then provide a response
-    // to the fetch request.
     event.respondWith(
         caches.match(event.request).then(async (cached) => {
-            // return immediately if cache successfull
             if (cached) {
-                console.debug(
-                    `${wName} fetch event(cached): `,
-                    event.request.url
-                );
+                console.debug(`${wName} fetch event(cached): `, event.request.url);
 
-                return cached;
+                return (cached); // Already has injected headers from when it was stored
             }
 
-            // Else, use the preloaded response, if it's there
             const preload = await event.preloadResponse;
 
             if (preload) {
-                return preload;
+                return injectIsolationHeaders(preload);
             }
 
-            /**
-             * We copy the response before replying to the network request.
-             * @param {Response} response This will be stored on the ServiceWorker cache.
-             * @returns {Response} cached
-             */
             function fetchedFromNetwork(response: Response) {
-                const cacheCopy = response.clone();
+                // Inject headers FIRST, then store the injected version in cache
+                const injected = injectIsolationHeaders(response);
+                const cacheCopy = injected.clone();
 
                 console.debug(
                     `${wName} fetch response from network.`,
                     event.request.url
                 );
-                // We open a cache to store the response for this request.
+
                 caches
                     .open(wName + version)
-                    .then((cache) => {
-                        return cache.put(event.request, cacheCopy);
-                    })
+                    .then((cache) => { return cache.put(event.request, cacheCopy); })
                     .then(() => {
                         return console.debug(
                             `${wName} fetch response stored in cache.`,
@@ -132,23 +133,9 @@ self.addEventListener('fetch', (event: any) => {
                         );
                     });
 
-                // Return the response so that the promise is settled in fulfillment.
-                return response;
+                return (injected);
             }
 
-            /**
-             * When this method is called, it means we were unable to produce a response
-             * from either the cache or the network. This is our last opportunity
-             * to produce a meaningful response even when all else fails.
-             * E.g.
-             * - Test the Accept header and then return one of the `offlineFundamentals`
-             * e.g: `return caches.match('/some/cached/image.png')`
-             * - consider the origin. It's easier to decide what "unavailable" means
-             * for requests against your origins than for requests against a third party,
-             * such as an ad provider.
-             * - Generate a Response programmaticaly, as shown below, and return that.
-             * @returns {Response} fallback
-             */
             function unableToResolve() {
                 console.error(
                     `${wName} fetch request failed in both cache and network.`
@@ -163,21 +150,9 @@ self.addEventListener('fetch', (event: any) => {
                 });
             }
 
-            // fallback to fetching from network
-            return (
-                fetch(event.request)
-                    // We handle the network request with success and failure scenarios.
-                    .then(fetchedFromNetwork, unableToResolve)
-                    // we are done
-                    .then(() => {
-                        return console.debug(
-                            `${wName} fetch event(networked): `,
-                            event.request.url
-                        );
-                    })
-                    // We should catch errors on the fetchedFromNetwork handler as well.
-                    .catch(unableToResolve)
-            );
+            return fetch(event.request)
+                .then(fetchedFromNetwork, unableToResolve)
+                .catch(unableToResolve);
         })
     );
 });
@@ -189,9 +164,11 @@ self.addEventListener('fetch', (event: any) => {
  * we delete old caches that don't match the version in the worker we just finished
  * installing.
  */
-self.addEventListener('activate', (event: any) => {
+wrk.addEventListener('activate', (event) => {
     console.info(`${wName} activate event triggered.`);
-    event.waitUntil(async () => {
+    const promise = async () => {
+        // Tell the active service worker to take control of the page immediately.
+        await wrk.clients.claim();
         // Feature-detect navigation preloads!
         if (wrk.registration?.navigationPreload) {
             await wrk.registration.navigationPreload.enable();
@@ -218,8 +195,7 @@ self.addEventListener('activate', (event: any) => {
             .then(() => {
                 console.info(`${wName} activated.`);
             });
-    });
+    };
 
-    // Tell the active service worker to take control of the page immediately.
-    wrk.clients.claim();
+    event.waitUntil(promise());
 });
