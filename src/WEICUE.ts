@@ -116,47 +116,46 @@ export class WEICUE extends CComponent {
         const st = document.createElement('style');
 
         st.innerHTML = `
-        #icueholder {
-            opacity: 0;
-            position: absolute;
-            top: -120px;
-            left: 0;
-            width: auto;
-            height: auto;
-            margin: 10px;
-            transition: all ${Transition}s ease;
-        }
-        #icueholder.show {
-            opacity: 1;
-            top: 0px;
-        }
-        #icueholder.waiting {
-            opacity: 0.2;
-            transition: all 10s ease;
-        }
-        #icuelogo {
-            float: left;
-            height: 80px;
-            width: 80px;
-        }
-        #icuetext {
-            float: left;
-            margin: 25px 5px;
-            font-size: 175%;
-        }
-        #icueholder {
-            text-shadow: 0 0 20px rgba(255, 255, 255, .5), 0 0 15px rgba(255, 255, 255, .5);
-        }
-        .cuePreview {
-            opacity: 0;
-            position: absolute;
-            background: rgba(255, 0, 0, .1);
-            transition: all 2s;
-        }
-        .cuePreview.show {
-            opacity: 0.5;
-        }
-        `;
+#icueholder {
+    opacity: 0;
+    position: absolute;
+    top: -120px;
+    left: 0;
+    width: auto;
+    height: auto;
+    margin: 10px;
+    transition: all ${Transition}s ease;
+}
+#icueholder.show {
+    opacity: 1;
+    top: 0px;
+}
+#icueholder.waiting {
+    opacity: 0.2;
+    transition: all 10s ease;
+}
+#icuelogo {
+    float: left;
+    height: 80px;
+    width: 80px;
+}
+#icuetext {
+    float: left;
+    margin: 25px 5px;
+    font-size: 175%;
+}
+#icueholder {
+    text-shadow: 0 0 20px rgba(255, 255, 255, .5), 0 0 15px rgba(255, 255, 255, .5);
+}
+.cuePreview {
+    opacity: 0;
+    position: absolute;
+    background: rgba(255, 0, 0, .1);
+    transition: all 2s;
+}
+.cuePreview.show {
+    opacity: 0.5;
+}`;
         document.head.append(st);
     }
 

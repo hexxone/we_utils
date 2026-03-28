@@ -47,33 +47,32 @@ export class LoadHelper {
         const st = document.createElement('style');
 
         st.innerHTML = `
-        #ldhlpr-bar {
-            position: absolute;
-            opacity: 0;
-            top: 0px;
-            height: 10px;
-            width: 0%;
-            background-color: ${mainColor};
-            transition: all 0.1s;
-        }
-        #ldhlpr-bar.show {
-            opacity: 1;
-        }
-        #ldhlpr-text {
-            position: absolute;
-            top: -30em;
-            width: 100%;
-            text-align: center;
-            text-shadow: 0 0 20px rgba(42, 255, 69, .5), 0 0 15px rgba(42, 255, 69, .5);
-            font-weight: 100;
-            font-size: 3em;
-            color: ${mainColor};
-            transition: all 0.1s ease;
-        }
-        #ldhlpr-text.show {
-            top: 10px;
-        }
-        `;
+#ldhlpr-bar {
+    position: absolute;
+    opacity: 0;
+    top: 0px;
+    height: 10px;
+    width: 0%;
+    background-color: ${mainColor};
+    transition: all 0.1s;
+}
+#ldhlpr-bar.show {
+    opacity: 1;
+}
+#ldhlpr-text {
+    position: absolute;
+    top: -30em;
+    width: 100%;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(42, 255, 69, .5), 0 0 15px rgba(42, 255, 69, .5);
+    font-weight: 100;
+    font-size: 3em;
+    color: ${mainColor};
+    transition: all 0.1s ease;
+}
+#ldhlpr-text.show {
+    top: 10px;
+}`;
         document.head.append(st);
     }
 

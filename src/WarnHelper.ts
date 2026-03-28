@@ -63,18 +63,17 @@ export class WarnHelper extends CComponent {
         const st = document.createElement('style');
 
         st.innerHTML = `
-        #${ELM_ID} {
-            opacity: 0;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            transition: opacity ${this.settings.animate_seconds}s ease;
-        }
-        #${ELM_ID}.show {
-            opacity: 1;
-        }
-        `;
+#${ELM_ID} {
+    opacity: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: opacity ${this.settings.animate_seconds}s ease;
+}
+#${ELM_ID}.show {
+    opacity: 1;
+}`;
         document.head.append(st);
     }
 

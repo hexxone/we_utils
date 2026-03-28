@@ -16,6 +16,8 @@ import { BeaTs } from './Bea';
 
 const DAT_LEN = 128;
 const LISTENAME = 'wallpaperRegisterAudioListener';
+const AUDIO_ACTIVE_TIMEOUT_MS = 3000;
+const AUDIO_DEBUG_HIDE_TIMEOUT_MS = 5000;
 
 /**
  * Audio processing settings.
@@ -158,6 +160,9 @@ export class WEAS extends CComponent {
     canvas2: HTMLCanvasElement;
     context2: CanvasRenderingContext2D;
     display: HTMLElement;
+    private lastAudibleTime = 0;
+    private debugCanvasVisible = true;
+    private debugCanvasCleared = true;
 
     public init?: () => Promise<void>;
 
@@ -302,13 +307,13 @@ export class WEAS extends CComponent {
                     const realProps = this.getProps(arrProps);
                     const teim = performance.now() - start;
 
-                    if (
-                        this.lastAudio
-                        && !this.lastAudio.silent
-                        && realProps.silent
-                    ) {
-                        console.debug(audioArray, arrData, arrProps);
-                    }
+                    // if (
+                    //     this.lastAudio
+                    //     && !this.lastAudio.silent
+                    //     && realProps.silent
+                    // ) {
+                    //     console.debug(audioArray, arrData, arrProps);
+                    // }
 
                     let bpmObj = {};
 
@@ -317,6 +322,10 @@ export class WEAS extends CComponent {
                             start / 1000.0,
                             this.convertAudio(audioArray)
                         );
+                    }
+
+                    if (!realProps.silent) {
+                        this.lastAudibleTime = start;
                     }
 
                     // apply actual last Data from worker
@@ -340,24 +349,23 @@ export class WEAS extends CComponent {
         const st = document.createElement('style');
 
         st.innerHTML = `
-        #weas-preview {
-            opacity: 0;
-            position: absolute;
-            z-index: 2;
-        }
-        #weas-preview canvas {
-            background: #06060666;
-            border: white 2px dotted;
-        }
-        #weas-preview.show {
-            opacity: 1;
-        }
-        #WEASDisplay {
-            position: fixed;
-            left: 0px;
-            width: 100vw;
-        }
-        `;
+#weas-preview {
+    opacity: 0;
+    position: absolute;
+    z-index: 2;
+}
+#weas-preview canvas {
+    background: #06060666;
+    border: white 2px dotted;
+}
+#weas-preview.show {
+    opacity: 1;
+}
+#WEASDisplay {
+    position: fixed;
+    left: 0px;
+    width: 100vw;
+}`;
         document.head.append(st);
     }
 
@@ -370,18 +378,17 @@ export class WEAS extends CComponent {
         this.mainElm = document.createElement('div');
         this.mainElm.id = 'weas-preview';
         this.mainElm.innerHTML = `
-        <div style="font-size: 300%">
-        <span>Raw Data:</span>
-        <br />
-        <span style="float:left">Left</span>
-        <span style="float:right">Right</span>
-        <canvas id="WEASCanvas1" style="height: 30vh; width: 95%;"></canvas>
-        <span>Processed:</span>
-        </div>
-        <span id="WEASDisplay"></span>
-        <br />
-        <canvas id="WEASCanvas2" style="height: 30vh; width: 95%;"></canvas>
-        `;
+<div style="font-size: 300%">
+<span>Raw Data:</span>
+<br />
+<span style="float:left">Left</span>
+<span style="float:right">Right</span>
+<canvas id="WEASCanvas1" style="height: 30vh; width: 95%;"></canvas>
+<span>Processed:</span>
+</div>
+<span id="WEASDisplay"></span>
+<br />
+<canvas id="WEASCanvas2" style="height: 30vh; width: 95%;"></canvas>`;
         document.body.append(this.mainElm);
 
         const { x: realWidth } = getRealWindowSize();
@@ -400,6 +407,7 @@ export class WEAS extends CComponent {
         this.context2 = this.canvas2.getContext('2d');
 
         this.display = document.getElementById('WEASDisplay');
+        this.setCanvasPreviewVisible(false);
     }
 
     /**
@@ -419,6 +427,28 @@ export class WEAS extends CComponent {
         }
 
         return res;
+    }
+
+
+    /**
+     * @returns {boolean} false if:
+     * <br/>
+     * - processing is disabled
+     * <br/>
+     * - there is no data
+     * <br/>
+     * - the data is silent
+     * <br/>
+     * - data is too old (> 3s)
+     * @public
+     */
+    public hasAudio(): boolean {
+        return (
+            this.initialized
+            && this.settings.audioprocessing
+            && this.hasRecentAudioSample()
+            && this.lastAudio.silent <= 0
+        );
     }
 
     /**
@@ -476,40 +506,39 @@ export class WEAS extends CComponent {
     }
 
     /**
-     * @returns {boolean} false if:
-     * <br/>
-     * - processing is disabled
-     * <br/>
-     * - there is no data
-     * <br/>
-     * - the data is silent
-     * <br/>
-     * - data is too old (> 3s)
-     * @public
-     */
-    public hasAudio(): boolean {
-        if (this.settings.show_canvas) {
-            this.updateCanvas();
-        }
-
-        return (
-            this.initialized
-            && this.settings.audioprocessing
-            && this.lastAudio
-            && this.lastAudio.silent <= 0
-            && performance.now() - this.lastAudio.time < 3000
-        );
-    }
-
-    /**
      * Update the debug canvas
      * @returns {void}
      */
-    private updateCanvas(): void {
+    public updateCanvas(): void {
         // update "raw" canvas
-        if (!this.initialized) {
+        if (
+            !this.initialized
+            || !this.settings.debugging
+            || !this.settings.show_canvas
+        ) {
+            this.setCanvasPreviewVisible(false);
+            this.clearDebugCanvas();
+
             return;
         }
+
+        const now = performance.now();
+        const keepVisible = this.lastAudibleTime > 0
+            && now - this.lastAudibleTime < AUDIO_DEBUG_HIDE_TIMEOUT_MS;
+
+        if (!keepVisible) {
+            this.setCanvasPreviewVisible(false);
+            this.clearDebugCanvas();
+
+            return;
+        }
+
+        if (!this.hasRecentAudioSample() || !this.lastAudio || this.lastAudio.silent > 0) {
+            return;
+        }
+
+        this.setCanvasPreviewVisible(true);
+        this.debugCanvasCleared = false;
 
         // clear the intersection
         this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
@@ -573,6 +602,40 @@ export class WEAS extends CComponent {
             this.drawHorizontLine('rgb(127,127,127)', this.lastAudio.min);
             */
         }
+    }
+
+    private hasRecentAudioSample(): boolean {
+        return Boolean(
+            this.lastAudio
+            && performance.now() - this.lastAudio.time < AUDIO_ACTIVE_TIMEOUT_MS
+        );
+    }
+
+    private clearDebugCanvas(): void {
+        if (
+            this.debugCanvasCleared
+            || !this.context1
+            || !this.context2
+            || !this.display
+            || !this.canvas1
+            || !this.canvas2
+        ) {
+            return;
+        }
+
+        this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
+        this.context2.clearRect(0, 0, this.canvas2.width, this.canvas2.height);
+        this.display.innerText = '';
+        this.debugCanvasCleared = true;
+    }
+
+    private setCanvasPreviewVisible(visible: boolean): void {
+        if (!this.mainElm || this.debugCanvasVisible === visible) {
+            return;
+        }
+
+        this.mainElm.style.display = visible ? '' : 'none';
+        this.debugCanvasVisible = visible;
     }
 
     /**

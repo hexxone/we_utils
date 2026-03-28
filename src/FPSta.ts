@@ -16,6 +16,7 @@ import { WEAS } from './weas/WEAS';
 
 const ElementId = 'fpstats';
 const MemUpdateRate = 19;
+const GpuHistoryLimit = 120;
 
 /**
  * Custom Stats settings
@@ -25,6 +26,9 @@ const MemUpdateRate = 19;
 export class FPSettings extends CSettings {
 
     debugging = false;
+    custom_fps = false;
+    fps_value = 60;
+    wallpaper_fps = 60;
 
 }
 
@@ -43,7 +47,7 @@ export class FPStats extends CComponent {
     // FPS
     private fpsHolder: HTMLElement;
     private lastUpdate: number = performance.now();
-    private frameCount = 1;
+    private frameCount = 0;
 
     // usage
     private useHolder: HTMLElement;
@@ -52,18 +56,26 @@ export class FPStats extends CComponent {
     private cpuHolder: HTMLElement;
     private cpuBegin: number = performance.now();
     private cpuEnd: number = performance.now();
-    private cpuMS = 1;
+    private cpuMS = 0;
 
     // gpu
     private gpuHolder: HTMLElement;
     private gpuBegin: number = performance.now();
     private gpuEnd: number = performance.now();
-    private gpuMS = 1;
+    private gpuMS = 0;
+    private gpuSupported = false;
+    private gpuSamples = 0;
+    private gl?: WebGLRenderingContext | WebGL2RenderingContext;
+    private gpuTimerExt?: any;
+    private gpuActiveQuery?: any;
+    private gpuPendingQueries: any[] = [];
+    private gpuUsesWebGL2Query = false;
+    private gpuHistory: number[] = [];
 
     // audio
     private auProvider: WEAS = undefined;
     private audHolder: HTMLElement;
-    private audioMS = 1;
+    private audioMS = 0;
     private bpmHolder: HTMLDivElement;
 
     // memory
@@ -78,7 +90,6 @@ export class FPStats extends CComponent {
     /**
      * Create hidden element
      * @param {WEAS} audio (optional)
-     * @param {WEICUE} cue (optional)
      */
     constructor(audio?: WEAS) {
         super();
@@ -99,21 +110,20 @@ export class FPStats extends CComponent {
         const st = document.createElement('style');
 
         st.innerHTML = `
-        #${ElementId} {
-            opacity: 0;
-            position: fixed;
-            top: 50vh;
-            left: 10px;
-            padding: 10px;
-            z-index: 90000;
-            font-size: 1.5em;
-            text-align: left;
-            background: black;
-        }
-        #${ElementId}.show {
-            opacity: 0.8;
-        }
-        `;
+#${ElementId} {
+    opacity: 0;
+    position: fixed;
+    top: 50vh;
+    left: 10px;
+    padding: 10px;
+    z-index: 90000;
+    font-size: 1.5em;
+    text-align: left;
+    background: black;
+}
+#${ElementId}.show {
+    opacity: 0.8;
+}`;
         document.head.append(st);
     }
 
@@ -149,10 +159,10 @@ export class FPStats extends CComponent {
         // audio
         if (this.auProvider) {
             this.bpmHolder = document.createElement('div');
-            this.bpmHolder.innerText = 'BPM: 0 ~ ';
+            this.bpmHolder.innerText = 'BPM: n/a';
 
             this.audHolder = document.createElement('div');
-            this.audHolder.innerText = 'Audio: 0 ms';
+            this.audHolder.innerText = 'Audio: n/a';
 
             this.container.append(this.bpmHolder, this.audHolder);
         }
@@ -176,6 +186,41 @@ export class FPStats extends CComponent {
     }
 
     /**
+     * Enable GPU timing via timer queries when supported by the active WebGL context.
+     * @param {WebGLRenderingContext | WebGL2RenderingContext} gl WebGL context
+     * @returns {void}
+     */
+    public setContext(gl?: WebGLRenderingContext | WebGL2RenderingContext): void {
+        this.gl = gl;
+        this.gpuTimerExt = undefined;
+        this.gpuActiveQuery = undefined;
+        this.gpuPendingQueries = [];
+        this.gpuSupported = false;
+        this.gpuUsesWebGL2Query = false;
+
+        if (!gl || typeof gl.getExtension !== 'function') {
+            return;
+        }
+
+        const extWebGL2 = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+
+        if (extWebGL2 && typeof (gl as WebGL2RenderingContext).createQuery === 'function') {
+            this.gpuTimerExt = extWebGL2;
+            this.gpuSupported = true;
+            this.gpuUsesWebGL2Query = true;
+
+            return;
+        }
+
+        const extWebGL1 = gl.getExtension('EXT_disjoint_timer_query');
+
+        if (extWebGL1 && typeof extWebGL1.createQueryEXT === 'function') {
+            this.gpuTimerExt = extWebGL1;
+            this.gpuSupported = true;
+        }
+    }
+
+    /**
      * Start measuring interval
      * @public
      * @param {boolean} cpu True if Cpu, false if GPU
@@ -188,6 +233,26 @@ export class FPStats extends CComponent {
 
         if (cpu) {
             this.cpuBegin = performance.now();
+        } else if (this.gpuSupported && !this.gpuActiveQuery && this.gl) {
+            if (this.gpuUsesWebGL2Query) {
+                const gl = this.gl as WebGL2RenderingContext;
+                const query = gl.createQuery();
+
+                if (query) {
+                    gl.beginQuery(this.gpuTimerExt.TIME_ELAPSED_EXT, query);
+                    this.gpuActiveQuery = query;
+                }
+            } else {
+                const query = this.gpuTimerExt.createQueryEXT();
+
+                if (query) {
+                    this.gpuTimerExt.beginQueryEXT(
+                        this.gpuTimerExt.TIME_ELAPSED_EXT,
+                        query
+                    );
+                    this.gpuActiveQuery = query;
+                }
+            }
         } else {
             this.gpuBegin = performance.now();
         }
@@ -206,6 +271,19 @@ export class FPStats extends CComponent {
 
         if (cpu) {
             this.cpuEnd = performance.now();
+        } else if (this.gpuSupported && this.gpuActiveQuery) {
+            if (this.gpuUsesWebGL2Query) {
+                (this.gl as WebGL2RenderingContext).endQuery(
+                    this.gpuTimerExt.TIME_ELAPSED_EXT
+                );
+            } else {
+                this.gpuTimerExt.endQueryEXT(
+                    this.gpuTimerExt.TIME_ELAPSED_EXT
+                );
+            }
+
+            this.gpuPendingQueries.push(this.gpuActiveQuery);
+            this.gpuActiveQuery = undefined;
         } else {
             this.gpuEnd = performance.now();
         }
@@ -219,41 +297,78 @@ export class FPStats extends CComponent {
     public update() {
         this.frameCount++;
         this.cpuMS += this.cpuEnd - this.cpuBegin;
-        this.gpuMS += this.gpuEnd - this.gpuBegin;
 
-        if (this.auProvider && this.auProvider.lastAudio) {
-            this.audioMS
-                = (this.audioMS + this.auProvider.lastAudio.ellapsed) / 2;
+        if (this.gpuSupported) {
+            this.resolveGpuQueries();
+        } else {
+            this.gpuMS += this.gpuEnd - this.gpuBegin;
+            this.gpuSamples++;
+        }
+
+        const hasAudio = this.auProvider && this.auProvider.hasAudio();
+
+        if (hasAudio && this.auProvider.lastAudio) {
+            this.audioMS += this.auProvider.lastAudio.ellapsed;
         }
 
         // only update text ~every second
         const now = performance.now();
+        const refreshRate = 1000;
 
-        if (now < this.lastUpdate + 1000) {
+        const refreshOffset = now - refreshRate - this.lastUpdate;
+
+        if (refreshOffset < 0) {
             return;
         }
 
-        // calculate
-        const elapsd = (now - this.lastUpdate) / 1000;
-        const efpies = this.frameCount / elapsd;
+        const refreshDelay = refreshRate + refreshOffset;
+        const frameMultiplier = refreshDelay / refreshRate;
 
-        const target = this.getFpsTarget(efpies);
-        const msPerFps = 1000 / target;
-        const cepeyu = (this.cpuMS / this.frameCount / msPerFps) * 100;
-        const gepeyu = (this.gpuMS / this.frameCount / msPerFps) * 100;
-        const alluse = (target / efpies) * (cepeyu + gepeyu);
+        // calculate
+        const elapsd = (now - this.lastUpdate) / refreshDelay;
+        const fps = this.frameCount / elapsd;
+
+        const targetFps = this.getFpsTarget();
+        const msPerFps = refreshDelay / targetFps;
+        const cpuUse = (this.cpuMS / this.frameCount / msPerFps) * 100;
+        const avgGpuMs = this.gpuSupported
+            ? this.getGpuAverageMs()
+            : (this.gpuSamples > 0 ? this.gpuMS / this.gpuSamples : NaN);
+        const gpuUse = Number.isFinite(avgGpuMs)
+            ? (avgGpuMs / msPerFps) * 100
+            : NaN;
+        const resourceUse = Number.isFinite(gpuUse)
+            ? (cpuUse + gpuUse)
+            : cpuUse;
+        const frameBudgetUse = (targetFps * frameMultiplier / fps) * 100;
+        const onTarget = fps >= targetFps * frameMultiplier * 0.99;
+        const allUse = onTarget
+            ? resourceUse
+            : frameBudgetUse;
 
         // apply
-        this.fpsHolder.innerText = `FPS: ${efpies.toFixed(2)} / ${target}`;
-        this.cpuHolder.innerText = `CPU: ${cepeyu.toFixed(2)} %`;
-        this.gpuHolder.innerText = `GPU: ${gepeyu.toFixed(2)} %`;
-        this.useHolder.innerText = `All: ${alluse.toFixed(2)} %`;
+        this.fpsHolder.innerText = `FPS: ${fps.toFixed(2)} / ${targetFps}`;
+        this.cpuHolder.innerText = `CPU: ${cpuUse.toFixed(2)} %`;
+        this.gpuHolder.innerText = Number.isFinite(gpuUse)
+            ? `GPU: ${gpuUse.toFixed(2)} %`
+            : 'GPU: n/a';
+        this.useHolder.innerText = `All: ${allUse.toFixed(2)} %`;
 
         if (this.audHolder) {
-            this.audHolder.innerText = `Audio: ${this.audioMS.toFixed(2)} ms`;
+            if (!hasAudio) {
+                this.audHolder.innerText = 'Audio: n/a';
+            } else {
+                this.audHolder.innerText = `Audio: ${(
+                    this.audioMS / Math.max(this.frameCount, 1)
+                ).toFixed(2)} ms`;
+            }
+        }
+        if (this.bpmHolder) {
+            this.bpmHolder.innerText = 'BPM: n/a';
         }
         if (
-            this.bpmHolder
+            hasAudio
+            && this.bpmHolder
             && this.auProvider.lastAudio
             && this.auProvider.lastAudio.bpm instanceof Array
         ) {
@@ -282,7 +397,11 @@ export class FPStats extends CComponent {
      * @returns {void}
      */
     public reset() {
-        this.frameCount = this.cpuMS = this.gpuMS = this.audioMS = 1;
+        this.frameCount = 0;
+        this.cpuMS = 0;
+        this.gpuMS = 0;
+        this.gpuSamples = 0;
+        this.audioMS = 0;
     }
 
     private updateMemory() {
@@ -373,17 +492,94 @@ export class FPStats extends CComponent {
         }
     }
 
-    private getFpsTarget(current: number) {
-        const margin = current * 0.1;
-        const targets = [600, 480, 360, 240, 144, 120, 90, 75, 60, 30];
-
-        for (let i = 1; i < targets.length; i++) {
-            if (current > targets[i] + margin) {
-                return targets[i - 1];
-            }
+    private resolveGpuQueries(): void {
+        if (!this.gl || !this.gpuTimerExt) {
+            return;
         }
 
-        return 30;
+        while (this.gpuPendingQueries.length > 0) {
+            const query = this.gpuPendingQueries[0];
+            let available = false;
+
+            if (this.gpuUsesWebGL2Query) {
+                const gl = this.gl as WebGL2RenderingContext;
+
+                available = !!gl.getQueryParameter(
+                    query,
+                    gl.QUERY_RESULT_AVAILABLE
+                );
+            } else {
+                available = !!this.gpuTimerExt.getQueryObjectEXT(
+                    query,
+                    this.gpuTimerExt.QUERY_RESULT_AVAILABLE_EXT
+                );
+            }
+
+            if (!available) {
+                break;
+            }
+
+            const disjoint = !!this.gl.getParameter(
+                this.gpuTimerExt.GPU_DISJOINT_EXT
+            );
+
+            if (!disjoint) {
+                const elapsedNs = this.gpuUsesWebGL2Query
+                    ? (() => {
+                        const gl = this.gl as WebGL2RenderingContext;
+
+                        return gl.getQueryParameter(query, gl.QUERY_RESULT);
+                    })()
+                    : this.gpuTimerExt.getQueryObjectEXT(
+                        query,
+                        this.gpuTimerExt.QUERY_RESULT_EXT
+                    );
+
+                const elapsedMs = elapsedNs / 1_000_000;
+
+                this.gpuMS += elapsedMs;
+                this.gpuSamples++;
+                this.recordGpuSample(elapsedMs);
+            }
+
+            if (this.gpuUsesWebGL2Query) {
+                (this.gl as WebGL2RenderingContext).deleteQuery(query);
+            } else {
+                this.gpuTimerExt.deleteQueryEXT(query);
+            }
+
+            this.gpuPendingQueries.shift();
+        }
+    }
+
+    private recordGpuSample(elapsedMs: number): void {
+        this.gpuHistory.push(elapsedMs);
+
+        if (this.gpuHistory.length > GpuHistoryLimit) {
+            this.gpuHistory.splice(0, this.gpuHistory.length - GpuHistoryLimit);
+        }
+    }
+
+    private getGpuAverageMs(): number {
+        if (this.gpuHistory.length <= 0) {
+            return NaN;
+        }
+
+        let total = 0;
+
+        this.gpuHistory.forEach((sample) => {
+            total += sample;
+        });
+
+        return total / this.gpuHistory.length;
+    }
+
+    private getFpsTarget() {
+        if (this.settings.custom_fps) {
+            return Math.max(1, this.settings.fps_value || 60);
+        }
+
+        return Math.max(1, this.settings.wallpaper_fps || 60);
     }
 
     private formatBytes(n: number) {

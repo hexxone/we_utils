@@ -59,46 +59,45 @@ export class ReloadHelper extends CComponent {
         const st = document.createElement('style');
 
         st.innerHTML = `
-        #reload-bar {
-            position: absolute;
-            opacity: 0;
-            top: 0px;
-            height: 10px;
-            width: 0%;
-            background-color: #989a;
-            transition: all 0s;
-        }
-        #reload-bar.show {
-            opacity: 1;
-            width: 100%;
-            background-color: #e11a;
-            transition: all ${this.settings.reload_seconds}s ease, opacity 0.33s ease;
-        }
-        #reload-bar.done {
-            transition: opacity 0.33s ease;
-        }
-        #reload-text {
-            position: absolute;
-            top: -6em;
-            width: 100%;
-            text-align: center;
-            font-weight: 100;
-            font-size: 3em;
-            color: #fffa;
-        }
-        #reload-text.show {
-            top: 10px;
-            color: #e11a;
-            text-shadow: 0 0 20px rgba(255, 50, 50, .5), 0 0 15px rgba(255, 50, 50, .5);
-            transition: all .33s ease, color ${this.settings.reload_seconds}s ease, text-shadow ${this.settings.reload_seconds}s ease;
-        }
-        #reload-text.done {
-            transition: position 0.33s linear;
-        }
-        #reload-text {
-            text-shadow: 0 0 20px rgba(255, 255, 255, .5), 0 0 15px rgba(255, 255, 255, .5);
-        }
-        `;
+#reload-bar {
+    position: absolute;
+    opacity: 0;
+    top: 0px;
+    height: 10px;
+    width: 0%;
+    background-color: #989a;
+    transition: all 0s;
+}
+#reload-bar.show {
+    opacity: 1;
+    width: 100%;
+    background-color: #e11a;
+    transition: all ${this.settings.reload_seconds}s ease, opacity 0.33s ease;
+}
+#reload-bar.done {
+    transition: opacity 0.33s ease;
+}
+#reload-text {
+    position: absolute;
+    top: -6em;
+    width: 100%;
+    text-align: center;
+    font-weight: 100;
+    font-size: 3em;
+    color: #fffa;
+}
+#reload-text.show {
+    top: 10px;
+    color: #e11a;
+    text-shadow: 0 0 20px rgba(255, 50, 50, .5), 0 0 15px rgba(255, 50, 50, .5);
+    transition: all .33s ease, color ${this.settings.reload_seconds}s ease, text-shadow ${this.settings.reload_seconds}s ease;
+}
+#reload-text.done {
+    transition: position 0.33s linear;
+}
+#reload-text {
+    text-shadow: 0 0 20px rgba(255, 255, 255, .5), 0 0 15px rgba(255, 255, 255, .5);
+}`;
         document.head.append(st);
     }
 
