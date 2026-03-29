@@ -11,6 +11,7 @@
 
 import { wascWorker } from './wasc-worker/Wasc';
 import { WascInterface } from './wasc-worker/WascInterface';
+import { Color } from './three.ts/src/math/Color';
 
 // promise resolve queue
 const promQueue: ((params: any) => void)[] = [];
@@ -59,54 +60,246 @@ export function waitReady() {
  * @param {number} mlt multiplier (default 255)
  * @returns {Object} {r,g,b,a} with float 0-mlt
  */
+type ParsedColor = {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+};
+
+function clamp01(value: number): number {
+    return Math.min(1, Math.max(0, value));
+}
+
+function parseUnitChannel(value: string): number {
+    const num = parseFloat(value);
+
+    if (!Number.isFinite(num)) {
+        return 0;
+    }
+
+    return num > 1 ? clamp01(num / 255) : clamp01(num);
+}
+
+function parseAlphaChannel(value?: string): number {
+    if (value === undefined || value === null || value === '') {
+        return 1;
+    }
+
+    const trimmed = String(value).trim();
+
+    if (trimmed.endsWith('%')) {
+        const num = parseFloat(trimmed.slice(0, -1));
+
+        return Number.isFinite(num) ? clamp01(num / 100) : 1;
+    }
+
+    const num = parseFloat(trimmed);
+
+    if (!Number.isFinite(num)) {
+        return 1;
+    }
+
+    return num > 1 ? clamp01(num / 255) : clamp01(num);
+}
+
+function parseHexColor(input: string): ParsedColor | null {
+    const match = input.match(/^#([a-f\d]{3,4}|[a-f\d]{6}|[a-f\d]{8})$/i);
+
+    if (!match) {
+        return null;
+    }
+
+    let hex = match[1];
+
+    if (hex.length === 3 || hex.length === 4) {
+        hex = hex
+            .split('')
+            .map((char) => {
+                return char + char;
+            })
+            .join('');
+    }
+
+    if (hex.length === 6) {
+        hex += 'ff';
+    }
+
+    return {
+        r: parseInt(hex.slice(0, 2), 16) / 255,
+        g: parseInt(hex.slice(2, 4), 16) / 255,
+        b: parseInt(hex.slice(4, 6), 16) / 255,
+        a: parseInt(hex.slice(6, 8), 16) / 255
+    };
+}
+
+function parseFloatColor(input: string): ParsedColor | null {
+    if (input.includes('(') || input.startsWith('#')) {
+        return null;
+    }
+
+    const parts = input
+        .trim()
+        .split(/[\s,]+/)
+        .filter(Boolean);
+
+    if (parts.length < 3 || parts.length > 4) {
+        return null;
+    }
+
+    if (
+        parts.some((part) => {
+            return !Number.isFinite(parseFloat(part));
+        })
+    ) {
+        return null;
+    }
+
+    return {
+        r: parseUnitChannel(parts[0]),
+        g: parseUnitChannel(parts[1]),
+        b: parseUnitChannel(parts[2]),
+        a: parseAlphaChannel(parts[3])
+    };
+}
+
+function parseRgbFunction(input: string): ParsedColor | null {
+    const match = input.match(/^rgba?\(([^)]*)\)$/i);
+
+    if (!match) {
+        return null;
+    }
+
+    const parts = match[1].split(',').map((part) => {
+        return part.trim();
+    });
+
+    if (parts.length < 3 || parts.length > 4) {
+        return null;
+    }
+
+    const parseRgbChannel = (value: string) => {
+        if (value.endsWith('%')) {
+            const num = parseFloat(value.slice(0, -1));
+
+            return Number.isFinite(num) ? clamp01(num / 100) : 0;
+        }
+
+        return parseUnitChannel(value);
+    };
+
+    return {
+        r: parseRgbChannel(parts[0]),
+        g: parseRgbChannel(parts[1]),
+        b: parseRgbChannel(parts[2]),
+        a: parseAlphaChannel(parts[3])
+    };
+}
+
+function parseStyleColor(input: string): ParsedColor | null {
+    const style = input.trim();
+    const lower = style.toLowerCase();
+    const hslMatch = lower.match(/^hsla?\(([^)]*)\)$/);
+    const isKnownName = Color.NAMES[lower] !== undefined;
+
+    if (!hslMatch && !isKnownName) {
+        return null;
+    }
+
+    const color = new Color();
+
+    if (hslMatch) {
+        color.setStyle(lower);
+    } else {
+        color.setColorName(lower);
+    }
+
+    const alpha = hslMatch
+        ? parseAlphaChannel(
+            hslMatch[1]
+                .split(',')
+                .map((part) => {
+                    return part.trim();
+                })[3]
+        )
+        : 1;
+
+    return {
+        r: color.r,
+        g: color.g,
+        b: color.b,
+        a: alpha
+    };
+}
+
+function parseColorInput(input: string): ParsedColor | null {
+    if (typeof input !== 'string') {
+        return null;
+    }
+
+    const trimmed = input.trim();
+
+    if (!trimmed) {
+        return null;
+    }
+
+    return (
+        parseHexColor(trimmed)
+        || parseRgbFunction(trimmed)
+        || parseFloatColor(trimmed)
+        || parseStyleColor(trimmed)
+    );
+}
+
+function formatNormalizedColor(value: number): string {
+    return clamp01(value)
+        .toFixed(6)
+        .replace(/\.?0+$/, '');
+}
+
+export function normalizeColorInput(
+    input: string,
+    includeAlpha = false
+): string | null {
+    const parsed = parseColorInput(input);
+
+    if (!parsed) {
+        return null;
+    }
+
+    const parts = [
+        formatNormalizedColor(parsed.r),
+        formatNormalizedColor(parsed.g),
+        formatNormalizedColor(parsed.b)
+    ];
+
+    if (includeAlpha || parsed.a < 1) {
+        parts.push(formatNormalizedColor(parsed.a));
+    }
+
+    return parts.join(' ');
+}
+
 export function rgbToObj(
     input: string,
     mlt: number = 255
 ): { r: number; g: number; b: number; a: number } {
-    if (input.startsWith('#')) {
-        let hex = input.replace('#', '');
+    const parsed = parseColorInput(input);
 
-        if (hex.length === 3) {
-            hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
-        }
-        if (hex.length === 4) {
-            hex = `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}${hex[3]}${hex[3]}`;
-        }
-
-        const r = (parseInt(hex.substring(0, 2), 16) / 255) * mlt;
-        const g = (parseInt(hex.substring(2, 4), 16) / 255) * mlt;
-        const b = (parseInt(hex.substring(4, 6), 16) / 255) * mlt;
-        const a = input.length === 8 ? parseInt(hex.substring(6, 8), 16) : mlt;
-
+    if (!parsed) {
         return {
-            r,
-            g,
-            b,
-            a
+            r: 0,
+            g: 0,
+            b: 0,
+            a: mlt
         };
     }
 
-    const brackI = input.indexOf('(');
-
-    if (brackI > -1) {
-        input = input.substring(brackI + 1, input.indexOf(')'));
-    }
-
-    const spl = input.split(/[\s,]+/).map(parseFloat);
-
-    for (let i = 0; i < spl.length; i++) {
-        spl[i] = isNaN(spl[i]) ? 0 : Math.min(mlt, Math.max(0, spl[i] * mlt));
-    }
-
-    if (spl.length < 4) {
-        spl[3] = mlt;
-    }
-
     return {
-        r: spl[0] || 0,
-        g: spl[1] || 0,
-        b: spl[2] || 0,
-        a: spl[3]
+        r: parsed.r * mlt,
+        g: parsed.g * mlt,
+        b: parsed.b * mlt,
+        a: parsed.a * mlt
     };
 }
 

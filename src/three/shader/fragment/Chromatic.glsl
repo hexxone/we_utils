@@ -4,17 +4,16 @@ uniform sampler2D tDiffuse;
 uniform vec2 iResolution;
 uniform float strength;
 
-vec4 ca(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
-    vec4 col = vec4(0.0);
-    vec2 off = vec2(1.33333333333333) * direction;
-    col.ra = texture2D(image, uv).ra;
-    col.g = texture2D(image, uv - (off / resolution)).g;
-    col.b = texture2D(image, uv - 2. * (off / resolution)).b;
-    return col;
-}
-
 void main() {
-    vec2 uv = gl_FragCoord.xy / iResolution;
-    vec2 direction = (uv - .5) * strength;
-    gl_FragColor = ca(tDiffuse, uv, iResolution.xy, direction);
+    vec4 base = texture2D(tDiffuse, vUv);
+    vec2 direction = (vUv - 0.5) * (strength / max(iResolution.x, iResolution.y));
+    vec2 off = direction * 1.33333333333333;
+    vec4 shifted = vec4(
+        texture2D(tDiffuse, clamp(vUv + off, 0.0, 1.0)).r,
+        texture2D(tDiffuse, vUv).g,
+        texture2D(tDiffuse, clamp(vUv - off, 0.0, 1.0)).b,
+        base.a
+    );
+
+    gl_FragColor = mix(base, shifted, clamp(abs(strength) / 24.0, 0.0, 1.0));
 }

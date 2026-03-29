@@ -16,7 +16,6 @@ import { WEAS } from './weas/WEAS';
 
 const ElementId = 'fpstats';
 const MemUpdateRate = 19;
-const GpuHistoryLimit = 120;
 
 /**
  * Custom Stats settings
@@ -70,7 +69,6 @@ export class FPStats extends CComponent {
     private gpuActiveQuery?: any;
     private gpuPendingQueries: any[] = [];
     private gpuUsesWebGL2Query = false;
-    private gpuHistory: number[] = [];
 
     // audio
     private auProvider: WEAS = undefined;
@@ -106,23 +104,30 @@ export class FPStats extends CComponent {
      * @ignore
      * @returns {void}
      */
-    private injectCSS() {
+    private injectCSS(): void {
         const st = document.createElement('style');
 
         st.innerHTML = `
 #${ElementId} {
     opacity: 0;
     position: fixed;
-    top: 50vh;
-    left: 10px;
-    padding: 10px;
+    top: 12px;
+    left: 12px;
+    padding: 14px;
     z-index: 90000;
-    font-size: 1.5em;
+    font-size: 1.15rem;
     text-align: left;
-    background: black;
+    color: #f4f6f8;
+    background: rgba(8, 12, 16, 0.56);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+    min-width: 260px;
+    font-family: "Overpass Mono", monospace;
 }
 #${ElementId}.show {
-    opacity: 0.8;
+    opacity: 1;
 }`;
         document.head.append(st);
     }
@@ -132,7 +137,7 @@ export class FPStats extends CComponent {
      * @ignore
      * @returns {void}
      */
-    private injectHTML() {
+    private injectHTML(): void {
         // root
         this.container = document.createElement('div');
         this.container.id = ElementId;
@@ -174,15 +179,14 @@ export class FPStats extends CComponent {
      * @returns {Promise}
      * @returns {void}
      */
-    public updateSettings(): Promise<void> {
+    public async updateSettings(): Promise<void> {
         // show or hide debug info
-        return waitReady().then(() => {
-            if (this.settings.debugging) {
-                this.container.classList.add('show');
-            } else {
-                this.container.classList.remove('show');
-            }
-        });
+        await waitReady();
+        if (this.settings.debugging) {
+            this.container.classList.add('show');
+        } else {
+            this.container.classList.remove('show');
+        }
     }
 
     /**
@@ -226,7 +230,7 @@ export class FPStats extends CComponent {
      * @param {boolean} cpu True if Cpu, false if GPU
      * @returns {void}
      */
-    public begin(cpu: boolean) {
+    public begin(cpu: boolean): void {
         if (!this.settings.debugging) {
             return;
         }
@@ -264,7 +268,7 @@ export class FPStats extends CComponent {
      * @param {boolean} cpu True if Cpu, false if GPU
      * @returns {void}
      */
-    public end(cpu: boolean) {
+    public end(cpu: boolean): void {
         if (!this.settings.debugging) {
             return;
         }
@@ -294,7 +298,7 @@ export class FPStats extends CComponent {
      * @public
      * @returns {void}
      */
-    public update() {
+    public update(): void {
         this.frameCount++;
         this.cpuMS += this.cpuEnd - this.cpuBegin;
 
@@ -322,29 +326,19 @@ export class FPStats extends CComponent {
         }
 
         const refreshDelay = refreshRate + refreshOffset;
-        const frameMultiplier = refreshDelay / refreshRate;
 
         // calculate
         const elapsd = (now - this.lastUpdate) / refreshDelay;
         const fps = this.frameCount / elapsd;
 
         const targetFps = this.getFpsTarget();
-        const msPerFps = refreshDelay / targetFps;
-        const cpuUse = (this.cpuMS / this.frameCount / msPerFps) * 100;
-        const avgGpuMs = this.gpuSupported
-            ? this.getGpuAverageMs()
-            : (this.gpuSamples > 0 ? this.gpuMS / this.gpuSamples : NaN);
-        const gpuUse = Number.isFinite(avgGpuMs)
-            ? (avgGpuMs / msPerFps) * 100
+        const cpuUse = this.clampPercent((this.cpuMS / refreshDelay) * 100);
+        const gpuUse = this.gpuSamples > 0
+            ? this.clampPercent((this.gpuMS / refreshDelay) * 100)
             : NaN;
-        const resourceUse = Number.isFinite(gpuUse)
-            ? (cpuUse + gpuUse)
+        const allUse = Number.isFinite(gpuUse)
+            ? Math.max(cpuUse, gpuUse)
             : cpuUse;
-        const frameBudgetUse = (targetFps * frameMultiplier / fps) * 100;
-        const onTarget = fps >= targetFps * frameMultiplier * 0.99;
-        const allUse = onTarget
-            ? resourceUse
-            : frameBudgetUse;
 
         // apply
         this.fpsHolder.innerText = `FPS: ${fps.toFixed(2)} / ${targetFps}`;
@@ -372,14 +366,12 @@ export class FPStats extends CComponent {
             && this.auProvider.lastAudio
             && this.auProvider.lastAudio.bpm instanceof Array
         ) {
-            let bts = 0;
             const bp = this.auProvider.lastAudio.bpm;
+            const primary = bp[0];
 
-            bp.forEach((b) => {
-                return (bts += b.value);
-            });
-            bts /= bp.length;
-            this.bpmHolder.innerText = `BPM: ${bts.toFixed(2)} ~`;
+            if (primary && Number.isFinite(primary.value)) {
+                this.bpmHolder.innerText = `BPM: ${this.formatBpm(primary.value)} ~`;
+            }
         }
 
         if (this.memUpdate++ > MemUpdateRate) {
@@ -396,7 +388,7 @@ export class FPStats extends CComponent {
      * @public
      * @returns {void}
      */
-    public reset() {
+    public reset(): void {
         this.frameCount = 0;
         this.cpuMS = 0;
         this.gpuMS = 0;
@@ -404,11 +396,19 @@ export class FPStats extends CComponent {
         this.audioMS = 0;
     }
 
+    private formatBpm(value: number): string {
+        const rounded = Math.round(value * 2) / 2;
+
+        return Number.isInteger(rounded)
+            ? rounded.toFixed(0)
+            : rounded.toFixed(1);
+    }
+
     private updateMemory() {
         // eslint-disable-next-line dot-notation
         if (
             window.crossOriginIsolated
-            && performance.measureUserAgentSpecificMemory !== undefined
+            && performance.measureUserAgentSpecificMemory !== undefined // TODO
         ) {
             // eslint-disable-next-line dot-notation
             performance['measureUserAgentSpecificMemory']()
@@ -539,7 +539,6 @@ export class FPStats extends CComponent {
 
                 this.gpuMS += elapsedMs;
                 this.gpuSamples++;
-                this.recordGpuSample(elapsedMs);
             }
 
             if (this.gpuUsesWebGL2Query) {
@@ -552,34 +551,20 @@ export class FPStats extends CComponent {
         }
     }
 
-    private recordGpuSample(elapsedMs: number): void {
-        this.gpuHistory.push(elapsedMs);
-
-        if (this.gpuHistory.length > GpuHistoryLimit) {
-            this.gpuHistory.splice(0, this.gpuHistory.length - GpuHistoryLimit);
-        }
-    }
-
-    private getGpuAverageMs(): number {
-        if (this.gpuHistory.length <= 0) {
-            return NaN;
-        }
-
-        let total = 0;
-
-        this.gpuHistory.forEach((sample) => {
-            total += sample;
-        });
-
-        return total / this.gpuHistory.length;
-    }
-
     private getFpsTarget() {
         if (this.settings.custom_fps) {
             return Math.max(1, this.settings.fps_value || 60);
         }
 
         return Math.max(1, this.settings.wallpaper_fps || 60);
+    }
+
+    private clampPercent(value: number) {
+        if (!Number.isFinite(value)) {
+            return 0;
+        }
+
+        return Math.min(100, Math.max(0, value));
     }
 
     private formatBytes(n: number) {

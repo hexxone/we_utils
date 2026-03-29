@@ -33,47 +33,283 @@
 /**
  * @public
  */
+type TempoCandidate = {
+    value: number;
+    score: number;
+};
+
+const WEAS_STEREO_BINS = 64;
+const WEAS_SPECTRUM_BINS = WEAS_STEREO_BINS * 2;
+const DEFAULT_FRAME_RATE = 30;
+const MIN_BPM = 55;
+const MAX_BPM = 190;
+const BPM_FAMILY_FLOOR = 70;
+const BPM_FAMILY_CEIL = 180;
+const HISTORY_SECONDS = 8;
+const MIN_ANALYSIS_SECONDS = 3;
+const SILENCE_HOLD_SECONDS = 2.5;
+
 export class BeaTs {
 
-    private bd_low: BeatsDetektor = new BeatsDetektor(55, 109);
-    private bd_med: BeatsDetektor = new BeatsDetektor(85, 169);
-    private bd_high: BeatsDetektor = new BeatsDetektor(100, 199);
-    private bd_ext: BeatsDetektor = new BeatsDetektor(150, 299);
-
-    private winRewards: number[] = [];
-
-    private bds: BeatsDetektor[] = [];
-    private bdi = 0;
-
-    private prev_bpm = -1;
-    private prev_win = -1;
+    private monoSpectrum = new Float64Array(WEAS_STEREO_BINS);
+    private previousSpectrum = new Float64Array(WEAS_STEREO_BINS);
+    private onsetHistory: number[] = [];
+    private lastTime = 0;
+    private fps = DEFAULT_FRAME_RATE;
+    private onsetMean = 0;
+    private onsetDeviation = 0.02;
+    private stableBpm = 0;
+    private stableWeight = 0;
+    private silentSeconds = 0;
+    private autoReset = true;
 
     /**
-     * Construct BeatDetektor array
+     * Construct realtime BPM tracker.
      * @param {boolean} autoReset stfu
      */
     constructor(autoReset = true) {
-        this.bds.push(this.bd_low, this.bd_med, this.bd_high, this.bd_ext);
+        this.autoReset = autoReset;
+    }
 
-        if (autoReset) {
-            setInterval(() => {
-                return this.resetBds();
-            }, 20 * 1000);
+    private resetState(): void {
+        this.onsetHistory = [];
+        this.previousSpectrum.fill(0);
+        this.lastTime = 0;
+        this.fps = DEFAULT_FRAME_RATE;
+        this.onsetMean = 0;
+        this.onsetDeviation = 0.02;
+        this.stableBpm = 0;
+        this.stableWeight = 0;
+        this.silentSeconds = 0;
+    }
+
+    private sanitizeSample(value: number): number {
+        if (!Number.isFinite(value) || value <= 0) {
+            return 0;
+        }
+
+        return Math.min(value, 1.5);
+    }
+
+    private normalizeBpmFamily(value: number, anchor = 0): number {
+        let bpm = value;
+        const familyAnchor = anchor > 0 ? anchor : 120;
+
+        while (bpm < familyAnchor * 0.67) {
+            bpm *= 2;
+        }
+        while (bpm > familyAnchor * 1.5) {
+            bpm /= 2;
+        }
+        while (bpm < BPM_FAMILY_FLOOR) {
+            bpm *= 2;
+        }
+        while (bpm > BPM_FAMILY_CEIL) {
+            bpm /= 2;
+        }
+
+        return bpm;
+    }
+
+    private extractMonoSpectrum(data: ArrayLike<number>): number {
+        let energy = 0;
+
+        for (let i = 0; i < WEAS_STEREO_BINS; i++) {
+            // Wallpaper Engine exposes 64 left bins followed by 64 right bins.
+            const left = this.sanitizeSample(data[i]);
+            const right = this.sanitizeSample(data[WEAS_STEREO_BINS + i]);
+            const mono = (left + right) * 0.5;
+
+            this.monoSpectrum[i] = Math.log1p(mono * 8);
+            energy += mono;
+        }
+
+        return energy / WEAS_STEREO_BINS;
+    }
+
+    private computeOnsetStrength(): number {
+        let flux = 0;
+        let totalWeight = 0;
+
+        for (let i = 0; i < WEAS_STEREO_BINS; i++) {
+            const current = this.monoSpectrum[i];
+            const previous = this.previousSpectrum[i];
+            const diff = current - previous;
+            const weight = i < 8
+                ? 1.35
+                : i < 24
+                    ? 1.0
+                    : i < 40
+                        ? 0.45
+                        : 0.15;
+
+            if (diff > 0) {
+                flux += diff * weight;
+            }
+            totalWeight += weight;
+        }
+
+        const rawFlux = totalWeight > 0 ? flux / totalWeight : 0;
+        const baseline = this.onsetMean;
+        const spread = this.onsetDeviation;
+
+        this.onsetMean += (rawFlux - this.onsetMean) * 0.08;
+        this.onsetDeviation += (Math.abs(rawFlux - baseline) - this.onsetDeviation) * 0.08;
+
+        const normalized = Math.max(0, rawFlux - baseline * 0.92)
+            / Math.max(0.02, spread * 3);
+
+        return Math.min(normalized, 4);
+    }
+
+    private pushOnset(value: number): void {
+        this.onsetHistory.push(value);
+
+        const historySize = Math.max(
+            Math.round(this.fps * HISTORY_SECONDS),
+            Math.round(DEFAULT_FRAME_RATE * HISTORY_SECONDS)
+        );
+
+        while (this.onsetHistory.length > historySize) {
+            this.onsetHistory.shift();
         }
     }
 
-    /**
-     * stfu eslint
-     * @returns {void}
-     */
-    private resetBds(): void {
-        let i = this.bdi++;
-        const l = this.bds.length;
+    private autoCorrelation(history: number[], lag: number): number {
+        let sum = 0;
 
-        if (i >= l) {
-            this.bdi = i %= l;
+        for (let i = lag; i < history.length; i++) {
+            sum += history[i] * history[i - lag];
         }
-        this.bds[i].reset();
+
+        return sum;
+    }
+
+    private estimateCandidates(): TempoCandidate[] {
+        const analysisFrames = Math.min(
+            this.onsetHistory.length,
+            Math.round(this.fps * HISTORY_SECONDS)
+        );
+        const history = this.onsetHistory.slice(-analysisFrames);
+
+        if (history.length < Math.round(this.fps * MIN_ANALYSIS_SECONDS)) {
+            return [];
+        }
+
+        const mean = history.reduce((sum, value) => {
+            return sum + value;
+        }, 0) / history.length;
+
+        for (let i = 0; i < history.length; i++) {
+            history[i] = Math.max(0, history[i] - mean * 0.35);
+        }
+
+        const minLag = Math.max(2, Math.round((this.fps * 60) / MAX_BPM));
+        const maxLag = Math.min(
+            history.length - 2,
+            Math.round((this.fps * 60) / MIN_BPM)
+        );
+
+        if (maxLag <= minLag) {
+            return [];
+        }
+
+        const lagScores: number[] = [];
+
+        for (let lag = minLag; lag <= maxLag; lag++) {
+            lagScores[lag] = this.autoCorrelation(history, lag);
+        }
+
+        const grouped = new Map<number, number>();
+        const continuityAnchor = this.stableBpm > 0 ? this.stableBpm : 120;
+
+        for (let lag = minLag; lag <= maxLag; lag++) {
+            const baseScore = lagScores[lag] || 0;
+
+            if (baseScore <= 0) {
+                continue;
+            }
+
+            const neighborhood = baseScore * 0.6
+                + (lagScores[lag - 1] || 0) * 0.2
+                + (lagScores[lag + 1] || 0) * 0.2;
+            const doubleLag = lag * 2;
+            const halfLag = Math.max(2, Math.round(lag / 2));
+            let score = neighborhood + (lagScores[doubleLag] || 0) * 0.35;
+
+            score -= (lagScores[halfLag] || 0) * 0.15;
+
+            let bpm = (60 * this.fps) / lag;
+
+            bpm = this.normalizeBpmFamily(bpm, continuityAnchor);
+
+            if (this.stableBpm > 0) {
+                const distance = Math.abs(bpm - this.stableBpm) / this.stableBpm;
+
+                score *= 1 + Math.max(0, 0.2 - distance) * 1.5;
+            }
+
+            const bucket = Math.round(bpm * 2) / 2;
+
+            grouped.set(bucket, (grouped.get(bucket) || 0) + score);
+        }
+
+        return Array.from(grouped.entries())
+            .map(([value, score]) => {
+                return {
+                    value,
+                    score
+                };
+            })
+            .filter((candidate) => {
+                return Number.isFinite(candidate.score) && candidate.score > 0;
+            })
+            .sort((a, b) => {
+                return b.score - a.score;
+            })
+            .slice(0, 6);
+    }
+
+    private buildOutput(candidates: TempoCandidate[]): { value: number; weight: number }[] {
+        if (!candidates.length) {
+            if (this.stableBpm <= 0 || this.stableWeight < 0.2) {
+                return [];
+            }
+
+            return [{
+                value: this.stableBpm,
+                weight: this.stableWeight
+            }];
+        }
+
+        const bestScore = candidates[0].score || 1;
+        const result = [];
+
+        if (this.stableBpm > 0 && this.stableWeight > 0.2) {
+            result.push({
+                value: this.stableBpm,
+                weight: this.stableWeight
+            });
+        }
+
+        for (let i = 0; i < candidates.length && result.length < 3; i++) {
+            const bpm = this.stableBpm > 0
+                ? this.normalizeBpmFamily(candidates[i].value, this.stableBpm)
+                : candidates[i].value;
+
+            if (result.some((entry) => {
+                return Math.abs(entry.value - bpm) < 0.75;
+            })) {
+                continue;
+            }
+
+            result.push({
+                value: bpm,
+                weight: Math.max(0, Math.min(1, candidates[i].score / bestScore))
+            });
+        }
+
+        return result;
     }
 
     /**
@@ -85,257 +321,94 @@ export class BeaTs {
      * @public
      */
     public process(time, data) {
-        const groupings = true;
-        const chooseAvg = false;
-
-        let results = [];
-
-        // weigh previous result in
-        if (this.prev_bpm > 0) {
-            results.push({
-                value: this.prev_bpm,
-                weight: this.prev_win
-            });
+        if (
+            !Array.isArray(data)
+            && !(data instanceof Float32Array)
+            && !(data instanceof Float64Array)
+        ) {
+            return [];
         }
 
-        this.bds.forEach((bd) => {
-            bd.process(time, data) / 10 || 1;
-            if (bd.bpm_contest.length > 0) {
-                const tmp = [];
-                let maxW = 0;
-
-                bd.bpm_contest.forEach((val, key) => {
-                    tmp.push({
-                        value: key / 10,
-                        weight: val
-                    });
-                    if (val > maxW) {
-                        maxW = val;
-                    }
-                });
-                const srt = tmp.sort((a, b) => {
-                    return b.weight - a.weight;
-                });
-
-                for (let i = 0; i < Math.min(srt.length, 10); i++) {
-                    const obj = srt[i];
-
-                    results.push({
-                        value: obj.value,
-                        weight: obj.weight /* / maxW */
-                    });
-                }
-            }
-        });
-
-        results = results
-            .sort((a, b) => {
-                return b.weight - a.weight;
-            })
-            .slice(0, 15);
-
-        let candidates = [];
-
-        if (results.length > 0) {
-            for (let r_i = 0; r_i < results.length; r_i++) {
-                // calc sum
-                let resWeight = 0;
-                // get result to multiply
-                const result = results[r_i];
-
-                for (let i_i = 0; i_i < results.length; i_i++) {
-                    // skip own multiplicator
-                    if (r_i === i_i) {
-                        continue;
-                    }
-                    // get object to compare
-                    const comp = results[i_i];
-                    // determine min/max multiply relation
-                    const mx = Math.max(result.value, comp.value);
-                    const mn = Math.min(result.value, comp.value);
-                    const ismn = comp.value === mn;
-                    let mult = mx / mn;
-
-                    if (mult > 2.5 && mult < 3.5) {
-                        // max is ~ 3x multiple of min
-                        mult /= 3;
-                    } else if (mult > 1.5 && mult < 2.5) {
-                        // max is ~ 2x multiple of min
-                        mult /= 2;
-                    }
-                    // do weighing calculation
-                    let weight = 0;
-
-                    if (mult > 0.96 && mult < 1.04) {
-                        weight = (ismn ? 1.0 : 1.0) - Math.abs(mult - 1.0);
-                    } // is 1/1 beat
-                    if (mult > 0.64 && mult < 0.68) {
-                        weight = (ismn ? 0.8 : 0.5) - Math.abs(mult - 0.66);
-                    } // is 2/3 beat
-                    if (mult > 0.72 && mult < 0.78) {
-                        weight = (ismn ? 0.3 : 0.4) - Math.abs(mult - 0.75);
-                    } // is 3/4 beat
-                    // calculate sum
-                    resWeight += weight * comp.weight;
-                }
-                // push matrix multiplied result average
-                let { value } = result;
-
-                if (value < 90) {
-                    value *= 2;
-                }
-                if (value > 180) {
-                    value /= 2;
-                }
-                candidates.push({
-                    value,
-                    weight: (result.weight * 2 + resWeight) / 3
-                });
-            }
-
-            // group by rounded numbers x,0 | x,5 | x+1,0
-            if (groupings) {
-                const grps = [];
-
-                candidates.forEach((can) => {
-                    // xxx.0 bpm weights
-                    let val = Math.round(can.value * 10);
-                    const rst = val % 10;
-
-                    if (rst < 3) {
-                        val -= rst;
-                    } else if (rst > 7) {
-                        val += 10 - rst;
-                    } else {
-                        val += 5 - rst;
-                    }
-                    if (!grps[val]) {
-                        grps[val] = 0;
-                    }
-                    grps[val] += can.weight;
-                    // overall winner Bpm weights
-                    const v2 = Math.round(can.value);
-
-                    if (
-                        !isNaN(this.winRewards[v2])
-                        && this.winRewards[v2] > 1
-                    ) {
-                        grps[val] = (grps[val] + this.winRewards[v2]) / 2;
-                    }
-                });
-                candidates = grps.map((v, i) => {
-                    return {
-                        value: i / 10,
-                        weight: v
-                    };
-                });
-            }
-
-            // sort and get Top-10 matches
-            candidates = candidates
-                .sort((a, b) => {
-                    return b.weight - a.weight;
-                })
-                .slice(0, 10);
-
-            // get average
-            if (chooseAvg) {
-                const half = candidates.length / 2;
-                let avg = 0;
-
-                candidates.forEach((c, i) => {
-                    return (avg += i < half ? c.value : 0);
-                });
-                avg /= half;
-                // choose closest to average
-                let choiceI = -1;
-                let choiceV = 0;
-
-                for (let index = 0; index < candidates.length; index++) {
-                    const cand = candidates[index];
-                    const diffC = Math.abs(choiceV - cand.value);
-                    const diffA = Math.abs(avg - cand.value);
-
-                    if (choiceI < 0 || diffA < diffC) {
-                        choiceI = index;
-                        choiceV = cand.value;
-                    }
-                }
-
-                if (choiceI !== 0) {
-                    const can0 = candidates.splice(choiceI, 1);
-
-                    candidates.unshift(can0);
-                }
-            }
-
-            if (Math.random() < 0.01) {
-                console.debug(results, candidates);
-            }
+        if (data.length < WEAS_SPECTRUM_BINS || !Number.isFinite(time)) {
+            return [];
         }
 
-        /*
-        const low = this.bd_low.process(time, data) / 10.0;
-        const med = this.bd_med.process(time, data) / 10.0;
-        const high = this.bd_high.process(time, data) / 10.0;
+        if (this.lastTime > 0) {
+            const delta = time - this.lastTime;
 
-        if (low != 1 || med != 1 || high != 1) {
-            let dekt: BeatsDetektor;
-
-            if (pre == low) {
-                dekt = this.bd_low;
-            } else if (pre == med) {
-                dekt = this.bd_med;
-            } else if (pre == high) {
-                dekt = this.bd_high;
+            if (delta <= 0 || delta > 1.5) {
+                this.resetState();
             } else {
-                // multiplier matching
-                const ml = med / low;
-                const hm = high / med;
-                const hl = high / low;
-                // average matching
-                const is_ml = (ml > 1.9 && ml < 2.1);
-                const is_hm = (hm > 1.9 && hm < 2.1);
-                const is_hl = (hl > 1.9 && hl < 2.1) || (hl > 2.7 && hl < 3.3);
-                // console.log('Matching results: ', is_ml, is_hm, is_hl);
+                const frameRate = 1 / delta;
 
-                const bts_l = this.bd_low.win_val;
-                const bts_m = this.bd_med.win_val;
-                const bts_h = this.bd_high.win_val;
-                // matching bpm?
-                if (is_hl) {
-                    dekt = this.bd_low;
-                } else if (is_hm || is_ml) {
-                    dekt = this.bd_med;
-                } else {
-                    const mx = Math.max(bts_l, bts_m, bts_h);
-                    dekt = (mx == bts_l) ? this.bd_low : (mx == bts_m) ? this.bd_med : this.bd_high;
-                }
-
-                // this.vu.process(this.bd_med);
-                // const kick = this.kick_det.process(this.bd_med);
+                this.fps += (frameRate - this.fps) * 0.15;
+                this.fps = Math.max(15, Math.min(90, this.fps));
             }
-
-            // take most probable bpm
-            this.prev_bpm = dekt.win_bpm_int / 10.0;
-        }
-        */
-
-        // process rewards
-        this.winRewards.forEach((r, i) => {
-            this.winRewards[i] = r > 1 ? r * 0.6 : r;
-        });
-        if (candidates.length > 0) {
-            const o = candidates[0];
-            const ovf = Math.floor(o.value);
-
-            if (!this.winRewards[ovf]) {
-                this.winRewards[ovf] = 0;
-            }
-            this.winRewards[ovf] = (this.winRewards[ovf] + o.weight) / 2;
         }
 
-        return candidates.slice(0, 3);
+        this.lastTime = time;
+
+        const energy = this.extractMonoSpectrum(data);
+        const onset = this.computeOnsetStrength();
+
+        this.previousSpectrum.set(this.monoSpectrum);
+        this.pushOnset(onset);
+
+        if (energy < 0.01 && onset < 0.18) {
+            this.silentSeconds += 1 / this.fps;
+            this.stableWeight *= 0.96;
+
+            if (this.autoReset && this.silentSeconds > SILENCE_HOLD_SECONDS) {
+                this.resetState();
+
+                return [];
+            }
+
+            return this.buildOutput([]);
+        }
+
+        this.silentSeconds = 0;
+
+        const candidates = this.estimateCandidates();
+
+        if (!candidates.length) {
+            this.stableWeight *= 0.985;
+
+            return this.buildOutput([]);
+        }
+
+        const best = candidates[0];
+        const secondScore = candidates[1]?.score || 0;
+        const dominance = best.score > 0
+            ? (best.score - secondScore) / best.score
+            : 0;
+        const alignedBpm = this.stableBpm > 0
+            ? this.normalizeBpmFamily(best.value, this.stableBpm)
+            : best.value;
+
+        if (this.stableBpm <= 0) {
+            this.stableBpm = alignedBpm;
+            this.stableWeight = Math.max(0.35, Math.min(1, 0.5 + dominance));
+        } else {
+            const drift = Math.abs(alignedBpm - this.stableBpm) / this.stableBpm;
+            const shouldAdopt = dominance > 0.14
+                || drift < 0.08
+                || this.stableWeight < 0.35;
+
+            if (shouldAdopt) {
+                const smoothing = dominance > 0.2 ? 0.22 : 0.1;
+
+                this.stableBpm += (alignedBpm - this.stableBpm) * smoothing;
+                this.stableWeight = Math.min(
+                    1,
+                    this.stableWeight * 0.7 + (0.35 + dominance) * 0.5
+                );
+            } else {
+                this.stableWeight *= 0.98;
+            }
+        }
+
+        return this.buildOutput(candidates);
     }
 
 }
@@ -410,6 +483,7 @@ Changelog:
 
 * @public
 */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 class BeatsDetektor {
 
     config = {

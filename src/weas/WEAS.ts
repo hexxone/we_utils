@@ -18,6 +18,18 @@ const DAT_LEN = 128;
 const LISTENAME = 'wallpaperRegisterAudioListener';
 const AUDIO_ACTIVE_TIMEOUT_MS = 3000;
 const AUDIO_DEBUG_HIDE_TIMEOUT_MS = 5000;
+const METRIC_COLORS = {
+    bass: '#ff6361',
+    mids: '#ffd166',
+    highs: '#06d6a0',
+    sum: '#8ecae6',
+    min: '#9b5de5',
+    max: '#ef476f',
+    average: '#ffffff',
+    range: '#f4a261',
+    silent: '#7a8594',
+    intensity: '#118ab2'
+};
 
 /**
  * Audio processing settings.
@@ -159,10 +171,13 @@ export class WEAS extends CComponent {
     context1: CanvasRenderingContext2D;
     canvas2: HTMLCanvasElement;
     context2: CanvasRenderingContext2D;
+    canvas3: HTMLCanvasElement;
+    context3: CanvasRenderingContext2D;
     display: HTMLElement;
     private lastAudibleTime = 0;
     private debugCanvasVisible = true;
     private debugCanvasCleared = true;
+    private metricLogPeak = 1;
 
     public init?: () => Promise<void>;
 
@@ -183,22 +198,6 @@ export class WEAS extends CComponent {
         } else {
             this.init = this.realInit;
         }
-    }
-
-    /**
-     * convert float based audio to int
-     * @param {Array<number>} data as
-     * @returns {Array<number>} asd
-     */
-    private convertAudio(data) {
-        const stereo = [];
-        const dl = data.length;
-
-        for (let i = 0; i < dl; i++) {
-            stereo[i] = Math.max(0, Math.floor(data[i] * 255));
-        }
-
-        return stereo;
     }
 
     /**
@@ -320,7 +319,7 @@ export class WEAS extends CComponent {
                     if (this.bpModule && !realProps.silent) {
                         bpmObj = this.bpModule.process(
                             start / 1000.0,
-                            this.convertAudio(audioArray)
+                            audioArray
                         );
                     }
 
@@ -351,20 +350,103 @@ export class WEAS extends CComponent {
         st.innerHTML = `
 #weas-preview {
     opacity: 0;
-    position: absolute;
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 2;
+    width: min(60vw, 960px);
+    height: calc(100vh - 24px);
+    max-height: calc(100vh - 24px);
+    padding: 12px;
+    color: #f5f7fb;
+    background: linear-gradient(180deg, rgba(16, 21, 28, 0.66), rgba(10, 14, 18, 0.6));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.38);
+    backdrop-filter: blur(14px);
+    font-family: "Overpass Mono", monospace;
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.18) rgba(255,255,255,0.05);
 }
 #weas-preview canvas {
-    background: #06060666;
-    border: white 2px dotted;
+    display: block;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(14, 20, 26, 0.68), rgba(7, 10, 14, 0.62));
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px;
+    margin: 6px 0 10px 0;
 }
 #weas-preview.show {
     opacity: 1;
+    transition: none !important;
 }
 #WEASDisplay {
-    position: fixed;
-    left: 0px;
-    width: 100vw;
+    display: block;
+    min-height: 52px;
+    overflow: hidden;
+    white-space: pre-wrap;
+    padding: 10px;
+    margin: 6px 0 8px 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-size: 0.85rem;
+    line-height: 1.2;
+}
+#weas-preview .weas-title {
+    font-size: 1.1rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 2px;
+}
+#weas-preview .weas-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2px;
+}
+#weas-preview .weas-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    margin: 4px 0 6px 0;
+    font-size: 0.74rem;
+    line-height: 1.1;
+}
+#weas-preview .weas-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+#weas-preview .weas-legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+}
+#weas-preview::-webkit-scrollbar {
+    width: 10px;
+}
+#weas-preview::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.18);
+    border-radius: 999px;
+}
+#weas-preview::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
+}
+@media all and (max-width: 900px) {
+    #weas-preview {
+        width: calc(100vw - 24px);
+    }
+    #weas-preview canvas {
+        width: 100%;
+    }
 }`;
         document.head.append(st);
     }
@@ -378,17 +460,33 @@ export class WEAS extends CComponent {
         this.mainElm = document.createElement('div');
         this.mainElm.id = 'weas-preview';
         this.mainElm.innerHTML = `
-<div style="font-size: 300%">
-<span>Raw Data:</span>
-<br />
-<span style="float:left">Left</span>
-<span style="float:right">Right</span>
-<canvas id="WEASCanvas1" style="height: 30vh; width: 95%;"></canvas>
-<span>Processed:</span>
+<div class="weas-title">WEAS Debug Preview</div>
+<div class="weas-row">
+<span>Raw Data</span>
+<span>Left / Right</span>
+</div>
+<canvas id="WEASCanvas1"></canvas>
+<div class="weas-row">
+<span>Processed Metrics</span>
 </div>
 <span id="WEASDisplay"></span>
-<br />
-<canvas id="WEASCanvas2" style="height: 30vh; width: 95%;"></canvas>`;
+<div class="weas-legend">
+<span><i style="background:${METRIC_COLORS.bass}"></i>bass</span>
+<span><i style="background:${METRIC_COLORS.mids}"></i>mids</span>
+<span><i style="background:${METRIC_COLORS.highs}"></i>highs</span>
+<span><i style="background:${METRIC_COLORS.sum}"></i>sum</span>
+<span><i style="background:${METRIC_COLORS.min}"></i>min</span>
+<span><i style="background:${METRIC_COLORS.max}"></i>max</span>
+<span><i style="background:${METRIC_COLORS.average}"></i>average</span>
+<span><i style="background:${METRIC_COLORS.range}"></i>range</span>
+<span><i style="background:${METRIC_COLORS.silent}"></i>silent</span>
+<span><i style="background:${METRIC_COLORS.intensity}"></i>intensity</span>
+</div>
+<canvas id="WEASCanvas3"></canvas>
+<div class="weas-row">
+<span>Spectrum</span>
+</div>
+<canvas id="WEASCanvas2"></canvas>`;
         document.body.append(this.mainElm);
 
         const { x: realWidth } = getRealWindowSize();
@@ -406,7 +504,17 @@ export class WEAS extends CComponent {
         this.canvas2.width = realWidth;
         this.context2 = this.canvas2.getContext('2d');
 
+        this.canvas3 = document.getElementById(
+            'WEASCanvas3'
+        ) as HTMLCanvasElement;
+        this.canvas3.width = realWidth;
+        this.context3 = this.canvas3.getContext('2d');
+
         this.display = document.getElementById('WEASDisplay');
+        window.addEventListener('resize', this.updateDebugLayout, {
+            passive: true
+        });
+        this.updateDebugLayout();
         this.setCanvasPreviewVisible(false);
     }
 
@@ -471,7 +579,6 @@ export class WEAS extends CComponent {
         } else {
             this.mainElm.classList.remove('show');
         }
-
         const { run } = this.weasModule;
 
         return new Promise((resolve) => {
@@ -571,14 +678,10 @@ export class WEAS extends CComponent {
         }
 
         // update "processed" data
-        const tmpData = {
-            ...this.lastAudio
-        };
+        this.display.innerText = this.formatDebugStatus();
+        this.updateMetricCanvas();
 
-        tmpData.data = null;
-        this.display.innerText = JSON.stringify(tmpData, null, '\t');
-
-        // update "processed" canvas
+        // update spectrum canvas
         this.context2.clearRect(0, 0, this.canvas2.width, this.canvas2.height);
 
         if (this.lastAudio && this.lastAudio.data) {
@@ -616,17 +719,95 @@ export class WEAS extends CComponent {
             this.debugCanvasCleared
             || !this.context1
             || !this.context2
+            || !this.context3
             || !this.display
             || !this.canvas1
             || !this.canvas2
+            || !this.canvas3
         ) {
             return;
         }
 
         this.context1.clearRect(0, 0, this.canvas1.width, this.canvas1.height);
         this.context2.clearRect(0, 0, this.canvas2.width, this.canvas2.height);
+        this.context3.clearRect(0, 0, this.canvas3.width, this.canvas3.height);
         this.display.innerText = '';
         this.debugCanvasCleared = true;
+    }
+
+    private updateMetricCanvas(): void {
+        if (!this.context3 || !this.canvas3 || !this.lastAudio) {
+            return;
+        }
+
+        const ctx = this.context3;
+        const canvas = this.canvas3;
+        const w = canvas.width;
+        const h = canvas.height;
+
+        ctx.drawImage(canvas, -1, 0);
+        ctx.fillStyle = 'rgba(7, 10, 14, 0.35)';
+        ctx.fillRect(w - 1, 0, 1, h);
+
+        const metricValues = {
+            bass: this.lastAudio.bass,
+            mids: this.lastAudio.mids,
+            highs: this.lastAudio.highs,
+            sum: this.lastAudio.sum,
+            min: this.lastAudio.min,
+            max: this.lastAudio.max,
+            average: this.lastAudio.average,
+            range: this.lastAudio.range,
+            silent: this.lastAudio.silent,
+            intensity: this.lastAudio.intensity
+        };
+        const peakCandidate = Object.values(metricValues).reduce((max, value) => {
+            return Number.isFinite(value) ? Math.max(max, value) : max;
+        }, 0);
+
+        this.metricLogPeak = Math.max(
+            1,
+            peakCandidate,
+            this.metricLogPeak * 0.985
+        );
+
+        const metricKeys = Object.keys(metricValues);
+
+        for (let i = 0; i < metricKeys.length; i++) {
+            const key = metricKeys[i];
+            const value = metricValues[key];
+            const y = h - this.normalizeMetricValue(value, this.metricLogPeak) * (h - 1) - 1;
+
+            ctx.fillStyle = METRIC_COLORS[key];
+            ctx.fillRect(w - 1, Math.max(0, Math.min(h - 1, y)), 1, 1);
+        }
+    }
+
+    private normalizeMetricValue(value: number, peak: number): number {
+        if (!Number.isFinite(value) || value <= 0 || !Number.isFinite(peak) || peak <= 0) {
+            return 0;
+        }
+
+        return Math.max(0, Math.min(1, Math.log1p(value) / Math.log1p(peak)));
+    }
+
+    private formatDebugStatus(): string {
+        if (!this.lastAudio) {
+            return '';
+        }
+
+        const lines = [
+            `time: ${this.lastAudio.time.toFixed(4)}`,
+            `ellapsed: ${this.lastAudio.ellapsed.toFixed(4)}`
+        ];
+
+        (this.lastAudio.bpm || []).slice(0, 3).forEach((entry, index) => {
+            lines.push(
+                `bpm[${index}]: ${entry.value.toFixed(4)} (${entry.weight.toFixed(4)})`
+            );
+        });
+
+        return lines.join('\n');
     }
 
     private setCanvasPreviewVisible(visible: boolean): void {
@@ -636,7 +817,68 @@ export class WEAS extends CComponent {
 
         this.mainElm.style.display = visible ? '' : 'none';
         this.debugCanvasVisible = visible;
+
+        if (visible) {
+            this.updateDebugLayout();
+        }
     }
+
+    /**
+     * Recalculate debug panel element sizes from the current viewport.
+     * @returns {void}
+     */
+    private updateDebugLayout = (): void => {
+        if (
+            !this.mainElm
+            || !this.canvas1
+            || !this.canvas2
+            || !this.canvas3
+            || !this.display
+        ) {
+            return;
+        }
+
+        const { x: realWidth } = getRealWindowSize();
+        const viewportHeight = window.innerHeight;
+        const panelHeight = Math.max(220, viewportHeight - 24);
+        const panelWidth = this.mainElm.clientWidth - 24;
+
+        this.mainElm.style.height = `${panelHeight}px`;
+
+        const canvases = [this.canvas1, this.canvas2, this.canvas3];
+
+        canvases.forEach((canvas) => {
+            canvas.style.width = '100%';
+        });
+
+        this.display.style.height = `${Math.max(52, Math.floor(panelHeight * 0.11))}px`;
+
+        const reserved = Array.from(this.mainElm.children)
+            .filter((elm) => {
+                return elm.tagName !== 'CANVAS';
+            })
+            .reduce((sum, elm: HTMLElement) => {
+                return sum + elm.offsetHeight;
+            }, 0);
+        const verticalGaps = 36;
+        const availableForCanvases = Math.max(
+            132,
+            panelHeight - reserved - verticalGaps
+        );
+        const canvasHeight = Math.max(44, Math.floor(availableForCanvases / 3));
+
+        canvases.forEach((canvas) => {
+            const nextWidth = Math.max(320, Math.min(realWidth, panelWidth));
+
+            if (canvas.width !== nextWidth) {
+                canvas.width = nextWidth;
+            }
+            if (canvas.height !== canvasHeight) {
+                canvas.height = canvasHeight;
+            }
+            canvas.style.height = `${canvasHeight}px`;
+        });
+    };
 
     /**
      * Draww Context2 line

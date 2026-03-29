@@ -11,6 +11,7 @@ export * from './pass/BasePass';
 export * from './pass/FullScreenHelper';
 export * from './pass/RenderPass';
 export * from './pass/ShaderPass';
+export * from './pass/TAAPass';
 export * from './pass/UnrealBloomPass';
 
 export * from './shader/BaseShader';
@@ -23,3 +24,4 @@ export * from './shader/FXAAShader';
 export * from './shader/LuminosityHighPassShader';
 export * from './shader/LUTShader';
 export * from './shader/LUTShaderNearest';
+export * from './shader/TAAShader';

@@ -9,7 +9,7 @@
 
 import { OfflineHelper } from './offline/OfflineHelper';
 import { Smallog } from './Smallog';
-import { waitReady } from './Util';
+import { normalizeColorInput, rgbToObj, waitReady } from './Util';
 import { WascUtil } from './wasc-worker/WascUtil';
 
 const LogHead = '[WEWA] ';
@@ -181,8 +181,130 @@ export class WEWA {
         const last = localStorage.getItem('wewaLastProps');
 
         if (last !== null) {
-            this.projectData.general.properties = Object.assign(props, JSON.parse(last));
-            Smallog.debug('Loaded & merged settings.', LogHead);
+            try {
+                const parsed = JSON.parse(last) ?? {};
+
+                Object.keys(props).forEach((key) => {
+                    const prop = props[key];
+                    const savedValue = parsed[key];
+
+                    if (!prop || savedValue === undefined) {
+                        return;
+                    }
+
+                    prop.value = this.coercePropertyValue(prop, savedValue);
+                });
+                Smallog.debug('Loaded persisted values.', LogHead);
+            } catch (error) {
+                Smallog.error(`Failed to load stored settings: ${error}`, LogHead);
+            }
+        }
+    }
+
+    private saveStorage() {
+        localStorage.setItem(
+            'wewaLastProps',
+            JSON.stringify(this.getSerializableProps())
+        );
+    }
+
+    private getSerializableProps() {
+        const props = this.projectData.general.properties;
+        const savedValues = {};
+
+        Object.keys(props).forEach((key) => {
+            const prop = props[key];
+
+            if (
+                !prop
+                || prop.type === 'hidden'
+                || key.startsWith('HDR_')
+                || key.startsWith('SPCR_')
+            ) {
+                return;
+            }
+
+            savedValues[key] = prop.value;
+        });
+
+        return savedValues;
+    }
+
+    private coercePropertyValue(prop: any, rawValue: any) {
+        if (!prop) {
+            return rawValue;
+        }
+
+        const fallback = prop.value;
+
+        switch (prop.type) {
+            case 'bool':
+                if (typeof rawValue === 'boolean') {
+                    return rawValue;
+                }
+                if (typeof rawValue === 'number') {
+                    return rawValue !== 0;
+                }
+                if (typeof rawValue === 'string') {
+                    const normalized = rawValue.trim().toLowerCase();
+
+                    if (['true', '1', 'on', 'yes'].includes(normalized)) {
+                        return true;
+                    }
+                    if (['false', '0', 'off', 'no'].includes(normalized)) {
+                        return false;
+                    }
+                }
+
+                return fallback;
+
+            case 'slider': {
+                const numericValue
+                    = typeof rawValue === 'number'
+                        ? rawValue
+                        : parseFloat(rawValue);
+
+                if (!Number.isFinite(numericValue)) {
+                    return fallback;
+                }
+
+                const min = Number.isFinite(prop.min) ? prop.min : numericValue;
+                const max = Number.isFinite(prop.max) ? prop.max : numericValue;
+
+                return Math.min(max, Math.max(min, numericValue));
+            }
+
+            case 'combo':
+                if (!(prop.options instanceof Array)) {
+                    return fallback;
+                }
+
+                for (const option of prop.options) {
+                    if (
+                        option?.value === rawValue
+                        || String(option?.value) === String(rawValue)
+                    ) {
+                        return option.value;
+                    }
+                }
+
+                return fallback;
+
+            case 'color':
+                if (typeof rawValue !== 'string') {
+                    return fallback;
+                }
+
+                return normalizeColorInput(rawValue) ?? fallback;
+
+            case 'file':
+            case 'textinput':
+            case 'text':
+            case 'hidden':
+                return typeof rawValue === 'string' ? rawValue : fallback;
+
+            default:
+                return rawValue;
         }
     }
 
@@ -214,65 +336,97 @@ export class WEWA {
 #wewaMenu, #wewaIcon {
     transform: none;
     transition: transform 500ms ease;
-    position:absolute;
-    top:0px;
-    padding:15px;
-    z-index:9999;
+    position: fixed;
+    top: 0px;
+    padding: 15px;
+    z-index: 9999;
 }
 #wewaMenu {
-    top:10px;
-    border: solid 2px #444;
+    top: 12px;
+    bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 18px;
     width:${pwShort};
     left:100vw;
-    color:white;
-    background-color: rgba(0.6,0.6,0.6,0.8);
+    color:#f5f7fb;
+    background: linear-gradient(180deg, rgba(16, 21, 28, 0.76), rgba(10, 14, 18, 0.7));
     overflow-x:hidden;
-    overflow-y:scroll;
-    max-height:92.5%;
+    overflow-y:auto;
+    max-height: calc(100vh - 24px);
     min-width: ${minWidthPx}px;
     max-width: 100vw;
-    font-family: Helvetica, Verdana, Arial;
-    font-size: larger;
+    font-family: "Overpass Mono", Helvetica, Verdana, Arial;
+    font-size: 1rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.38);
+    backdrop-filter: blur(14px);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.25) rgba(255,255,255,0.06);
+    box-sizing: border-box;
 }
 #wewaMenu hr {
-    margin: 20px 0px;
+    margin: 16px 0px;
+    border: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
 }
 #wewaMenu a {
-    color: white;
-    border: 2px solid #4CAF50;
-    padding: 5px 10px;
+    color: #f5f7fb;
+    border: 1px solid rgba(110, 231, 183, 0.7);
+    background: rgba(110, 231, 183, 0.08);
+    border-radius: 10px;
+    padding: 8px 12px;
     margin: 5px;
     text-decoration: none;
     display: block;
+    transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
 #wewaMenu a:hover {
-    background: #4CAF50;
+    background: rgba(110, 231, 183, 0.18);
+    transform: translateY(-1px);
 }
 #wewaMenu .red {
-    border-color: #FF7F50;
+    border-color: rgba(255, 127, 80, 0.75);
+    background: rgba(255, 127, 80, 0.08);
 }
 #wewaMenu .red:hover {
-    background-color: #FF7F50;
+    background-color: rgba(255, 127, 80, 0.18);
 }
 #wewaMenu .audio {
-    border-color: #00a1ff;
+    border-color: rgba(0, 161, 255, 0.75);
+    background: rgba(0, 161, 255, 0.08);
 }
 #wewaMenu .audio:hover {
-    background-color: #00a1ff;
+    background-color: rgba(0, 161, 255, 0.18);
 }
-#wewaMenu audio, #wewaMenu select {
+#wewaMenu audio, #wewaMenu select, #wewaMenu input[type="text"], #wewaMenu input[type="number"], #wewaMenu input[type="range"], #wewaMenu input[type="color"], #wewaMenu input[type="file"] {
     width: 100%;
+}
+#wewaMenu select, #wewaMenu input[type="text"], #wewaMenu input[type="number"], #wewaMenu input[type="color"], #wewaMenu input[type="file"] {
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: inherit;
+    box-sizing: border-box;
+}
+#wewaMenu input[type="range"] {
+    accent-color: #6ee7b7;
+}
+#wewaMenu input[type="checkbox"] {
+    transform: scale(1.2);
+    accent-color: #6ee7b7;
 }
 #wewaMenu table {
     width:100%;
     table-layout: fixed;
+    border-spacing: 0 4px;
 }
 #wewaMenu tr.hide {
     display: none;
 }
 #wewaMenu td {
     width: 50%;
-    padding: 5px;
+    padding: 6px 4px;
+    vertical-align: middle;
 }
 #wewaMenu .left {
     text-align: left;
@@ -284,30 +438,60 @@ export class WEWA {
     width: ${percentageWidth / 2}vw;
     min-width: ${Math.floor(minWidthPx / 2)}px;
     max-width: 90%;
-    heigth: auto;
+    height: auto;
+    border-radius: 12px;
+    display: block;
+    margin: 0 auto 10px auto;
+    box-shadow: 0 16px 30px rgba(0,0,0,0.24);
 }
 #wewaMenu .droparea {
-    border: 2px dashed #bbb;
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
+    border: 2px dashed rgba(255,255,255,0.24);
+    border-radius: 10px;
     padding: 20px;
     text-align: center;
-    font: 18pt;
-    color: #bbb;
+    font-size: 18pt;
+    color: rgba(255,255,255,0.7);
+    background: rgba(255,255,255,0.03);
+}
+#wewaMenu .actionRow {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin: 10px 0 4px 0;
+}
+#wewaMenu .actionRow a {
+    margin: 0;
+    text-align: center;
+}
+#wewaMenu::-webkit-scrollbar {
+    width: 10px;
+}
+#wewaMenu::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.18);
+    border-radius: 999px;
+}
+#wewaMenu::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.05);
 }
 /* Icon */
 #wewaIcon {
-    right:0px;
+    right:10px;
+    top: 14px;
     cursor:pointer;
+    border-radius: 14px;
+    background: rgba(10, 14, 18, 0.62);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.28);
 }
 #wewaIcon div {
     width:35px;
     height:5px;
-    background-color:#888888;
+    background-color:#b4bec8;
     margin:6px 0;
+    border-radius: 999px;
 }
 #wewaMenu.open, #wewaIcon.open {
-    transform: translateX(min(-${percentageWidth * 1.1}vw, -${Math.floor(minWidthPx * 1.1)}px));
+    transform: translateX(calc(-1 * max(${pwShort}, ${minWidthPx}px) - 12px));
     transition: transform 500ms ease;
 }
 /* Smartphone format */
@@ -512,7 +696,17 @@ export class WEWA {
      */
     private mergeLocals(local: any) {
         const locDefs = {
-            ui_browse_properties_scheme_color: 'Scheme color'
+            ui_browse_properties_scheme_color: 'Scheme color',
+            ui_ao_1303: 'Distance LOD',
+            ui_ao_1303_1: 'Off',
+            ui_ao_1303_2: 'Low',
+            ui_ao_1303_3: 'Medium',
+            ui_ao_1303_4: 'Strong',
+            ui_ao_1304: 'Hotspot avoidance',
+            ui_ao_1304_1: 'Off',
+            ui_ao_1304_2: 'Low',
+            ui_ao_1304_3: 'Medium',
+            ui_ao_1304_4: 'Strong'
         };
 
         for (const loc in local) {
@@ -538,6 +732,26 @@ export class WEWA {
 
         preFoot.innerHTML = '<hr>';
 
+        const actions = ce('div');
+
+        actions.classList.add('actionRow');
+
+        const copy = ce('a');
+
+        copy.innerHTML = 'Copy Settings';
+        copy.addEventListener('click', () => {
+            this.copySettingsToClipboard();
+        });
+
+        const paste = ce('a');
+
+        paste.innerHTML = 'Apply Settings';
+        paste.addEventListener('click', () => {
+            this.applySettingsFromClipboard();
+        });
+
+        actions.append(copy, paste);
+
         const rst = ce('a');
 
         rst.classList.add('red');
@@ -556,7 +770,7 @@ export class WEWA {
                 location.reload();
             });
         });
-        preFoot.append(rst);
+        preFoot.append(actions, rst);
 
         // footer with ident
         const footer = ce('div');
@@ -856,13 +1070,11 @@ export class WEWA {
                 for (const o of itm.options) {
                     const opt = ce('option');
 
-                    opt.setAttribute('value', o.value);
+                    opt.value = String(o.value);
                     opt.innerText = o.realLabel ? o.realLabel : o.label;
-                    if (itm.value === o.value) {
-                        opt.setAttribute('selected', true);
-                    }
                     inpt.appendChild(opt);
                 }
+                inpt.value = String(itm.value);
                 break;
 
             // system color picker across 2 columns
@@ -994,19 +1206,21 @@ export class WEWA {
         // process value based on DOM element type
         switch (props[prop].type) {
             case 'bool':
-                applyCall(elm.checked === true);
+                applyCall(this.coercePropertyValue(props[prop], elm.checked));
                 break;
             case 'color':
-                applyCall(this.hexToRgb(elm.value));
+                applyCall(this.coercePropertyValue(props[prop], elm.value));
                 break;
             case 'file':
                 this.loadXHRSaveLocal(elm.value, (res) => {
-                    return applyCall(res);
+                    return applyCall(this.coercePropertyValue(props[prop], res));
                 });
                 break;
             case 'slider':
                 if (elm.name.includes('_out_')) {
-                    const inpt: any = document.querySelector(`#wewa_${prop}`);
+                    const inpt: any = document.querySelector(
+                        `#wewa_prop_${prop}`
+                    );
 
                     if (inpt) {
                         inpt.value = elm.value;
@@ -1030,7 +1244,7 @@ export class WEWA {
             // eslint-disable-next-line no-fallthrough
             case 'combo':
             case 'textinput':
-                applyCall(elm.value);
+                applyCall(this.coercePropertyValue(props[prop], elm.value));
                 break;
         }
     }
@@ -1071,7 +1285,7 @@ export class WEWA {
         const pre = 'wewaProps';
         const wewaProps = this.projectData.general.properties;
 
-        localStorage.setItem('wewaLastProps', JSON.stringify(wewaProps));
+        this.saveStorage();
         for (const p in wewaProps) {
             if (!p) {
                 continue;
@@ -1144,12 +1358,94 @@ export class WEWA {
                     elm.checked = prop.value === true;
                     break;
                 case 'slider':
+                    elm.value = String(prop.value);
+                    {
+                        const outElm = document.getElementById(
+                            `wewa_out_${p}`
+                        ) as HTMLInputElement | HTMLOutputElement | null;
+
+                        if (outElm) {
+                            if (outElm instanceof HTMLInputElement) {
+                                outElm.value = String(prop.value);
+                            } else {
+                                outElm.textContent = String(prop.value);
+                            }
+                        }
+                    }
+                    break;
                 case 'combo':
                 case 'textinput':
-                    elm.value = prop.value;
+                    elm.value = String(prop.value);
                     break;
             }
         }
+    }
+
+    private async copySettingsToClipboard() {
+        const payload = JSON.stringify(this.getSerializableProps(), null, 2);
+
+        try {
+            await navigator.clipboard.writeText(payload);
+            Smallog.info('Copied settings to clipboard.', LogHead);
+        } catch (error) {
+            Smallog.error(`Clipboard copy failed: ${error}`, LogHead);
+            window.prompt('Copy the settings JSON manually:', payload);
+        }
+    }
+
+    private async applySettingsFromClipboard() {
+        let rawSettings = '';
+
+        try {
+            rawSettings = await navigator.clipboard.readText();
+        } catch (error) {
+            Smallog.error(`Clipboard read failed: ${error}`, LogHead);
+            rawSettings = window.prompt('Paste the settings JSON:', '') ?? '';
+        }
+
+        if (!rawSettings) {
+            return;
+        }
+
+        let parsed;
+
+        try {
+            parsed = JSON.parse(rawSettings);
+        } catch (error) {
+            Smallog.error(`Invalid settings JSON: ${error}`, LogHead);
+            alert('Could not parse clipboard settings.');
+
+            return;
+        }
+
+        if (!parsed || typeof parsed !== 'object' || parsed instanceof Array) {
+            alert('Clipboard settings must be a JSON object.');
+
+            return;
+        }
+
+        const props = this.projectData.general.properties;
+        const changedProps = {};
+
+        Object.keys(parsed).forEach((key) => {
+            const prop = props[key];
+
+            if (!prop || prop.type === 'hidden') {
+                return;
+            }
+
+            prop.value = this.coercePropertyValue(prop, parsed[key]);
+            changedProps[key] = prop;
+        });
+
+        this.applyAudioProcessingSettings();
+        this.evaluateSettings();
+        this.applyProp(changedProps);
+        this.saveStorage();
+        Smallog.info(
+            `Applied clipboard settings (${Object.keys(changedProps).length} values).`,
+            LogHead
+        );
     }
 
     // -------------------------------------
@@ -1195,29 +1491,16 @@ export class WEWA {
 
     // eslint-disable-next-line require-jsdoc
     private rgbToHex(rgb) {
+        const { r, g, b } = rgbToObj(rgb);
+
         // eslint-disable-next-line require-jsdoc
         function cth(c) {
-            const h = Math.floor(c * 255).toString(16);
+            const h = Math.floor(c).toString(16);
 
             return h.length === 1 ? `0${h}` : h;
         }
 
-        const spl = rgb.split(' ');
-
-        return `#${cth(spl[0])}${cth(spl[1])}${cth(spl[2])}`;
-    }
-
-    // eslint-disable-next-line require-jsdoc
-    private hexToRgb(hex) {
-        const result = (/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i).exec(hex);
-
-        return result
-            ? [
-                parseInt(result[1], 16) / 255,
-                parseInt(result[2], 16) / 255,
-                parseInt(result[3], 16) / 255
-            ].join(' ')
-            : null;
+        return `#${cth(r)}${cth(g)}${cth(b)}`;
     }
 
     // -------------------------------------
