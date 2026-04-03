@@ -67,14 +67,15 @@ async function register(
         return false;
     }
 
-    const workerPath = `${worker}?name=${name}&jsonPath=${oFile}`;
+    const workerPath = `${worker}?name=${encodeURIComponent(name)}&jsonPath=${encodeURIComponent(oFile)}`;
 
     try {
         const result = await navigator.serviceWorker.register(workerPath, {
-            scope: '/'
+            scope: '/',
+            updateViaCache: 'none'
         });
 
-        if (result.active) {
+        if (result.installing || result.waiting || result.active) {
             Smallog.info('service-worker registration complete.', oh);
 
             return true;

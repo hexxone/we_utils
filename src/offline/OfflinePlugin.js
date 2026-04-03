@@ -14,9 +14,11 @@
 const fs = require('fs');
 const validate = require('schema-utils');
 const { Compilation } = require('webpack');
-const { RawSource } = require('webpack-sources');
+const { RawSource, ReplaceSource } = require('webpack-sources');
 
 const pluginName = 'OfflinePlugin';
+const workerName = 'Offline.worker.js';
+const versionToken = '__OFFLINE_VERSION__';
 
 /**
  * schema for options object
@@ -67,6 +69,21 @@ function getAllFiles(baseDir, subDir, arrayOfFiles) {
     });
 
     return arrayOfFiles;
+}
+
+/**
+ * Normalize an emitted asset path for the offline manifest.
+ * @param {string} filePath file to normalize
+ * @returns {string} normalized path
+ */
+function normalizeFilePath(filePath) {
+    const normalized = filePath.replace(/\\/gu, '/');
+
+    if (normalized === '/') {
+        return normalized;
+    }
+
+    return normalized.startsWith('/') ? normalized : `/${normalized}`;
 }
 
 /**
@@ -130,38 +147,47 @@ class OfflinePlugin {
 
                     console.info(`[${pluginName}] Gathering Infos...`);
 
-                    // list of all app-contents
-                    const filelist = [];
+                    const version = compilation.fullHash || compilation.hash || 'dev';
+                    const filelist = new Set();
 
                     // add static files from folder
                     const sFiles = getAllFiles(this.options.staticdir, '');
 
-                    for (const staticFile in sFiles) {
+                    for (const staticFile of sFiles) {
                         if (!staticFile) {
                             continue;
                         }
-                        filelist.push(sFiles[staticFile]);
+
+                        filelist.add(normalizeFilePath(staticFile));
                     }
 
                     // Loop through all compiled assets,
                     // adding a new line item for each filename.
-                    for (const filename in compilation.assets) {
+                    for (const filename of Object.keys(compilation.assets)) {
                         if (!filename) {
                             continue;
                         }
-                        filelist.push(`/${filename}`);
+
+                        filelist.add(normalizeFilePath(filename));
                     }
 
                     // add additional files anyway?
                     if (this.options.extrafiles) {
-                        this.options.extrafiles.map((ef) => {
-                            return filelist.push(ef);
+                        this.options.extrafiles.forEach((extraFile) => {
+                            filelist.add(normalizeFilePath(extraFile));
                         });
                     }
 
+                    this.replaceWorkerVersion(compilation, version);
+
+                    const manifest = {
+                        version,
+                        files: Array.from(filelist).sort()
+                    };
+
                     // create the target file with all app-contents as json list
                     const jList = JSON.stringify(
-                        filelist,
+                        manifest,
                         null,
                         this.options.pretty ? 1 : 0
                     );
@@ -176,6 +202,42 @@ class OfflinePlugin {
                 }
             );
         });
+    }
+
+    /**
+     * Stamps the current build version into the emitted service worker asset.
+     * @param {Compilation} compilation current compilation
+     * @param {string} version current build version
+     * @returns {void}
+     */
+    replaceWorkerVersion(compilation, version) {
+        const workerAsset = compilation.getAsset(workerName);
+
+        if (!workerAsset) {
+            console.warn(`[${pluginName}] Missing ${workerName} asset, version was not stamped.`);
+
+            return;
+        }
+
+        const sourceCode = workerAsset.source.source().toString();
+
+        if (!sourceCode.includes(versionToken)) {
+            return;
+        }
+
+        const nextSource = new ReplaceSource(workerAsset.source, workerName);
+        let index = sourceCode.indexOf(versionToken);
+
+        while (index !== -1) {
+            nextSource.replace(
+                index,
+                index + versionToken.length - 1,
+                version
+            );
+            index = sourceCode.indexOf(versionToken, index + versionToken.length);
+        }
+
+        compilation.updateAsset(workerName, nextSource);
     }
 
 }

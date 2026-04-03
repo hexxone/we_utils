@@ -367,7 +367,13 @@ export class FPStats extends CComponent {
             && this.auProvider.lastAudio.bpm instanceof Array
         ) {
             const bp = this.auProvider.lastAudio.bpm;
-            const primary = bp[0];
+            const primary = bp.reduce((best, entry) => {
+                if (!best || entry.weight > best.weight) {
+                    return entry;
+                }
+
+                return best;
+            }, undefined);
 
             if (primary && Number.isFinite(primary.value)) {
                 this.bpmHolder.innerText = `BPM: ${this.formatBpm(primary.value)} ~`;

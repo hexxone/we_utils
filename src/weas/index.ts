@@ -9,4 +9,5 @@
  */
 
 export * from './Bea';
+export * from './WEAI';
 export * from './WEAS';

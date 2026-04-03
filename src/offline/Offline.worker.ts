@@ -24,9 +24,61 @@ const wrk = self as unknown as ServiceWorkerGlobalScope;
 // A version number is useful when updating the worker logic,
 // allowing you to remove outdated cache entries during the update.
 const wName = '[OfflineWorker]';
-const version = '::2.4';
+const version = '__OFFLINE_VERSION__';
+const cachePrefix = `${wName}::`;
+const cacheName = `${cachePrefix}${version}`;
 
 console.debug(`${wName} executing..`);
+
+type OfflineManifest = string[] | {
+    version?: string;
+    files?: string[];
+};
+
+function parseManifest(data: OfflineManifest): string[] {
+    if (Array.isArray(data)) {
+        return Array.from(new Set(data));
+    }
+
+    if (!Array.isArray(data.files)) {
+        throw new Error(`${wName} invalid offline manifest.`);
+    }
+
+    if (data.version && data.version !== version) {
+        console.warn(
+            `${wName} manifest version mismatch.`,
+            data.version,
+            version
+        );
+    }
+
+    return Array.from(new Set(data.files));
+}
+
+function shouldBypassRuntimeCache(request: Request, manifestPath: string): boolean {
+    const { pathname } = new URL(request.url);
+
+    return pathname === manifestPath || pathname.endsWith('/Offline.worker.js');
+}
+
+async function storeResponse(
+    request: RequestInfo | URL | string,
+    response: Response
+): Promise<Response> {
+    const injected = injectIsolationHeaders(response);
+
+    if (!response.ok) {
+        return injected;
+    }
+
+    const cache = await caches.open(cacheName);
+
+    await cache.put(request, injected.clone());
+
+    console.debug(`${wName} fetch response stored in cache.`);
+
+    return injected;
+}
 
 // The install event fires when the service worker is first installed.
 // You can use this event to prepare the service worker to be able to serve
@@ -38,29 +90,35 @@ wrk.addEventListener('install', (event) => {
     // These resources will be downloaded and cached by the service worker
     // If any resource fails to be downloaded, then the service worker won't be installed.
     const sp = new URL(location.href).searchParams;
-    const jsonPath = sp.get('jsonPath');
+    const jsonPath = sp.get('jsonPath') || 'offlinefiles.json';
+    const manifestUrl = new URL(jsonPath, wrk.location.href);
 
     const promise = async () => {
         await wrk.skipWaiting();
 
-        // let's request the files to store in cache
-        return fetch(jsonPath)
-            .then((response) => {
-                return response.json();
-            })
-            // after we received the files to store, we open the cache
-            .then((data) => {
-                return (
-                    caches
-                        .open(wName + version)
-                        // then map the array and add one-by-one
-                        .then((cache) => {
-                            return data.map((url) => {
-                                return cache.add(url);
-                            });
-                        })
-                );
+        const manifestResponse = await fetch(new Request(manifestUrl.toString(), {
+            cache: 'reload'
+        }));
+
+        if (!manifestResponse.ok) {
+            throw new Error(`${wName} failed to load offline manifest.`);
+        }
+
+        const fileList = parseManifest(await manifestResponse.json());
+        const cache = await caches.open(cacheName);
+
+        await Promise.all(fileList.map(async (url) => {
+            const request = new Request(url, {
+                cache: 'reload'
             });
+            const response = await fetch(request);
+
+            if (!response.ok) {
+                throw new Error(`${wName} failed to precache ${url}.`);
+            }
+
+            await cache.put(url, injectIsolationHeaders(response));
+        }));
     };
 
     // Using event.waitUntil(p) blocks the installation process on the provided
@@ -100,7 +158,18 @@ self.addEventListener('fetch', (event: any) => {
     }
 
     event.respondWith(
-        caches.match(event.request).then(async (cached) => {
+        (async () => {
+            const sp = new URL(location.href).searchParams;
+            const jsonPath = sp.get('jsonPath') || 'offlinefiles.json';
+            const manifestPath = new URL(jsonPath, wrk.location.href).pathname;
+
+            if (shouldBypassRuntimeCache(event.request, manifestPath)) {
+                return fetch(event.request);
+            }
+
+            const cache = await caches.open(cacheName);
+            const cached = await cache.match(event.request);
+
             if (cached) {
                 console.debug(`${wName} fetch event(cached): `, event.request.url);
 
@@ -110,30 +179,7 @@ self.addEventListener('fetch', (event: any) => {
             const preload = await event.preloadResponse;
 
             if (preload) {
-                return injectIsolationHeaders(preload);
-            }
-
-            function fetchedFromNetwork(response: Response) {
-                // Inject headers FIRST, then store the injected version in cache
-                const injected = injectIsolationHeaders(response);
-                const cacheCopy = injected.clone();
-
-                console.debug(
-                    `${wName} fetch response from network.`,
-                    event.request.url
-                );
-
-                caches
-                    .open(wName + version)
-                    .then((cache) => { return cache.put(event.request, cacheCopy); })
-                    .then(() => {
-                        return console.debug(
-                            `${wName} fetch response stored in cache.`,
-                            event.request.url
-                        );
-                    });
-
-                return (injected);
+                return storeResponse(event.request, preload);
             }
 
             function unableToResolve() {
@@ -150,10 +196,19 @@ self.addEventListener('fetch', (event: any) => {
                 });
             }
 
-            return fetch(event.request)
-                .then(fetchedFromNetwork, unableToResolve)
-                .catch(unableToResolve);
-        })
+            try {
+                const response = await fetch(event.request);
+
+                console.debug(
+                    `${wName} fetch response from network.`,
+                    event.request.url
+                );
+
+                return storeResponse(event.request, response);
+            } catch (error) {
+                return unableToResolve();
+            }
+        })()
     );
 });
 
@@ -175,26 +230,19 @@ wrk.addEventListener('activate', (event) => {
         }
 
         // This method will resolve an array of available cache keys.
-        caches
-            .keys()
-            // We return a promise that settles when all outdated caches are deleted.
-            .then((keys) => {
-                return Promise.all(
-                    // Filter by keys that don't start with the latest version prefix.
-                    keys
-                        .filter((key) => {
-                            return !key.endsWith(version);
-                        })
-                        // Return a promise that's fulfilled when each outdated cache is deleted.
-                        .map((key) => {
-                            return caches.delete(key);
-                        })
-                );
-            })
-            // completed
-            .then(() => {
-                console.info(`${wName} activated.`);
-            });
+        const keys = await caches.keys();
+
+        await Promise.all(
+            keys
+                .filter((key) => {
+                    return key.startsWith(cachePrefix) && key !== cacheName;
+                })
+                .map((key) => {
+                    return caches.delete(key);
+                })
+        );
+
+        console.info(`${wName} activated.`);
     };
 
     event.waitUntil(promise());

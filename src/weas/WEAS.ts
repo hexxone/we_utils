@@ -12,7 +12,8 @@ import { CSettings } from '../CSettings';
 import { Smallog } from '../Smallog';
 import { getRealWindowSize, sharedWorker, waitReady } from '../Util';
 import { WascInterface } from '../wasc-worker/WascInterface';
-import { BeaTs } from './Bea';
+import { BeatAnalysis, TempoAnalyzerMode, TempoAnalyzerModeValue } from './Bea';
+import { WEAITempoAnalyzer } from './WEAI';
 
 const DAT_LEN = 128;
 const LISTENAME = 'wallpaperRegisterAudioListener';
@@ -22,6 +23,7 @@ const METRIC_COLORS = {
     bass: '#ff6361',
     mids: '#ffd166',
     highs: '#06d6a0',
+    peakActivation: '#f72585',
     sum: '#8ecae6',
     min: '#9b5de5',
     max: '#ef476f',
@@ -62,6 +64,8 @@ export class WEASettings extends CSettings {
     bass_multiplier = 1.2;
     // ignore value leveling for "silent" data
     minimum_volume = 0.005;
+    // tempo analyzer mode
+    analyzer_mode: TempoAnalyzerModeValue = TempoAnalyzerMode.General;
     // use low latency audio?
     low_latency = false;
     // show debug rendering?
@@ -88,6 +92,26 @@ export type WEAudio = {
     silent: number;
     intensity: number;
     bpm?: BpmDataWip[];
+    peakActivation?: number;
+    phaseLock?: number;
+    beatPhase?: number;
+    isBeat?: boolean;
+    beatConfidence?: number;
+    secondsSinceLastBeat?: number;
+    secondsToNextBeat?: number;
+    beatInterval?: number;
+    lastBeatTime?: number;
+    nextBeatTime?: number;
+    analyzerMode?: TempoAnalyzerModeValue;
+    analyzerBackend?: 'heuristic' | 'ai-webgpu' | 'ai-wasm' | 'fallback-edm';
+    aiReady?: boolean;
+    aiInferenceMs?: number;
+    aiModelConfidence?: number;
+    aiFrameStride?: number;
+    primaryPulseSource?: string;
+    tempoFamily?: string;
+    transientCorroboration?: boolean;
+    switchConfidence?: number;
 };
 
 export type BpmDataWip = {
@@ -163,7 +187,7 @@ export class WEAS extends CComponent {
     weasModule: WascInterface = null;
 
     // bpm detektor
-    bpModule: BeaTs;
+    bpModule: WEAITempoAnalyzer;
 
     // debug render elements
     mainElm: HTMLDivElement;
@@ -178,6 +202,7 @@ export class WEAS extends CComponent {
     private debugCanvasVisible = true;
     private debugCanvasCleared = true;
     private metricLogPeak = 1;
+    private debugBeatFlashUntil = 0;
 
     public init?: () => Promise<void>;
 
@@ -189,7 +214,7 @@ export class WEAS extends CComponent {
     constructor(autoInit: boolean = false, detectBpm: boolean = false) {
         super();
         if (detectBpm) {
-            this.bpModule = new BeaTs();
+            this.bpModule = new WEAITempoAnalyzer(this.settings.analyzer_mode);
         }
         if (autoInit) {
             waitReady().then(() => {
@@ -314,9 +339,9 @@ export class WEAS extends CComponent {
                     //     console.debug(audioArray, arrData, arrProps);
                     // }
 
-                    let bpmObj = {};
+                    let bpmObj: BeatAnalysis | undefined;
 
-                    if (this.bpModule && !realProps.silent) {
+                    if (this.bpModule) {
                         bpmObj = this.bpModule.process(
                             start / 1000.0,
                             audioArray
@@ -333,8 +358,9 @@ export class WEAS extends CComponent {
                         ellapsed: teim,
                         data: arrData,
                         ...realProps,
-                        bpm: bpmObj
+                        ...(bpmObj || {})
                     } as any;
+                    this.triggerDebugBeatFlash();
                 });
         });
     }
@@ -474,6 +500,7 @@ export class WEAS extends CComponent {
 <span><i style="background:${METRIC_COLORS.bass}"></i>bass</span>
 <span><i style="background:${METRIC_COLORS.mids}"></i>mids</span>
 <span><i style="background:${METRIC_COLORS.highs}"></i>highs</span>
+<span><i style="background:${METRIC_COLORS.peakActivation}"></i>peak</span>
 <span><i style="background:${METRIC_COLORS.sum}"></i>sum</span>
 <span><i style="background:${METRIC_COLORS.min}"></i>min</span>
 <span><i style="background:${METRIC_COLORS.max}"></i>max</span>
@@ -567,6 +594,10 @@ export class WEAS extends CComponent {
      * @public
      */
     public updateSettings(): Promise<void> {
+        if (this.bpModule) {
+            this.bpModule.setMode(this.settings.analyzer_mode);
+        }
+
         if (!this.weasModule) {
             return;
         }
@@ -645,6 +676,7 @@ export class WEAS extends CComponent {
         }
 
         this.setCanvasPreviewVisible(true);
+        this.applyDebugBeatFlash(now);
         this.debugCanvasCleared = false;
 
         // clear the intersection
@@ -753,6 +785,7 @@ export class WEAS extends CComponent {
             bass: this.lastAudio.bass,
             mids: this.lastAudio.mids,
             highs: this.lastAudio.highs,
+            peakActivation: this.lastAudio.peakActivation,
             sum: this.lastAudio.sum,
             min: this.lastAudio.min,
             max: this.lastAudio.max,
@@ -761,7 +794,19 @@ export class WEAS extends CComponent {
             silent: this.lastAudio.silent,
             intensity: this.lastAudio.intensity
         };
-        const peakCandidate = Object.values(metricValues).reduce((max, value) => {
+        const peakCandidate = [
+            this.lastAudio.bass,
+            this.lastAudio.mids,
+            this.lastAudio.highs,
+            this.lastAudio.peakActivation,
+            this.lastAudio.sum,
+            this.lastAudio.min,
+            this.lastAudio.max,
+            this.lastAudio.average,
+            this.lastAudio.range,
+            this.lastAudio.silent,
+            this.lastAudio.intensity
+        ].reduce((max, value) => {
             return Number.isFinite(value) ? Math.max(max, value) : max;
         }, 0);
 
@@ -773,14 +818,49 @@ export class WEAS extends CComponent {
 
         const metricKeys = Object.keys(metricValues);
 
+        if (this.lastAudio.isBeat) {
+            ctx.fillStyle = 'rgba(235, 239, 244, 0.16)';
+            ctx.fillRect(w - 1, 0, 1, h);
+        }
+
         for (let i = 0; i < metricKeys.length; i++) {
             const key = metricKeys[i];
             const value = metricValues[key];
-            const y = h - this.normalizeMetricValue(value, this.metricLogPeak) * (h - 1) - 1;
+            const normalized = this.normalizeMetricValue(value, this.metricLogPeak);
+            const y = h - normalized * (h - 1) - 1;
 
             ctx.fillStyle = METRIC_COLORS[key];
             ctx.fillRect(w - 1, Math.max(0, Math.min(h - 1, y)), 1, 1);
         }
+    }
+
+    private applyDebugBeatFlash(now: number): void {
+        if (!this.mainElm) {
+            return;
+        }
+
+        const flashActive = this.settings.debugging
+            && now < this.debugBeatFlashUntil;
+
+        this.mainElm.style.borderColor = flashActive
+            ? 'rgba(255,255,255,0.95)'
+            : 'rgba(255,255,255,0.12)';
+        this.mainElm.style.boxShadow = flashActive
+            ? '0 0 0 1px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.45), 0 24px 60px rgba(0,0,0,0.38)'
+            : '0 24px 60px rgba(0,0,0,0.38)';
+    }
+
+    private triggerDebugBeatFlash(): void {
+        if (
+            !this.settings.debugging
+            || !this.lastAudio
+            || !this.lastAudio.isBeat
+        ) {
+            return;
+        }
+
+        this.debugBeatFlashUntil = performance.now() + 90;
+        this.applyDebugBeatFlash(performance.now());
     }
 
     private normalizeMetricValue(value: number, peak: number): number {
@@ -798,7 +878,8 @@ export class WEAS extends CComponent {
 
         const lines = [
             `time: ${this.lastAudio.time.toFixed(4)}`,
-            `ellapsed: ${this.lastAudio.ellapsed.toFixed(4)}`
+            `ellapsed: ${this.lastAudio.ellapsed.toFixed(4)}`,
+            `analyzerMode: ${this.formatAnalyzerMode(this.lastAudio.analyzerMode)}`
         ];
 
         (this.lastAudio.bpm || []).slice(0, 3).forEach((entry, index) => {
@@ -807,7 +888,73 @@ export class WEAS extends CComponent {
             );
         });
 
+        if (Number.isFinite(this.lastAudio.beatPhase)) {
+            lines.push(`beatPhase: ${this.lastAudio.beatPhase.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.peakActivation)) {
+            lines.push(`peakActivation: ${this.lastAudio.peakActivation.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.phaseLock)) {
+            lines.push(`phaseLock: ${this.lastAudio.phaseLock.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.beatConfidence)) {
+            lines.push(`beatConfidence: ${this.lastAudio.beatConfidence.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.secondsSinceLastBeat)) {
+            lines.push(`secondsSinceLastBeat: ${this.lastAudio.secondsSinceLastBeat.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.secondsToNextBeat)) {
+            lines.push(`secondsToNextBeat: ${this.lastAudio.secondsToNextBeat.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.beatInterval)) {
+            lines.push(`beatInterval: ${this.lastAudio.beatInterval.toFixed(4)}`);
+        }
+        if (this.lastAudio.isBeat !== undefined) {
+            lines.push(`isBeat: ${this.lastAudio.isBeat ? 'true' : 'false'}`);
+        }
+        if (this.lastAudio.primaryPulseSource) {
+            lines.push(`primaryPulseSource: ${this.lastAudio.primaryPulseSource}`);
+        }
+        if (this.lastAudio.tempoFamily) {
+            lines.push(`tempoFamily: ${this.lastAudio.tempoFamily}`);
+        }
+        if (this.lastAudio.transientCorroboration !== undefined) {
+            lines.push(`transientCorroboration: ${this.lastAudio.transientCorroboration ? 'true' : 'false'}`);
+        }
+        if (Number.isFinite(this.lastAudio.switchConfidence)) {
+            lines.push(`switchConfidence: ${this.lastAudio.switchConfidence.toFixed(4)}`);
+        }
+        if (this.lastAudio.analyzerBackend) {
+            lines.push(`analyzerBackend: ${this.lastAudio.analyzerBackend}`);
+        }
+        if (this.lastAudio.aiReady !== undefined) {
+            lines.push(`aiReady: ${this.lastAudio.aiReady ? 'true' : 'false'}`);
+        }
+        if (Number.isFinite(this.lastAudio.aiInferenceMs)) {
+            lines.push(`aiInferenceMs: ${this.lastAudio.aiInferenceMs.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.aiModelConfidence)) {
+            lines.push(`aiModelConfidence: ${this.lastAudio.aiModelConfidence.toFixed(4)}`);
+        }
+        if (Number.isFinite(this.lastAudio.aiFrameStride)) {
+            lines.push(`aiFrameStride: ${this.lastAudio.aiFrameStride.toFixed(0)}`);
+        }
+
         return lines.join('\n');
+    }
+
+    private formatAnalyzerMode(mode?: TempoAnalyzerModeValue): string {
+        switch (mode) {
+            case TempoAnalyzerMode.Off:
+                return 'Off';
+            case TempoAnalyzerMode.AI:
+                return 'AI';
+            case TempoAnalyzerMode.EDM:
+                return 'EDM';
+            case TempoAnalyzerMode.General:
+            default:
+                return 'General';
+        }
     }
 
     private setCanvasPreviewVisible(visible: boolean): void {
@@ -816,6 +963,10 @@ export class WEAS extends CComponent {
         }
 
         this.mainElm.style.display = visible ? '' : 'none';
+        if (!visible) {
+            this.debugBeatFlashUntil = 0;
+            this.applyDebugBeatFlash(0);
+        }
         this.debugCanvasVisible = visible;
 
         if (visible) {
