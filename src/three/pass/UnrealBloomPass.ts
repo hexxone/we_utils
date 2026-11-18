@@ -34,7 +34,7 @@ export class UnrealBloomPass implements BasePass {
     public oldClearAlpha = 1;
     public clearColor = new Color(0);
 
-    private resolution = null;
+    public readonly viewportSize: Vector2;
     private strength = null;
     private radius = null;
     private threshold = null;
@@ -73,7 +73,7 @@ export class UnrealBloomPass implements BasePass {
         radius: number,
         threshold: number
     ) {
-        this.resolution = resolution ? resolution : new Vector2(256, 256);
+        this.viewportSize = resolution ? resolution.clone() : new Vector2(256, 256);
         this.strength = strength !== undefined ? strength : 1;
         this.radius = radius;
         this.threshold = threshold;
@@ -84,8 +84,8 @@ export class UnrealBloomPass implements BasePass {
             magFilter: LinearFilter,
             format: RGBAFormat
         };
-        let resx = Math.round(this.resolution.x / 2);
-        let resy = Math.round(this.resolution.y / 2);
+        let resx = Math.round(this.viewportSize.x / 2);
+        let resy = Math.round(this.viewportSize.y / 2);
 
         this.renderTargetBright = new WebGLRenderTarget(resx, resy, pars);
         this.renderTargetBright.texture.name = 'UnrealBloomPass.bright';
@@ -134,8 +134,8 @@ export class UnrealBloomPass implements BasePass {
         // Gaussian Blur Materials
         const kernelSizeArray = [3, 5, 7, 9, 11];
 
-        resx = Math.round(this.resolution.x / 2);
-        resy = Math.round(this.resolution.y / 2);
+        resx = Math.round(this.viewportSize.x / 2);
+        resy = Math.round(this.viewportSize.y / 2);
 
         for (let i = 0; i < this.nMips; i++) {
             this.separableBlurMaterials.push(
@@ -236,14 +236,12 @@ export class UnrealBloomPass implements BasePass {
             this.renderTargetsHorizontal[i].setSize(resx, resy);
             this.renderTargetsVertical[i].setSize(resx, resy);
 
-            this.separableBlurMaterials[i].uniforms.texSize.value = new Vector2(
-                resx,
-                resy
-            );
+            this.separableBlurMaterials[i].uniforms.texSize.value.set(resx, resy);
 
             resx = Math.round(resx / 2);
             resy = Math.round(resy / 2);
         }
+        this.viewportSize.set(width, height);
     }
 
     /**

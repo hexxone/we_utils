@@ -14,6 +14,15 @@ import { Scene } from '../three.ts/src/scenes/Scene';
 import { BasePass } from './pass/BasePass';
 import { RenderPass } from './pass/RenderPass';
 
+/** Apply the requested viewport to the pass, respecting passes with per-draw setup. */
+function sizePass(pass: BasePass, width: number, height: number) {
+    const size = pass.viewportSize;
+
+    if (!size || size.x !== width || size.y !== height) {
+        pass.setSize(width, height);
+    }
+}
+
 /**
  * render shader chain
  * // TODO move to three.ts ??
@@ -29,6 +38,7 @@ export class EffectComposer {
 
     // runtime
     private viewSize: Vector2;
+    private readonly rendererSize = new Vector2();
     private previousFrame = Date.now();
 
     // target & origin buffers
@@ -131,7 +141,7 @@ export class EffectComposer {
      * @returns {void}
      */
     public addPass(p: BasePass) {
-        p.setSize(this.viewSize.width, this.viewSize.height);
+        sizePass(p, this.viewSize.width, this.viewSize.height);
         this.passes.push(p);
     }
 
@@ -143,7 +153,7 @@ export class EffectComposer {
      * @returns {void}
      */
     public insertPass(p: BasePass, index: number) {
-        p.setSize(this.viewSize.width, this.viewSize.height);
+        sizePass(p, this.viewSize.width, this.viewSize.height);
         this.passes.splice(index, 0, p);
     }
 
@@ -189,9 +199,7 @@ export class EffectComposer {
         }
         this.previousFrame = dn;
 
-        const size = new Vector2();
-
-        this.renderer.getSize(size);
+        const size = this.renderer.getSize(this.rendererSize);
         const currentRenderTarget = this.renderer.getRenderTarget();
 
         // has enabled passes?
@@ -270,7 +278,7 @@ export class EffectComposer {
                     if (!pass.enabled) {
                         return;
                     }
-                    pass.setSize(viewSize, size.height);
+                    sizePass(pass, viewSize, size.height);
                     pass.render(
                         this.renderer,
                         this.writeBuffer,
@@ -307,7 +315,7 @@ export class EffectComposer {
                 if (!pass.enabled) {
                     return;
                 }
-                pass.setSize(size.width, size.height);
+                sizePass(pass, size.width, size.height);
                 pass.render(
                     this.renderer,
                     this.writeBuffer,
@@ -362,7 +370,7 @@ export class EffectComposer {
         this.renderWrite.setSize(width, height);
         this.renderRead.setSize(width, height);
         this.passes.forEach((pass) => {
-            return pass.setSize(width, height);
+            sizePass(pass, width, height);
         });
         this.viewSize.set(width, height);
     }

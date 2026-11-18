@@ -27,7 +27,11 @@ export class ShaderPass implements BasePass {
     textureID: string;
     uniforms: any;
     fsQuad: FullScreenHelper;
-    iRes: Vector2;
+    iRes = new Vector2();
+
+    get viewportSize() {
+        return this.iRes;
+    }
 
     /**
      * Make Pass
@@ -79,7 +83,7 @@ export class ShaderPass implements BasePass {
      * @returns {void}
      */
     setSize(width: number, height: number) {
-        this.iRes = new Vector2(width, height);
+        this.iRes.set(width, height);
     }
 
     /**

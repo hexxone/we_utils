@@ -5,6 +5,7 @@
  * Basic shader pass interface
  */
 
+import type { Vector2 } from 'three.ts/src/math/Vector2';
 import { WebGLRenderer } from 'three.ts/src/renderers/WebGLRenderer';
 import { WebGLRenderTarget } from 'three.ts/src/renderers/WebGLRenderTarget';
 
@@ -25,6 +26,9 @@ export type BasePass = {
     prepare(renderer: WebGLRenderer);
 
     dispose();
+
+    /** Passes with size-only setup expose the viewport they are already configured for. */
+    readonly viewportSize?: Readonly<Vector2>;
 
     setSize(width: number, height: number);
 
