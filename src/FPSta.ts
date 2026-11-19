@@ -411,13 +411,18 @@ export class FPStats extends CComponent {
     }
 
     private updateMemory() {
-        // eslint-disable-next-line dot-notation
+        const memory = performance as Performance & {
+            measureUserAgentSpecificMemory?: () => Promise<{
+                bytes: number;
+                breakdown: { bytes: number; types: string[] }[];
+            }>;
+        };
+
         if (
             window.crossOriginIsolated
-            && performance.measureUserAgentSpecificMemory !== undefined // TODO
+            && memory.measureUserAgentSpecificMemory
         ) {
-            // eslint-disable-next-line dot-notation
-            performance['measureUserAgentSpecificMemory']()
+            memory.measureUserAgentSpecificMemory()
                 .then((result) => {
                     if (result && result.breakdown && result.bytes) {
                         let sum = result.bytes;
